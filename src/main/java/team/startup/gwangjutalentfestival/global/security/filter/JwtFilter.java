@@ -51,7 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
         Role role = jwtProvider.getRole(token);
         String phoneNumber = jwtProvider.getPhoneNumber(token);
 
-        CustomUserDetails customUserDetails = CustomUserDetails.fromToken(userId, token, role);
+        CustomUserDetails customUserDetails = CustomUserDetails.fromToken(userId, phoneNumber, role);
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 customUserDetails,
                 null,
