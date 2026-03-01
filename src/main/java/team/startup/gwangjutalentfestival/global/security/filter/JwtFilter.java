@@ -39,10 +39,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (!jwtProvider.validateToken(token)) {
             setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+            return;
         }
 
         if (!jwtProvider.isAccessToken(token)) {
             setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+            return;
         }
 
         Long userId = jwtProvider.getUserId(token);
