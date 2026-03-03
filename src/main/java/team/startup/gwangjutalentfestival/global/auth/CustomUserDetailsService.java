@@ -13,8 +13,8 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public CustomUserDetails loadUserByUsername(String phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber)
+    public CustomUserDetails loadUserByUsername(String userId) {
+        return userRepository.findByPhoneNumber(userId)
                 .map(CustomUserDetails::from)
                 .orElseThrow(UserNotFoundException::new);
     }
