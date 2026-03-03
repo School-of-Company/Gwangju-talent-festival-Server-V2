@@ -1,3 +1,35 @@
 spring:
   application:
     name: gwangjutalentfestival
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 1800
+  refresh-token-expiration: 1209600
+cors:
+  allowed-origins:
+    - "http://localhost:3000"
+    - "http://localhost:3001"
+    - "http://localhost:3002"
+    - "http://localhost:3003"
+    - "http://localhost:3004"
+    - "https://광탈페.kr"
+    - "https://www.광탈페.kr"
+    - "https://xn--hc0b809dz3b.kr"
+    - "https://www.xn--hc0b809dz3b.kr"
+    - "https://gwangju-talent-festival-clienttest.vercel.app"
+    - "https://festival-test-pink.vercel.app"
