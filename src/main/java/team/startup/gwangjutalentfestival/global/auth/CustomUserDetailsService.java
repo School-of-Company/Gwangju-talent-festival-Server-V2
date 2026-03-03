@@ -3,7 +3,7 @@ package team.startup.gwangjutalentfestival.global.auth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
-import team.startup.gwangjutalentfestival.domain.user.exception.NotFoundMemberException;
+import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 
 @Service
@@ -16,6 +16,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public CustomUserDetails loadUserByUsername(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber)
                 .map(CustomUserDetails::from)
-                .orElseThrow(NotFoundMemberException::new);
+                .orElseThrow(UserNotFoundException::new);
     }
 }
