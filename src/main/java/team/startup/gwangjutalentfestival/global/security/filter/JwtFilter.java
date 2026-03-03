@@ -1,5 +1,6 @@
 package team.startup.gwangjutalentfestival.global.security.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.auth.CustomUserDetails;
 import team.startup.gwangjutalentfestival.global.exception.ErrorCode;
+import team.startup.gwangjutalentfestival.global.exception.ErrorResponse;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
 
 import java.io.IOException;
@@ -23,6 +25,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
+    private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
 
     @Override
@@ -32,32 +35,30 @@ public class JwtFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
         String token = jwtProvider.resolveToken(request);
 
-        if (token == null) {
-            filterChain.doFilter(request, response);
-            return;
+        if (token != null) {
+            try {
+                if (jwtProvider.validateToken(token) && jwtProvider.isAccessToken(token)) {
+                    Long userId = jwtProvider.getUserId(token);
+                    Role role = jwtProvider.getRole(token);
+                    String phoneNumber = jwtProvider.getPhoneNumber(token);
+
+                    CustomUserDetails customUserDetails = CustomUserDetails.fromToken(userId, phoneNumber, role);
+                    Authentication authentication = new UsernamePasswordAuthenticationToken(
+                            customUserDetails,
+                            null,
+                            customUserDetails.getAuthorities());
+
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+                    return;
+                }
+            } catch (io.jsonwebtoken.ExpiredJwtException e) {
+                setErrorResponse(response, ErrorCode.EXPIRED_TOKEN);
+                return;
+            }
         }
 
-        if (!jwtProvider.validateToken(token)) {
-            setErrorResponse(response, ErrorCode.INVALID_TOKEN);
-            return;
-        }
-
-        if (!jwtProvider.isAccessToken(token)) {
-            setErrorResponse(response, ErrorCode.INVALID_TOKEN);
-            return;
-        }
-
-        Long userId = jwtProvider.getUserId(token);
-        Role role = jwtProvider.getRole(token);
-        String phoneNumber = jwtProvider.getPhoneNumber(token);
-
-        CustomUserDetails customUserDetails = CustomUserDetails.fromToken(userId, phoneNumber, role);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                customUserDetails,
-                null,
-                customUserDetails.getAuthorities());
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
 
@@ -65,8 +66,9 @@ public class JwtFilter extends OncePerRequestFilter {
     private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getStatus());
         response.setContentType("application/json; charset=UTF-8");
-        response.getWriter().write(
-                "{\"status\":" + errorCode.getStatus() + ",\"message\":\"" + errorCode.getMessage() + "\"}"
+        objectMapper.writeValue(
+                response.getWriter(),
+                new ErrorResponse(errorCode.getStatus(), errorCode.getMessage())
         );
     }
 }
