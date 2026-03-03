@@ -59,12 +59,12 @@ public class JwtProvider {
         return createToken(userId,  role, ACCESS_TOKEN, expiryDate);
     }
 
-    public String generateRefreshToken(Long userId,  Role role) {
+    public String generateRefreshToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
         return createToken(userId,  role, REFRESH_TOKEN, expiryDate);
     }
 
-    private String createToken(Long userId,  Role role, String type, Date expiryDate) {
+    private String createToken(Long userId, Role role, String type, Date expiryDate) {
         return Jwts.builder()
 
                 .claim(USER_ID, userId)
