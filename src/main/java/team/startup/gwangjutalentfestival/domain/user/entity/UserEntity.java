@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
-
 @Entity
 @Getter
 @Table(name = "users")
@@ -15,7 +14,6 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
     @Column(unique = true, nullable = true, name = "phone_number")
