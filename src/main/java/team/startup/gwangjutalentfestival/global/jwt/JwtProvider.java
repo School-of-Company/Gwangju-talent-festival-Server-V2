@@ -38,12 +38,12 @@ public class JwtProvider {
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
-    public TokenResponse receiveToken(Long userId, String phoneNumber, Role role) {
+    public TokenResponse receiveToken(Long userId, Role role) {
         Date accessExpiryDate = calculateExpiryDate(jwtProperties.getAccessTokenExpiration());
         Date refreshExpiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
 
-        String accessToken = createToken(userId, phoneNumber, role, ACCESS_TOKEN, accessExpiryDate);
-        String refreshToken = createToken(userId, phoneNumber, role, REFRESH_TOKEN, refreshExpiryDate);
+        String accessToken = createToken(userId, role, ACCESS_TOKEN, accessExpiryDate);
+        String refreshToken = createToken(userId, role, REFRESH_TOKEN, refreshExpiryDate);
 
         return new TokenResponse(
                 accessToken,
@@ -54,19 +54,19 @@ public class JwtProvider {
         );
     }
 
-    public String generateAccessToken(Long userId, String phoneNumber, Role role) {
+    public String generateAccessToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getAccessTokenExpiration());
-        return createToken(userId, phoneNumber, role, ACCESS_TOKEN, expiryDate);
+        return createToken(userId,  role, ACCESS_TOKEN, expiryDate);
     }
 
-    public String generateRefreshToken(Long userId, String phoneNumber, Role role) {
+    public String generateRefreshToken(Long userId,  Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
-        return createToken(userId, phoneNumber, role, REFRESH_TOKEN, expiryDate);
+        return createToken(userId,  role, REFRESH_TOKEN, expiryDate);
     }
 
-    private String createToken(Long userId, String phoneNumber, Role role, String type, Date expiryDate) {
+    private String createToken(Long userId,  Role role, String type, Date expiryDate) {
         return Jwts.builder()
-                .setSubject(phoneNumber)
+
                 .claim(USER_ID, userId)
                 .claim(ROLE, role.name())
                 .claim(TOKEN_TYPE, type)
@@ -111,10 +111,6 @@ public class JwtProvider {
 
     public Long getUserId(String token) {
         return getClaims(token).get(USER_ID, Long.class);
-    }
-
-    public String getPhoneNumber(String token) {
-        return getClaims(token).getSubject();
     }
 
     public Role getRole(String token) {

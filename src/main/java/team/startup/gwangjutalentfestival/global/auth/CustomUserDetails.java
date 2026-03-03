@@ -26,8 +26,8 @@ public class CustomUserDetails implements UserDetails {
         return new CustomUserDetails(user.getId(), user.getPhoneNumber(), user.getPassword(), user.getRole());
     }
 
-    public static CustomUserDetails fromToken(Long userId, String phoneNumber, Role role) {
-        return new CustomUserDetails(userId, phoneNumber, null, role);
+    public static CustomUserDetails fromToken(Long userId,  Role role) {
+        return new CustomUserDetails(userId, null, null, role);
     }
 
     @Override
