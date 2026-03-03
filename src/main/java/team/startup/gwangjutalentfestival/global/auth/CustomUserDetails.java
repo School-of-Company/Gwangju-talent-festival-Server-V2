@@ -25,7 +25,6 @@ public class CustomUserDetails implements UserDetails {
     public static CustomUserDetails from(UserEntity user) {
         return new CustomUserDetails(user.getId(), user.getPhoneNumber(), user.getPassword(), user.getRole());
     }
-
     public static CustomUserDetails fromToken(Long userId,  Role role) {
         return new CustomUserDetails(userId, null, null, role);
     }
