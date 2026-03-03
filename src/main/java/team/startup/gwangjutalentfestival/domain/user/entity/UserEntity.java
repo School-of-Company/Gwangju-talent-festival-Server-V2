@@ -15,18 +15,19 @@ public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
 
-    @Column(unique = true,nullable = true,name = "phone_number")
+    @Column(unique = true, nullable = true, name = "phone_number")
     private String phoneNumber;
 
-    @Column(unique = true,nullable = true,name = "email")
+    @Column(unique = true, nullable = true, name = "email")
     private String email;
 
-    @Column(nullable = true,name = "password")
+    @Column(nullable = true, name = "password")
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false,name = "role")
+    @Column(nullable = false, name = "role")
     private Role role;
 }
