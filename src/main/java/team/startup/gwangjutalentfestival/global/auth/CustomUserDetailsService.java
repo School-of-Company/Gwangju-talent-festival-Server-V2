@@ -8,13 +8,12 @@ import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 
 @Service
 @RequiredArgsConstructor
-public class CustomUserDetailsService implements UserDetailsService {
+public class CustomUserDetailsService {
 
     private final UserRepository userRepository;
 
-    @Override
-    public CustomUserDetails loadUserByUsername(String userId) {
-        return userRepository.findByPhoneNumber(userId)
+    public CustomUserDetails loadUserByUsername(Long userId) {
+        return userRepository.findById(userId)
                 .map(CustomUserDetails::from)
                 .orElseThrow(UserNotFoundException::new);
     }
