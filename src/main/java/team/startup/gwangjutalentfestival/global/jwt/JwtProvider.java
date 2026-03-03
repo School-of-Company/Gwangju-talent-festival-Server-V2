@@ -66,8 +66,7 @@ public class JwtProvider {
 
     private String createToken(Long userId, Role role, String type, Date expiryDate) {
         return Jwts.builder()
-
-                .claim(USER_ID, userId)
+                .setSubject(String.valueOf(userId))
                 .claim(ROLE, role.name())
                 .claim(TOKEN_TYPE, type)
                 .setIssuedAt(new Date())
