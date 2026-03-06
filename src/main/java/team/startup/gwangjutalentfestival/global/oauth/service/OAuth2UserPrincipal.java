@@ -15,9 +15,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OAuth2UserPrincipal implements OAuth2User {
 
-    private final OAuth2UserInfo oAuth2UserInfo;
     private final UserEntity member;
-    private final Map<String, Object> attributes;
 
     @Override
     public Map<String, Object> getAttributes() {
