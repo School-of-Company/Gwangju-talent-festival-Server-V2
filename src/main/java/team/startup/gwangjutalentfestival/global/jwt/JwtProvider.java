@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import team.startup.gwangjutalentfestival.domain.user.dto.response.TokenResponse;
+import team.startup.gwangjutalentfestival.auth.presentation.data.response.TokenResponse;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 import javax.crypto.SecretKey;
@@ -109,7 +109,7 @@ public class JwtProvider {
     }
 
     public Long getUserId(String token) {
-        return getClaims(token).get(USER_ID, Long.class);
+        return Long.parseLong(getClaims(token).getSubject());
     }
 
     public Role getRole(String token) {
