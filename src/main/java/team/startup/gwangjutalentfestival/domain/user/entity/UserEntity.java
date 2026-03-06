@@ -1,15 +1,16 @@
 package team.startup.gwangjutalentfestival.domain.user.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.global.oauth.common.OAuthType;
 
 @Entity
 @Getter
+@Builder
 @Table(name = "users")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserEntity {
 
     @Id
@@ -24,6 +25,13 @@ public class UserEntity {
 
     @Column(nullable = true, name = "password")
     private String password;
+
+    @Column(nullable = true, name = "provider_id")
+    private String providerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "provider")
+    private OAuthType provider;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "role")
