@@ -50,7 +50,7 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
 
         long expiresInSeconds = Duration.between(
                 LocalDateTime.now(),
-                tokenResponse.refreshTokenExpiresIn()
+                tokenResponse.refreshTokenExpiresAt()
         ).getSeconds();
 
         RefreshToken newToken = RefreshToken.builder()
