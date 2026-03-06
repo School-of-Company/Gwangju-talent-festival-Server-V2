@@ -31,7 +31,7 @@ public ProviderProperties getProvider(OAuthType type) {
         ProviderProperties providerProperties = providers.get(type);
 
         if (providerProperties == null) {
-            throw new UnsupportedOperationException();
+            throw new IllegalArgumentException("지원하지 않는 OAuth 제공자입니다: " + type);
         }
         return providerProperties;
 }
