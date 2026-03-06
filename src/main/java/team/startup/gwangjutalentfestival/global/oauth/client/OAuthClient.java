@@ -1,7 +1,6 @@
 package team.startup.gwangjutalentfestival.global.oauth.client;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ import team.startup.gwangjutalentfestival.global.oauth.exception.OAuth2Authentic
 import java.util.Map;
 import java.util.Optional;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OAuthClient {
@@ -38,7 +36,6 @@ public class OAuthClient {
         params.add("client_secret", properties.clientSecret());
         params.add("redirect_uri", redirectUri);
 
-        log.info("[OAuth] 액세스 토큰 요청 - provider: {}, redirectUri: {}", type, redirectUri);
         try {
             Map<String, Object> response = restTemplate.post()
                     .uri(properties.tokenUri())
@@ -47,13 +44,11 @@ public class OAuthClient {
                     .retrieve()
                     .body(MAP_TYPE);
 
-            log.info("[OAuth] 카카오 토큰 응답: {}", response);
             return Optional.ofNullable(response)
-                    .map(r -> (String)r.get("access_token"))
+                    .map(r -> (String) r.get("access_token"))
                     .filter(token -> !token.isBlank())
                     .orElseThrow(OAuth2AuthenticationProcessingException::new);
         } catch (RestClientException e) {
-            log.error("[OAuth] 액세스 토큰 요청 실패: {}", e.getMessage(), e);
             throw new OAuth2AuthenticationProcessingException();
         }
     }
@@ -61,7 +56,6 @@ public class OAuthClient {
     public Map<String, Object> getUserAttributes(OAuthType type, String accessToken) {
         ProviderProperties properties = oAuthProviderConfig.getProvider(type);
 
-        log.info("[OAuth] 유저 정보 요청 - provider: {}", type);
         try {
             Map<String, Object> attributes = restTemplate.get()
                     .uri(properties.userInfoUri())
@@ -69,11 +63,9 @@ public class OAuthClient {
                     .retrieve()
                     .body(MAP_TYPE);
 
-            log.info("[OAuth] 유저 정보 응답: {}", attributes);
             return Optional.ofNullable(attributes)
                     .orElseThrow(OAuth2AuthenticationProcessingException::new);
         } catch (RestClientException e) {
-            log.error("[OAuth] 유저 정보 요청 실패: {}", e.getMessage(), e);
             throw new OAuth2AuthenticationProcessingException();
         }
     }
