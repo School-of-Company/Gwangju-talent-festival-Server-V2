@@ -1,10 +1,9 @@
-package team.startup.gwangjutalentfestival.domain.user.dto.response;
+package team.startup.gwangjutalentfestival.auth.presentation.data.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 import java.time.LocalDateTime;
-
 
 public record TokenResponse(
         String accessToken,
