@@ -30,7 +30,7 @@ public class UserEntity {
     private String providerId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, name = "provider")
+    @Column(nullable = true, name = "provider")
     private OAuthType provider;
 
     @Enumerated(EnumType.STRING)
