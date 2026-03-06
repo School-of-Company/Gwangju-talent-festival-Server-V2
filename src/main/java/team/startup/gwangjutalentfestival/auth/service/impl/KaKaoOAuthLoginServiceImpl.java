@@ -35,8 +35,13 @@ public class KaKaoOAuthLoginServiceImpl implements KaKaoOAuthLoginService {
 
     @Override
     public TokenResponse execute(OAuthLoginRequest request) {
-        OAuthType type = OAuthType.valueOf(request.provider());
+        OAuthType type;
 
+        try {
+            type = OAuthType.valueOf(request.provider().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new OAuth2AuthenticationProcessingException();
+        }
         String accessToken = oAuthClient.getAccessToken(type, request.code(), request.redirectUri());
         Map<String, Object> attributes = oAuthClient.getUserAttributes(type, accessToken);
 
