@@ -2,7 +2,6 @@ package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.exception.InvalidRefreshTokenException;
 import team.startup.gwangjutalentfestival.domain.auth.exception.RefreshTokenNotFoundException;
@@ -32,8 +31,8 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
             throw new InvalidRefreshTokenException();
         }
 
-        Long userId = Long.parseLong(jwtProvider.getClaims(refreshToken).getSubject());
-        String userIdStr = String.valueOf(userId);
+        String userIdStr = jwtProvider.getClaims(refreshToken).getSubject();
+        Long userId = Long.parseLong(userIdStr);
         Role role = jwtProvider.getRole(refreshToken);
 
         RefreshToken stored = refreshTokenRepository.findById(userIdStr)
