@@ -1,15 +1,14 @@
-package team.startup.gwangjutalentfestival.auth.service.impl;
+package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team.startup.gwangjutalentfestival.auth.entity.RefreshToken;
-import team.startup.gwangjutalentfestival.auth.presentation.data.request.OAuthLoginRequest;
-import team.startup.gwangjutalentfestival.auth.presentation.data.response.TokenResponse;
-import team.startup.gwangjutalentfestival.auth.repository.RefreshTokenRepository;
-import team.startup.gwangjutalentfestival.auth.service.KaKaoOAuthLoginService;
-import team.startup.gwangjutalentfestival.auth.service.MemberRegistrationService;
-import team.startup.gwangjutalentfestival.auth.service.ReissueTokenService;
+import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
+import team.startup.gwangjutalentfestival.domain.auth.presentation.data.request.OAuthLoginRequest;
+import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response.TokenResponse;
+import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
+import team.startup.gwangjutalentfestival.domain.auth.service.KaKaoOAuthLoginService;
+import team.startup.gwangjutalentfestival.domain.auth.service.MemberRegistrationService;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;

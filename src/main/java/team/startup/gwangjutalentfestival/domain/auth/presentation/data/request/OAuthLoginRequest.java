@@ -1,4 +1,4 @@
-package team.startup.gwangjutalentfestival.auth.presentation.data.request;
+package team.startup.gwangjutalentfestival.domain.auth.presentation.data.request;
 
 public record OAuthLoginRequest(
         String code,

@@ -1,4 +1,4 @@
-package team.startup.gwangjutalentfestival.auth.entity;
+package team.startup.gwangjutalentfestival.domain.auth.entity;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
