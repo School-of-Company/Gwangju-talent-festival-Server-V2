@@ -1,5 +1,6 @@
 package team.startup.gwangjutalentfestival.global.auth;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
+    @Getter
     private final Long userId;
     private final String phoneNumber;
     private final String password;
@@ -44,6 +46,7 @@ public class CustomUserDetails implements UserDetails {
     public String getUsername() {
         return phoneNumber;
     }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;

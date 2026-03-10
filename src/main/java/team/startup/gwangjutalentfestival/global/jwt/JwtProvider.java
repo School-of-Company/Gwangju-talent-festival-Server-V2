@@ -56,12 +56,12 @@ public class JwtProvider {
 
     public String generateAccessToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getAccessTokenExpiration());
-        return createToken(userId,  role, ACCESS_TOKEN, expiryDate);
+        return createToken(userId, role, ACCESS_TOKEN, expiryDate);
     }
 
     public String generateRefreshToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
-        return createToken(userId,  role, REFRESH_TOKEN, expiryDate);
+        return createToken(userId, role, REFRESH_TOKEN, expiryDate);
     }
 
     private String createToken(Long userId, Role role, String type, Date expiryDate) {
@@ -84,6 +84,8 @@ public class JwtProvider {
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.error("잘못된 JWT 서명입니다.");
+        } catch (ExpiredJwtException e) {
+            log.error("만료된 JWT 토큰입니다.");
         } catch (UnsupportedJwtException e) {
             log.error("지원하지 않는 JWT 토큰입니다.");
         } catch (IllegalArgumentException e) {
@@ -92,6 +94,7 @@ public class JwtProvider {
         return false;
     }
 
+    // validateToken() 통과한 토큰만 여기로 와야 함
     public Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -108,12 +111,16 @@ public class JwtProvider {
         return REFRESH_TOKEN.equals(getClaims(token).get(TOKEN_TYPE, String.class));
     }
 
-    public Long getUserId(String token) {
-        return Long.parseLong(getClaims(token).getSubject());
+    public Long getUserId(Claims claims) {
+        return Long.parseLong(claims.getSubject());
     }
 
-    public Role getRole(String token) {
-        return Role.valueOf(getClaims(token).get(ROLE, String.class));
+    public String getPhoneNumber(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    public String getRole(Claims claims) {
+        return claims.get("role", String.class);
     }
 
     public String resolveToken(HttpServletRequest request) {

@@ -1,5 +1,6 @@
 package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
@@ -31,18 +32,18 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
             throw new InvalidRefreshTokenException();
         }
 
-        String userIdStr = jwtProvider.getClaims(refreshToken).getSubject();
-        Long userId = Long.parseLong(userIdStr);
-        Role role = jwtProvider.getRole(refreshToken);
+        Claims claims = jwtProvider.getClaims(refreshToken);
+        Long userId = jwtProvider.getUserId(claims);
+        Role role = Role.valueOf(jwtProvider.getRole(claims));
 
-        RefreshToken stored = refreshTokenRepository.findById(userIdStr)
+        RefreshToken stored = refreshTokenRepository.findById(String.valueOf(userId))
                 .orElseThrow(RefreshTokenNotFoundException::new);
 
         if (!stored.getToken().equals(refreshToken)) {
             throw new InvalidRefreshTokenException();
         }
 
-        refreshTokenRepository.deleteById(userIdStr);
+        refreshTokenRepository.deleteById(String.valueOf(userId));
 
         TokenResponse tokenResponse = jwtProvider.receiveToken(userId, role);
 
@@ -52,7 +53,7 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
         ).getSeconds();
 
         RefreshToken newToken = RefreshToken.builder()
-                .userId(userIdStr)
+                .userId(String.valueOf(userId))
                 .token(tokenResponse.refreshToken())
                 .expiresIn(expiresInSeconds)
                 .build();
