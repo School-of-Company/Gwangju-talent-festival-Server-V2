@@ -20,7 +20,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OAuthClient {
 
-    private final RestClient restTemplate;
+    private final RestClient restClient;
     private final OAuthProviderConfig oAuthProviderConfig;
     private final KakaoOAuth2Client kakaoOAuth2Client;
 
@@ -51,7 +51,7 @@ public class OAuthClient {
         ProviderProperties properties = oAuthProviderConfig.getProvider(type);
 
         try {
-            Map<String, Object> attributes = restTemplate.get()
+            Map<String, Object> attributes = restClient.get()
                     .uri(properties.userInfoUri())
                     .headers(h -> h.setBearerAuth(accessToken))
                     .retrieve()
