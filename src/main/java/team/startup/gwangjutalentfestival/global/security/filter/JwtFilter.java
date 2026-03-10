@@ -2,6 +2,7 @@ package team.startup.gwangjutalentfestival.global.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,8 +38,12 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = jwtProvider.resolveToken(request);
 
         if (token != null) {
-            if (jwtProvider.validateToken(token) && jwtProvider.isAccessToken(token)) {
+            try {
                 Claims claims = jwtProvider.getClaims(token);
+                if (!jwtProvider.isAccessToken(claims)) {
+                    setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+                    return;
+                }
                 Long userId = jwtProvider.getUserId(claims);
                 Role role = Role.valueOf(jwtProvider.getRole(claims));
                 CustomUserDetails userDetails = CustomUserDetails.fromToken(userId, role);
@@ -47,7 +52,7 @@ public class JwtFilter extends OncePerRequestFilter {
                         null,
                         userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } else {
+            } catch (JwtException e) {
                 setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                 return;
             }

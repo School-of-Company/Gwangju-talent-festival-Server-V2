@@ -101,12 +101,12 @@ public class JwtProvider {
                 .getPayload();
     }
 
-    public boolean isAccessToken(String token) {
-        return ACCESS_TOKEN.equals(getClaims(token).get(TOKEN_TYPE, String.class));
+    public boolean isAccessToken(Claims claims) {
+        return ACCESS_TOKEN.equals(claims.get(TOKEN_TYPE, String.class));
     }
 
-    public boolean isRefreshToken(String token) {
-        return REFRESH_TOKEN.equals(getClaims(token).get(TOKEN_TYPE, String.class));
+    public boolean isRefreshToken(Claims claims) {
+        return REFRESH_TOKEN.equals(claims.get(TOKEN_TYPE, String.class));
     }
 
     public Long getUserId(Claims claims) {

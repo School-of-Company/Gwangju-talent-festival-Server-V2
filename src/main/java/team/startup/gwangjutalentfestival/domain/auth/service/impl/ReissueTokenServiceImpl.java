@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
@@ -24,15 +25,16 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
 
     @Override
     public TokenResponse execute(String refreshToken) {
-        if (!jwtProvider.validateToken(refreshToken)) {
+        Claims claims;
+        try {
+            claims = jwtProvider.getClaims(refreshToken);
+        } catch (JwtException e) {
             throw new InvalidRefreshTokenException();
         }
 
-        if (!jwtProvider.isRefreshToken(refreshToken)) {
+        if (!jwtProvider.isRefreshToken(claims)) {
             throw new InvalidRefreshTokenException();
         }
-
-        Claims claims = jwtProvider.getClaims(refreshToken);
         Long userId = jwtProvider.getUserId(claims);
         Role role = Role.valueOf(jwtProvider.getRole(claims));
 
