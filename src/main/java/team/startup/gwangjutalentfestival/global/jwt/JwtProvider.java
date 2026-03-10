@@ -28,7 +28,6 @@ public class JwtProvider {
     private static final String TOKEN_TYPE = "type";
     private static final String ACCESS_TOKEN = "accessToken";
     private static final String REFRESH_TOKEN = "refreshToken";
-    private static final String USER_ID = "userId";
     private static final String ROLE = "role";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String AUTHORIZATION_HEADER = "Authorization";
