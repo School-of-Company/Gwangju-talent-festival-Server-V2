@@ -93,7 +93,6 @@ public class JwtProvider {
         return false;
     }
 
-    // validateToken() 통과한 토큰만 여기로 와야 함
     public Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
