@@ -115,10 +115,6 @@ public class JwtProvider {
         return Long.parseLong(claims.getSubject());
     }
 
-    public String getPhoneNumber(String token) {
-        return getClaims(token).getSubject();
-    }
-
     public String getRole(Claims claims) {
         return claims.get("role", String.class);
     }
