@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.global.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,29 +39,27 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                if (jwtProvider.validateToken(token) && jwtProvider.isAccessToken(token)) {
-                    Long userId = jwtProvider.getUserId(token);
-                    Role role = jwtProvider.getRole(token);
-                    CustomUserDetails customUserDetails = CustomUserDetails.fromToken(userId, role);
-                    Authentication authentication = new UsernamePasswordAuthenticationToken(
-                            customUserDetails,
-                            null,
-                            customUserDetails.getAuthorities());
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
+                Claims claims = jwtProvider.getClaims(token);
+                if (!jwtProvider.isAccessToken(claims)) {
                     setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                     return;
                 }
-            } catch (io.jsonwebtoken.ExpiredJwtException e) {
-                setErrorResponse(response, ErrorCode.EXPIRED_TOKEN);
+                Long userId = jwtProvider.getUserId(claims);
+                Role role = Role.valueOf(jwtProvider.getRole(claims));
+                CustomUserDetails userDetails = CustomUserDetails.fromToken(userId, role);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (JwtException e) {
+                setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                 return;
             }
         }
 
         filterChain.doFilter(request, response);
     }
-
 
     private void setErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getStatus());

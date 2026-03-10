@@ -8,28 +8,49 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - account_email
+              - profile_nickname
+
+        provider:
+            kakao:
+              authorization-uri: https://kauth.kakao.com/oauth/authorize
+              token-uri: https://kauth.kakao.com/oauth/token
+              user-info-uri: https://kapi.kakao.com/v2/user/me
+              user-name-attribute: id
 
 jwt:
   secret: ${JWT_SECRET}
-  access-token-expiration: 1800
-  refresh-token-expiration: 1209600
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:180000000}
+  refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:1209600}
+
 cors:
-  allowed-origins:
-    - "http://localhost:3000"
-    - "http://localhost:3001"
-    - "http://localhost:3002"
-    - "http://localhost:3003"
-    - "http://localhost:3004"
-    - "https://광탈페.kr"
-    - "https://www.광탈페.kr"
-    - "https://xn--hc0b809dz3b.kr"
-    - "https://www.xn--hc0b809dz3b.kr"
-    - "https://gwangju-talent-festival-clienttest.vercel.app"
-    - "https://festival-test-pink.vercel.app"
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004}
+
+feign:
+  log-level: ${FEIGN_LOG_LEVEL:BASIC}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
