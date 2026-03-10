@@ -15,7 +15,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -32,7 +32,6 @@ spring:
             scope:
               - account_email
               - profile_nickname
-
 
         provider:
             kakao:
@@ -58,3 +57,11 @@ cors:
     - "https://www.xn--hc0b809dz3b.kr"
     - "https://gwangju-talent-festival-clienttest.vercel.app"
     - "https://festival-test-pink.vercel.app"
+    -
+
+feign:
+  log-level: ${FEIGN_LOG_LEVEL:BASIC}
+
+logging:
+  level:
+    org.springframework.security: DEBUG
