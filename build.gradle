@@ -5,7 +5,7 @@ plugins {
 }
 
 ext {
-    set('springCloudVersion', '2024.0.1')
+    set('springCloudVersion', '2025.0.0')
 }
 
 group = 'team.startup'
