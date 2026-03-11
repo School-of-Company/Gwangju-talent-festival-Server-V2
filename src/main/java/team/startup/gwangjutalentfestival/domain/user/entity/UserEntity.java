@@ -3,7 +3,6 @@ package team.startup.gwangjutalentfestival.domain.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
-import team.startup.gwangjutalentfestival.global.oauth.common.OAuthType;
 
 @Entity
 @Getter
@@ -25,13 +24,6 @@ public class UserEntity {
 
     @Column(nullable = true, name = "password")
     private String password;
-
-    @Column(nullable = true, name = "provider_id")
-    private String providerId;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = true, name = "provider")
-    private OAuthType provider;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "role")
