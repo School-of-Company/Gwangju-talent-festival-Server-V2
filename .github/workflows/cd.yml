@@ -36,3 +36,17 @@ jobs:
           docker-compose up -d
         env:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      - name: Notify Discord on success
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"✅ 배포 성공\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"❌ 배포 실패\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
