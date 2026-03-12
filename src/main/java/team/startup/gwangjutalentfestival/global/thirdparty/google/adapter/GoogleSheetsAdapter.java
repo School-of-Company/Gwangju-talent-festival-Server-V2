@@ -4,6 +4,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
+import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleSheetsProperties;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
@@ -31,7 +32,7 @@ public class GoogleSheetsAdapter {
                     .execute();
 
         } catch (Exception e) {
-            throw new RuntimeException("Google Sheets 연동 실패: " + e.getMessage(), e);
+            throw new GoogleSheetsException();
         }
     }
 

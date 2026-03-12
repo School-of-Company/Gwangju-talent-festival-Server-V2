@@ -21,6 +21,9 @@ public enum ErrorCode {
     TOKEN_MISMATCH(401, "저장된 토큰과 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
 
+    // Google Sheets
+    GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
+
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
 
     private final int status;
