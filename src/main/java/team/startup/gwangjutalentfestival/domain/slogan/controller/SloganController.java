@@ -20,7 +20,7 @@ public class SloganController {
     private final CreateSloganService createSloganService;
 
     @PostMapping
-    public ResponseEntity<SloganEntity> createSlogan(@Valid @RequestBody CreateSloganRequest request) {
+    public ResponseEntity<Void> createSlogan(@Valid @RequestBody CreateSloganRequest request) {
         createSloganService.execute(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
