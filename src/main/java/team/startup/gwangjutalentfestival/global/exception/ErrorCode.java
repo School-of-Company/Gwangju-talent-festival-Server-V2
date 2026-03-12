@@ -9,7 +9,7 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(404, "유저를 찾을 수 없습니다."),
-    DUPLICATE_PHONE_NUMBER(409, "이미 사용중인 전화번호입니다."),
+    DUPLICATE_PHONE_NUMBER(409, "이미 등록된 전화번호입니다."),
 
     // Auth
     INVALID_PASSWORD(401, "비밀번호가 올바르지 않습니다."),
@@ -29,6 +29,12 @@ public enum ErrorCode {
     SMS_SEND_FAILED(500, "SMS 전송에 실패했습니다."),
     SMS_EMPTY_RESPONSE(500, "SMS 응답이 없습니다."),
     EXCEEDED_VERIFY_COUNT(429, "인증번호 전송 횟수를 초과했습니다."),
+
+    // Google Sheets
+    GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
+    GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),
+    GOOGLE_SHEETS_IO_ERROR(503, "Google Sheets 서버와 연결할 수 없습니다."),
+    GOOGLE_SHEETS_INIT_ERROR(500, "Google Sheets 초기화 중 오류가 발생했습니다."),
 
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
 
