@@ -40,3 +40,8 @@ google:
     account-credential: ${GOOGLE_ACCOUNT_CREDENTIAL}
     sheet-id: ${GOOGLE_SHEET_ID}
     sheet-page: ${GOOGLE_SHEET_PAGE}
+
+slogan:
+  submission:
+    start-at: 2026-05-04T00:00:00
+    end-at: 2026-05-08T23:59:59
