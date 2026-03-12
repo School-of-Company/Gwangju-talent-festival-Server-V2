@@ -9,7 +9,7 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(404, "유저를 찾을 수 없습니다."),
-    DUPLICATE_PHONE_NUMBER(409, "이미 사용중인 전화번호입니다."),
+    DUPLICATE_PHONE_NUMBER(409, "이미 등록된 전화번호입니다."),
 
     // Auth
     INVALID_PASSWORD(401, "비밀번호가 올바르지 않습니다."),
