@@ -31,6 +31,18 @@ cors:
 feign:
   log-level: ${FEIGN_LOG_LEVEL:BASIC}
 
+solapi:
+  api-key: ${COOL_SMS_KEY}
+  api-secret: ${COOL_SMS_SECRET}
+  sms-phonenumber: ${COOL_SMS_PHONENUMBER:01037018554}
+  url: ${SOLAPI_URL:https://api.solapi.com}
+
+sms:
+  verify:
+    max-send-count: ${SMS_MAX_SEND_COUNT:5}
+    verify-code-ttl: ${SMS_VERIFY_CODE_TTL:300}
+    verify-count-ttl: ${SMS_VERIFY_COUNT_TTL:600}
+
 logging:
   level:
     org.springframework.security: DEBUG
