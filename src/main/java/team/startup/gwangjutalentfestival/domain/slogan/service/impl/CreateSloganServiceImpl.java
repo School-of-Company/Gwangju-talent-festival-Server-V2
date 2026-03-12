@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.exception.DuplicatePhoneNumberException;
 import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
-import team.startup.gwangjutalentfestival.domain.slogan.entity.Slogan;
+import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.repository.SloganRepository;
 import team.startup.gwangjutalentfestival.domain.slogan.service.CreateSloganService;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleSheetsAdapter;
@@ -22,7 +22,7 @@ public class CreateSloganServiceImpl implements CreateSloganService {
     public void execute(CreateSloganRequest request) {
         validateDuplicatePhoneNumber(request.phoneNumber());
 
-        Slogan slogan = Slogan.builder()
+        SloganEntity slogan = SloganEntity.builder()
                 .slogan(request.slogan())
                 .description(request.description())
                 .school(request.school())
