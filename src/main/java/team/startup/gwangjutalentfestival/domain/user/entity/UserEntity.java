@@ -19,9 +19,6 @@ public class UserEntity {
     @Column(unique = true, nullable = true, name = "phone_number")
     private String phoneNumber;
 
-    @Column(unique = true, nullable = true, name = "email")
-    private String email;
-
     @Column(nullable = true, name = "password")
     private String password;
 
