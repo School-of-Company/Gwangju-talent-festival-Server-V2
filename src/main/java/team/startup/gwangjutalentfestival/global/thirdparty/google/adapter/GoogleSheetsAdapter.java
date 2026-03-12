@@ -1,13 +1,17 @@
 package team.startup.gwangjutalentfestival.global.thirdparty.google.adapter;
 
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
+import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsApiException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsException;
+import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsIoException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleSheetsProperties;
 import com.google.api.services.sheets.v4.model.ValueRange;
 
+import java.io.IOException;
 import java.util.List;
 
 @Component
@@ -31,6 +35,10 @@ public class GoogleSheetsAdapter {
                     .setInsertDataOption("INSERT_ROWS")
                     .execute();
 
+        } catch (GoogleJsonResponseException e) {
+            throw new GoogleSheetsApiException();
+        } catch (IOException e) {
+            throw new GoogleSheetsIoException();
         } catch (Exception e) {
             throw new GoogleSheetsException();
         }
