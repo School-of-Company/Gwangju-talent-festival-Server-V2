@@ -15,24 +15,24 @@ public class SloganEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "slogan", nullable = false, columnDefinition = "TEXT")
     private String slogan;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false)
+    @Column(name = "school", nullable = false)
     private String school;
 
-    @Column(nullable = false)
+    @Column(name = "grade", nullable = false)
     private Integer grade;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "class_num", nullable = false)
     private Integer classNum;
 
-    @Column(nullable = false)
+    @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 }
