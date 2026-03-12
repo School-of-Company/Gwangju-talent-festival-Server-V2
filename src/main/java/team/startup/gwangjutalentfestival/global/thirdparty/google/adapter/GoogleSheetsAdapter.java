@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.thirdparty.google.adapter;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.sheets.v4.Sheets;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsApiException;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class GoogleSheetsAdapter {
 
     private final Sheets sheets;
@@ -36,10 +38,13 @@ public class GoogleSheetsAdapter {
                     .execute();
 
         } catch (GoogleJsonResponseException e) {
+            log.error("Google Sheets API 오류 발생 - statusCode: {}, message: {}", e.getStatusCode(), e.getMessage());
             throw new GoogleSheetsApiException();
         } catch (IOException e) {
+            log.error("Google Sheets IO 오류 발생 - message: {}", e.getMessage());
             throw new GoogleSheetsIoException();
         } catch (Exception e) {
+            log.error("Google Sheets 예기치 못한 오류 발생 - message: {}", e.getMessage());
             throw new GoogleSheetsException();
         }
     }
