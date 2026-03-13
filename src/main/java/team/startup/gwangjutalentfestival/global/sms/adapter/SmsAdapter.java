@@ -33,7 +33,7 @@ public class SmsAdapter {
         Message message = new Message();
         message.setFrom(solapiProperties.getSmsPhoneNumber());
         message.setTo(to);
-        message.setText("[광탈페] 인증번호 [" + code + "]를 입력해주세요.");
+        message.setText(String.format("[광탈페] 인증번호 [%s]를 입력해주세요.", code));
 
         try {
             messageService.send(message);
