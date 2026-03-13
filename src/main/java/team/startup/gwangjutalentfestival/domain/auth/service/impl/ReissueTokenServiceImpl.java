@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.exception.InvalidRefreshTokenException;
 import team.startup.gwangjutalentfestival.domain.auth.exception.RefreshTokenNotFoundException;
@@ -23,6 +24,7 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
     private final JwtProperties jwtProperties;
 
     @Override
+    @Transactional
     public TokenResponse execute(String refreshToken) {
         Claims claims;
         try {
