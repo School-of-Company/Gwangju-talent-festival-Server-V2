@@ -23,6 +23,8 @@ public class CreateSloganServiceImpl implements CreateSloganService {
     private final GoogleSheetsAdapter googleSheetsAdapter;
     private final SloganSubmissionProperties sloganSubmissionProperties;
 
+    private static final String SEOUL_ZONE_ID  = "Asia/Seoul";
+
     @Override
     @Transactional
     public void execute(CreateSloganRequest request) {
@@ -50,7 +52,7 @@ public class CreateSloganServiceImpl implements CreateSloganService {
     }
 
     private void validateSloganSubmissionPeriod() {
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+        LocalDateTime now = LocalDateTime.now(ZoneId.of(SEOUL_ZONE_ID));
 
         if (now.isBefore(sloganSubmissionProperties.startAt()) ||
                 now.isAfter(sloganSubmissionProperties.endAt())) {
