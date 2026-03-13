@@ -34,7 +34,7 @@ feign:
 solapi:
   api-key: ${COOL_SMS_KEY}
   api-secret: ${COOL_SMS_SECRET}
-  sms-phonenumber: ${COOL_SMS_PHONENUMBER:01037018554}
+  sms-phonenumber: ${COOL_SMS_PHONENUMBER}
   url: ${SOLAPI_URL:https://api.solapi.com}
 
 sms:
