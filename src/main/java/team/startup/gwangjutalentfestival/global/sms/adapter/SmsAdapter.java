@@ -17,6 +17,8 @@ import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties
 @RequiredArgsConstructor
 public class SmsAdapter {
 
+    private static final String VERIFY_CODE_MESSAGE_FORMAT = "[광탈페] 인증번호 [%s]를 입력해주세요.";
+
     private final SolapiProperties solapiProperties;
     private DefaultMessageService messageService;
 
@@ -33,7 +35,7 @@ public class SmsAdapter {
         Message message = new Message();
         message.setFrom(solapiProperties.getSmsPhoneNumber());
         message.setTo(to);
-        message.setText(String.format("[광탈페] 인증번호 [%s]를 입력해주세요.", code));
+        message.setText(String.format(VERIFY_CODE_MESSAGE_FORMAT, code));
 
         try {
             messageService.send(message);
