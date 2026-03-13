@@ -12,7 +12,7 @@ import team.startup.gwangjutalentfestival.domain.auth.repository.VerifyCodeRepos
 import team.startup.gwangjutalentfestival.domain.auth.service.SignUpService;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
-import team.startup.gwangjutalentfestival.domain.user.exception.DuplicatePhoneNumberException;
+import team.startup.gwangjutalentfestival.domain.auth.exception.DuplicatePhoneNumberException;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 
 @Service
