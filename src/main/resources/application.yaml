@@ -43,5 +43,5 @@ google:
 
 slogan:
   submission:
-    start-at: 2026-05-04T00:00:00
-    end-at: 2026-05-08T23:59:59
+    start-at: ${START_AT:2026-05-04T00:00:00}
+    end-at: ${END_AT:2026-05-08T23:59:59}
