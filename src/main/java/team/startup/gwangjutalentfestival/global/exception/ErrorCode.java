@@ -21,6 +21,9 @@ public enum ErrorCode {
     TOKEN_MISMATCH(401, "저장된 토큰과 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
 
+    // Slogan
+    SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
+
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),
