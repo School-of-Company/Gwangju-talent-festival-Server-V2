@@ -43,10 +43,8 @@ public class SignUpServiceImpl implements SignUpService {
                 .role(Role.USER)
                 .build();
 
-        userRepository.save(user);
-
         verifyCodeRepository.delete(code);
+
+        userRepository.save(user);
     }
-
 }
-
