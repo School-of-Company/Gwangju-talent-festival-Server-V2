@@ -40,7 +40,7 @@ solapi:
 sms:
   verify:
     max-send-count: ${SMS_MAX_SEND_COUNT:5}
-    verify-code-ttl: ${SMS_VERIFY_CODE_TTL:300}
+    verify-code-ttl: ${SMS_VERIFY_CODE_TTL:180}
     verify-count-ttl: ${SMS_VERIFY_COUNT_TTL:600}
 
 logging:
