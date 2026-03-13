@@ -46,3 +46,9 @@ sms:
 logging:
   level:
     org.springframework.security: DEBUG
+
+google:
+  sheets:
+    account-credential: ${GOOGLE_ACCOUNT_CREDENTIAL}
+    sheet-id: ${GOOGLE_SHEET_ID}
+    sheet-page: ${GOOGLE_SHEET_PAGE}
