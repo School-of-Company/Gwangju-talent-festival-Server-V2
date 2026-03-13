@@ -29,6 +29,8 @@ public enum ErrorCode {
     SMS_SEND_FAILED(500, "SMS 전송에 실패했습니다."),
     SMS_EMPTY_RESPONSE(500, "SMS 응답이 없습니다."),
     ALREADY_VERIFY_CODE_EXISTS(429, "이미 인증번호가 발송되었습니다. 만료 후 다시 요청해주세요."),
+    // Slogan
+    SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
 
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
