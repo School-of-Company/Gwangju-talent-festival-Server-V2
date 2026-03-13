@@ -29,7 +29,6 @@ public class LoginServiceImpl implements LoginService {
     @Override
     @Transactional
     public TokenResponse execute(LoginRequest request) {
-
         UserEntity user = userRepository.findByPhoneNumber(request.phoneNumber())
                 .orElseThrow(UserNotFoundException::new);
 
