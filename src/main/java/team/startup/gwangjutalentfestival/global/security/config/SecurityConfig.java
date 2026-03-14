@@ -59,7 +59,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(it ->it
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS).permitAll()
+
+                        // slogan
                         .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
+
+                        // health
+                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
