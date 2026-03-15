@@ -33,7 +33,7 @@ public class SignUpServiceImpl implements SignUpService {
             throw new InvalidVerifyCodeException();
         }
 
-        if(userRepository.existsByPhoneNumber(request.phoneNumber())){
+        if (userRepository.existsByPhoneNumber(request.phoneNumber())) {
             throw new DuplicatePhoneNumberException();
         }
 
