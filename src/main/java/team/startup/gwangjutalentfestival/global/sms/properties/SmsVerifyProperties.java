@@ -10,5 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SmsVerifyProperties {
     private int maxSendCount;
     private long verifyCodeTtl;
-    private Integer verifyCountTtl;
+    private long verifyCountTtl;
+    private String verifyCountKeyPrefix;
 }
