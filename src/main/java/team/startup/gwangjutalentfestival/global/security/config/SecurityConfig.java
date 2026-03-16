@@ -36,7 +36,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {
             "/auth/**",
-            "/actuator/**",
+            "/health/**",
             "/excel/**",
             "/vote/{teamId}",
             "/error"
@@ -62,10 +62,6 @@ public class SecurityConfig {
 
                         // slogan
                         .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
-
-                        // health
-                        .requestMatchers(HttpMethod.GET, "/health").permitAll()
-
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
