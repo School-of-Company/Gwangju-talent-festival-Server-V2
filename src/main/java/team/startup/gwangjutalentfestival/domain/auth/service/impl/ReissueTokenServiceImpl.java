@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.exception.InvalidRefreshTokenException;
 import team.startup.gwangjutalentfestival.domain.auth.exception.RefreshTokenNotFoundException;
@@ -11,10 +12,8 @@ import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response
 import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
 import team.startup.gwangjutalentfestival.domain.auth.service.ReissueTokenService;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -22,8 +21,10 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
 
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtProperties jwtProperties;
 
     @Override
+    @Transactional
     public TokenResponse execute(String refreshToken) {
         Claims claims;
         try {
@@ -49,15 +50,10 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
 
         TokenResponse tokenResponse = jwtProvider.receiveToken(userId, role);
 
-        long expiresInSeconds = Duration.between(
-                LocalDateTime.now(),
-                tokenResponse.refreshTokenExpiresAt()
-        ).getSeconds();
-
         RefreshToken newToken = RefreshToken.builder()
                 .userId(String.valueOf(userId))
                 .token(tokenResponse.refreshToken())
-                .expiresIn(expiresInSeconds)
+                .expiresIn(jwtProperties.getRefreshTokenExpiration())
                 .build();
 
         refreshTokenRepository.save(newToken);

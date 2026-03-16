@@ -9,7 +9,7 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(404, "유저를 찾을 수 없습니다."),
-    DUPLICATE_PHONE_NUMBER(409, "이미 등록된 전화번호입니다."),
+    DUPLICATE_PHONE_NUMBER(409, "이미 사용중인 전화번호입니다."),
 
     // Auth
     INVALID_PASSWORD(401, "비밀번호가 올바르지 않습니다."),
@@ -21,6 +21,14 @@ public enum ErrorCode {
     TOKEN_MISMATCH(401, "저장된 토큰과 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
 
+    // Verify
+    EXPIRED_VERIFY_CODE(401, "인증번호가 만료되었습니다."),
+    INVALID_VERIFY_CODE(400, "인증번호가 올바르지 않습니다."),
+
+    // SMS
+    SMS_SEND_FAILED(500, "SMS 전송에 실패했습니다."),
+    SMS_EMPTY_RESPONSE(500, "SMS 응답이 없습니다."),
+    ALREADY_VERIFY_CODE_EXISTS(429, "이미 인증번호가 발송되었습니다. 만료 후 다시 요청해주세요."),
     // Slogan
     SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
 
