@@ -36,7 +36,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_URLS = {
             "/auth/**",
-            "/actuator/**",
+            "/health/**",
             "/excel/**",
             "/vote/{teamId}",
             "/error"
@@ -59,6 +59,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(it ->it
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS).permitAll()
+
+                        // slogan
                         .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
                         .anyRequest().authenticated()
                 )

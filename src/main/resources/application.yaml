@@ -56,5 +56,18 @@ google:
 
 slogan:
   submission:
-    start-at: ${START_AT:2026-05-04T00:00:00}
-    end-at: ${END_AT:2026-05-08T23:59:59}
+    start-at: ${START_AT:2026-05-18T00:00:00}
+    end-at: ${END_AT:2026-05-28T23:59:59}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /
+      path-mapping:
+        health: health
+
+  endpoint:
+    health:
+      show-details: never
