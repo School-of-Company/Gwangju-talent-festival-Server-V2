@@ -26,6 +26,9 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon
 
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Build Docker image
         run: docker build -t gwangju-festival:latest .
 
@@ -33,8 +36,6 @@ jobs:
         run: |
           docker compose down
           docker compose up -d
-        env:
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
 
       - name: Notify Discord on success
         if: success()
