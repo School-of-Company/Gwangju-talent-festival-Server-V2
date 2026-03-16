@@ -31,6 +31,19 @@ cors:
 feign:
   log-level: ${FEIGN_LOG_LEVEL:BASIC}
 
+solapi:
+  api-key: ${COOL_SMS_KEY}
+  api-secret: ${COOL_SMS_SECRET}
+  sms-phonenumber: ${COOL_SMS_PHONENUMBER}
+  url: ${SOLAPI_URL:https://api.solapi.com}
+
+sms:
+  verify:
+    max-send-count: ${SMS_MAX_SEND_COUNT:5}
+    verify-code-ttl: ${SMS_VERIFY_CODE_TTL:180}
+    verify-count-ttl: ${SMS_VERIFY_COUNT_TTL:600}
+    verify-count-key-prefix: ${SMS_VERIFY_COUNT_KEY_PREFIX:verify:count:}
+
 logging:
   level:
     org.springframework.security: DEBUG
@@ -43,5 +56,18 @@ google:
 
 slogan:
   submission:
-    start-at: ${START_AT:2026-05-04T00:00:00}
-    end-at: ${END_AT:2026-05-08T23:59:59}
+    start-at: ${START_AT:2026-05-18T00:00:00}
+    end-at: ${END_AT:2026-05-28T23:59:59}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      base-path: /
+      path-mapping:
+        health: health
+
+  endpoint:
+    health:
+      show-details: never
