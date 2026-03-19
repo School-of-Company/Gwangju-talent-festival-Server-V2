@@ -29,7 +29,7 @@ public class SeatEntity {
     @Column(nullable = false, name = "seat_section")
     private Character seatSection;
 
-    @Column(nullable = false,name = "seat_number")
+    @Column(nullable = false, name = "seat_number")
     private Integer seatNumber;
 
     @OneToOne(fetch = FetchType.LAZY)
@@ -38,6 +38,6 @@ public class SeatEntity {
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tema_id")
+    @JoinColumn(name = "team_id")
     private TeamEntity team;
 }

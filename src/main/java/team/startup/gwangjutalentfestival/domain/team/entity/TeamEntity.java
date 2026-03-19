@@ -21,7 +21,7 @@ public class TeamEntity {
     private Long id;
 
     @Column(name = "team_name", nullable = false)
-    private String temaName;
+    private String teamName;
 
     @Column(name = "team_status", nullable = false)
     @Enumerated(EnumType.STRING)
