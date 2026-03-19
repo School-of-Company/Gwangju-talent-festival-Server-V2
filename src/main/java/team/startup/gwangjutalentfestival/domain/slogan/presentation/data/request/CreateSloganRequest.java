@@ -1,4 +1,4 @@
-package team.startup.gwangjutalentfestival.domain.slogan.dto.request;
+package team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request;
 
 import jakarta.validation.constraints.*;
 

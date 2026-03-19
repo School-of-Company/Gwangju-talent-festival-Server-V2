@@ -1,4 +1,4 @@
-package team.startup.gwangjutalentfestival.domain.slogan.controller;
+package team.startup.gwangjutalentfestival.domain.slogan.presentation.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.domain.slogan.service.CreateSloganService;
 
 @RestController
