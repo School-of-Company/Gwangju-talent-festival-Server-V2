@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Entity
 @NoArgsConstructor
-@Table(name = "performs_user")
+@Table(name = "performer_user")
 public class PerformerUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,6 +16,6 @@ public class PerformerUser {
     @Column(nullable = false, name = "phone_number")
     private String phoneNumber;
 
-    @Column(nullable = false,name = "password")
+    @Column(nullable = false, name = "password")
     private String password;
 }
