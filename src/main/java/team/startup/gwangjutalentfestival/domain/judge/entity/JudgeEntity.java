@@ -16,7 +16,7 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 @NoArgsConstructor
 @Builder
 @Table(
-        name = "judgement",
+        name = "judge",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"team_id", "user_id"})
         }
