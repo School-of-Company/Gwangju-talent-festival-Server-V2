@@ -16,12 +16,12 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 @NoArgsConstructor
 @Builder
 @Table(
-        name = "judge",
+        name = "judgement",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"team_id", "user_id"})
         }
 )
-public class JudgeEntity {
+public class JudgementEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
