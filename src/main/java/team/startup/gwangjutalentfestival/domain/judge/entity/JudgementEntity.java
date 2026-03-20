@@ -51,3 +51,4 @@ public class JudgementEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 }
+
