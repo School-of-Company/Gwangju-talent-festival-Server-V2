@@ -5,7 +5,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsApiException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsIoException;

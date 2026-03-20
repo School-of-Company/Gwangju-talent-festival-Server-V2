@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.exception.DuplicatePhoneNumberException;
-import team.startup.gwangjutalentfestival.domain.slogan.dto.request.CreateSloganRequest;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.exception.SloganSubmissionPeriodException;
 import team.startup.gwangjutalentfestival.domain.slogan.properties.SloganSubmissionProperties;
