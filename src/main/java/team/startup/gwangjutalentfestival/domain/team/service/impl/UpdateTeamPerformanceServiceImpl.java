@@ -27,7 +27,8 @@ public class UpdateTeamPerformanceServiceImpl implements UpdateTeamPerformanceSe
 
         TeamStatus status = team.getTeamStatus();
         if (status == TeamStatus.FINISHED) throw new TeamAlreadyFinishedException();
-        if (status == TeamStatus.ONGOING) throw new TeamAlreadyOngoingException();
+        if (status == TeamStatus.ONGOING) team.updateStatus(TeamStatus.FINISHED);
+
 
         team.updateStatus(TeamStatus.ONGOING);
 
