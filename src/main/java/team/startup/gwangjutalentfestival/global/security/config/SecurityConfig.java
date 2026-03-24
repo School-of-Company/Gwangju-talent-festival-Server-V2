@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.security.filter.JwtFilter;
 import team.startup.gwangjutalentfestival.global.security.handler.JwtAccessDeniedHandler;
 import team.startup.gwangjutalentfestival.global.security.handler.JwtAuthenticationEntryPoint;
@@ -62,6 +63,13 @@ public class SecurityConfig {
 
                         // slogan
                         .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
+
+                        // seat
+                        .requestMatchers(HttpMethod.POST, "/seat").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/seat").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.DELETE, "/seat/performer").hasAnyAuthority(Role.PERFORMER.name())
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
