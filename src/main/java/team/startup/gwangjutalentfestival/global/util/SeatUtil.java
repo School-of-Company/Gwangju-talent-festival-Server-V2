@@ -1,7 +1,7 @@
 package team.startup.gwangjutalentfestival.global.util;
 
 import org.springframework.stereotype.Component;
-import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
+import team.startup.gwangjutalentfestival.domain.seat.exception.InvalidSeatSectionException;
 
 import java.util.Map;
 
@@ -14,7 +14,7 @@ public class SeatUtil {
 
     public Integer getMaxSeats(Character section) {
         if (!SEAT_MAP.containsKey(section)) {
-            throw new SeatNotFoundException();
+            throw new InvalidSeatSectionException();
         }
         return SEAT_MAP.get(section);
     }
