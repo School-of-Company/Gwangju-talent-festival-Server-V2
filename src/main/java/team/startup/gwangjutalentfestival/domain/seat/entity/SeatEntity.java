@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
-import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
 @Entity
