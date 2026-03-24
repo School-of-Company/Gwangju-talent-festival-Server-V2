@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
+import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
@@ -22,7 +23,7 @@ public class BanSeatServiceImpl implements BanSeatService {
 
         if (seatBanRepository
                 .existsBySeatSectionAndSeatNumber(seatSection, request.seatNumber())) {
-            throw new SeatBannedException();
+            throw new SeatAlreadyReservedException();
         }
 
         SeatBanEntity seatBan = SeatBanEntity.builder()

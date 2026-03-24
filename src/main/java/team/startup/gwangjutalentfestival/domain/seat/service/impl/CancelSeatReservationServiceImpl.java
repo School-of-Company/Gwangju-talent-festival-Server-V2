@@ -27,7 +27,7 @@ public class CancelSeatReservationServiceImpl implements CancelSeatReservationSe
                 .orElseThrow(UserNotFoundException::new);
 
         SeatEntity seat = seatReservationRepository.findByUser(user)
-                .orElseThrow(SeatAlreadyBannedException::new);
+                .orElseThrow(SeatNotFoundException::new);
 
         seatReservationRepository.delete(seat);
     }
