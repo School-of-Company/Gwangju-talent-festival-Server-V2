@@ -66,7 +66,7 @@ public class SecurityConfig {
 
                         // seat
                         .requestMatchers(HttpMethod.POST, "/seat").authenticated()
-                        .requestMatchers(HttpMethod.DELETE, "/seat").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/seat").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
                         .requestMatchers(HttpMethod.POST, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/seat/performer").hasAnyAuthority(Role.PERFORMER.name())
