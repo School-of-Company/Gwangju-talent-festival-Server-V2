@@ -22,17 +22,11 @@ public class TeamRepositoryCustomImpl implements TeamRepositoryCustom {
 
     @Override
     public List<GetTeamRankingResponse> getRanking() {
-        List<Tuple> results = queryFactory
-                .select(
-                        team.teamName,
-                        team.totalScore,
-                        judgement.expressionCommunicationScore.avg(),
-                        judgement.creativityCompositionScore.avg(),
-                        judgement.stagePresencePerformanceScore.avg()
-                )
+        List<String> teamNames = queryFactory
+                .select(team.teamName)
                 .from(team)
                 .leftJoin(judgement).on(judgement.team.id.eq(team.id))
-                .groupBy(team.id)
+                .groupBy(team.id, team.teamName)
                 .orderBy(
                         team.totalScore.desc(),
                         judgement.expressionCommunicationScore.avg().desc(),
@@ -43,10 +37,10 @@ public class TeamRepositoryCustomImpl implements TeamRepositoryCustom {
                 .fetch();
 
         AtomicInteger rank = new AtomicInteger(1);
-        return results.stream()
-                .map(tuple -> new GetTeamRankingResponse(
+        return teamNames.stream()
+                .map(name -> new GetTeamRankingResponse(
                         rank.getAndIncrement(),
-                        tuple.get(team.teamName)
+                        name
                 ))
                 .toList();
     }
