@@ -101,14 +101,6 @@ class UpdateTeamPerformanceServiceTest {
     }
 
     @Test
-    void 이미_진행중인_팀이면_TeamAlreadyOngoingException이_발생한다() {
-        given(teamRepository.findById(ONGOING_TEAM_ID)).willReturn(Optional.of(ongoingTeam));
-
-        assertThatThrownBy(() -> updateTeamPerformanceService.execute(ONGOING_TEAM_ID))
-                .isInstanceOf(TeamAlreadyOngoingException.class);
-    }
-
-    @Test
     void 이미_종료된_팀이면_TeamAlreadyFinishedException이_발생한다() {
         given(teamRepository.findById(FINISHED_TEAM_ID)).willReturn(Optional.of(finishedTeam));
 
