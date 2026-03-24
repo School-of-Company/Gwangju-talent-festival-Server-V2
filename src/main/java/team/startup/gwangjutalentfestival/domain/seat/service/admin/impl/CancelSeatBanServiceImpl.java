@@ -5,10 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBanNotFoundException;
-import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.CancelSeatBanRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
-import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
 
 @Service
@@ -16,7 +14,6 @@ import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBa
 public class CancelSeatBanServiceImpl implements CancelSeatBanService {
 
     private final SeatBanRepository seatBanRepository;
-    private final SeatReservationRepository seatReservationRepository;
 
     @Override
     @Transactional
