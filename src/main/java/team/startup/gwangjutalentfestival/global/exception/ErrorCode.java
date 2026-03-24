@@ -9,6 +9,11 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(404, "유저를 찾을 수 없습니다."),
+
+    // Team
+    TEAM_NOT_FOUND(404, "팀을 찾을 수 없습니다."),
+    TEAM_ALREADY_FINISHED(409, "이미 종료된 공연입니다."),
+    TEAM_ALREADY_ONGOING(409, "이미 공연이 진행 중인 팀입니다."),
     DUPLICATE_PHONE_NUMBER(409, "이미 사용중인 전화번호입니다."),
 
     // Auth

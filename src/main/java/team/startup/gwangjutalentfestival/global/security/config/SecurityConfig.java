@@ -60,6 +60,10 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PUBLIC_URLS).permitAll()
 
+                        // team
+                        .requestMatchers(HttpMethod.GET, "/team").permitAll()
+                        .requestMatchers("/team/**").hasRole("ADMIN")
+
                         // slogan
                         .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
                         .anyRequest().authenticated()

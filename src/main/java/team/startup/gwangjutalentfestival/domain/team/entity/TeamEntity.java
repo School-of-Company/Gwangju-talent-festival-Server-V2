@@ -5,9 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import team.startup.gwangjutalentfestival.domain.team.enums.TeamGenre;
 import team.startup.gwangjutalentfestival.domain.team.enums.TeamStatus;
-
-import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -23,13 +22,28 @@ public class TeamEntity {
     @Column(name = "team_name", nullable = false)
     private String teamName;
 
+    @Column(name = "school", nullable = false)
+    private String school;
+
     @Column(name = "team_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TeamStatus teamStatus;
 
-    @Column(name = "event_year", nullable = false)
-    private LocalDate eventYear;
+    @Column(name = "team_genre", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TeamGenre teamGenre;
+
+    @Column(name = "perform_order")
+    private Integer performOrder;
 
     @Column(name = "total_score", nullable = false)
     private Integer totalScore;
+
+    public void updateStatus(TeamStatus teamStatus) {
+        this.teamStatus = teamStatus;
+    }
+
+    public void updateOrder(Integer order) {
+        this.performOrder = order;
+    }
 }
