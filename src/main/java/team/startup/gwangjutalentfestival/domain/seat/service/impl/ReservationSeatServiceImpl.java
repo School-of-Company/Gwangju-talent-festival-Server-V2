@@ -57,12 +57,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
 
         long reserveCount = seatReservationRepository.countByUser(user);
 
-        int limit;
-        if (user.getRole() == PERFORMER) {
-            limit = PERFORMER_SEAT_LIMIT;
-        } else {
-            limit = DEFAULT_SEAT_LIMIT;
-        }
+        int limit = user.getRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
 
         if (reserveCount >= limit) {
             throw new SeatReservationLimitExceededException();
