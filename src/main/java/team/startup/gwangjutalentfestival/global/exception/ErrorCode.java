@@ -37,6 +37,16 @@ public enum ErrorCode {
     // Slogan
     SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
 
+    // Seat
+    SEAT_NOT_EXISTS_IN_SECTION(400, "해당 섹션에 존재하지 않는 좌석입니다."),
+    SEAT_ALREADY_RESERVED(400, "이미 예약된 좌석입니다."),
+    SEAT_BANNED(400, "관리자에 의해 금지된 좌석입니다."),
+    SEAT_ALREADY_BANNED(400, "이미 금지된 좌석입니다."),
+    INVALID_SEAT_SECTION(400, "유효하지 않은 좌석 구역입니다."),
+    SEAT_RESERVATION_LIMIT_EXCEEDED(400, "예약 한도를 초과했습니다."),
+    SEAT_NOT_FOUND(404, "예약된 좌석이 없습니다."),
+    SEAT_BAN_NOT_FOUND(404, "금지되지 않은 상태의 자리입니다."),
+
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),
