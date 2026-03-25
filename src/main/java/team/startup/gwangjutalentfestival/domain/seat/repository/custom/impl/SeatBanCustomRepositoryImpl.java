@@ -35,7 +35,7 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
     }
 
     @Override
-    public Set<Integer> findSeatNumbersBySeatSectionAndRole(Character seatSection, Role role) {
+    public Set<Integer> findSeatNumbersBySeatSectionAndRole(String seatSection, Role role) {
         return new HashSet<>(queryFactory
                 .select(seatBan.seatNumber)
                 .from(seatBan)

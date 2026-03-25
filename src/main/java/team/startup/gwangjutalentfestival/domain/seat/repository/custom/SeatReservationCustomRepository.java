@@ -7,5 +7,5 @@ import java.util.Set;
 
 public interface SeatReservationCustomRepository {
     List<SectionSeatNumber> findAllSeatNumbers();
-    Set<Integer> findSeatNumbersBySeatSection(Character seatSection);
+    Set<Integer> findSeatNumbersBySeatSection(String seatSection);
 }

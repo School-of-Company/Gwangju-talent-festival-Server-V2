@@ -34,13 +34,13 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
         List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();
 
-        Map<Character, Set<Integer>> seatBansMap = seatBans.stream()
+        Map<String, Set<Integer>> seatBansMap = seatBans.stream()
                 .collect(Collectors.groupingBy(
                         SectionSeatNumber::section,
                         Collectors.mapping(SectionSeatNumber::seatNumber, Collectors.toSet())
                 ));
 
-        Map<Character, Set<Integer>> seatReservationMap = seatReservations.stream()
+        Map<String, Set<Integer>> seatReservationMap = seatReservations.stream()
                 .collect(Collectors.groupingBy(
                         SectionSeatNumber::section,
                         Collectors.mapping(SectionSeatNumber::seatNumber, Collectors.toSet())
@@ -48,17 +48,17 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
 
         Map<String, GetSeatsBySectionResponse> responseMap = new LinkedHashMap<>();
 
-        for (Character section : seatUtil.getSections()) {
+        for (String section : seatUtil.getSections()) {
             Set<Integer> bans = seatBansMap.getOrDefault(section, Set.of());
             Set<Integer> reservations = seatReservationMap.getOrDefault(section, Set.of());
-            responseMap.put(section.toString(), getSeatResponse(section, bans, reservations));
+            responseMap.put(section, getSeatResponse(section, bans, reservations));
         }
 
         return new GetAllSeatsResponse(responseMap);
     }
 
     private GetSeatsBySectionResponse getSeatResponse(
-            Character section, Set<Integer> bans, Set<Integer> reservations) {
+            String section, Set<Integer> bans, Set<Integer> reservations) {
         Integer seatLastNumber = seatUtil.getMaxSeats(section);
 
         List<Boolean> seats = IntStream.rangeClosed(1, seatLastNumber)

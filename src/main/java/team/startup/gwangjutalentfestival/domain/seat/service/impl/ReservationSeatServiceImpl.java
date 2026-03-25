@@ -37,7 +37,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
     @Override
     @Transactional
     public void execute(ReservationSeatRequest request) {
-        Character seatSection = request.seatSection().charAt(0);
+        String seatSection = request.seatSection();
         Integer seatNumber = request.seatNumber();
 
         Integer maxSeats = seatUtil.getMaxSeats(seatSection);

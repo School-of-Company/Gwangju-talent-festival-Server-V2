@@ -27,7 +27,7 @@ public class PerformerCancelSeatReservationServiceImpl implements PerformerCance
         UserEntity user = userUtil.getCurrentUser();
 
         SeatEntity seat = seatReservationRepository.findBySeatSectionAndSeatNumberAndUser(
-                request.seatSection().charAt(0),
+                request.seatSection(),
                 request.seatNumber(),
                 user
         ).orElseThrow(SeatNotFoundException::new);

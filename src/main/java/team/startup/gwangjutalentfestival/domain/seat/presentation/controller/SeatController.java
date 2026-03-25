@@ -106,7 +106,7 @@ public class SeatController {
     })
     @GetMapping
     public ResponseEntity<GetSeatsBySectionResponse> getSeatsBySection(
-            @RequestParam Character section) {
+            @RequestParam String section) {
         return ResponseEntity.ok(getSeatsBySectionService.execute(section));
     }
 

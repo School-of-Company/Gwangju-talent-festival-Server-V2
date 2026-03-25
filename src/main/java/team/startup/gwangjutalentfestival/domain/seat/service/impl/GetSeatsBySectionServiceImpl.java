@@ -26,7 +26,7 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
 
     @Override
     @Transactional(readOnly = true)
-    public GetSeatsBySectionResponse execute(Character section) {
+    public GetSeatsBySectionResponse execute(String section) {
         Role role = userUtil.getCurrentUser().getRole();
         Integer seatLastNumber = seatUtil.getMaxSeats(section);
 

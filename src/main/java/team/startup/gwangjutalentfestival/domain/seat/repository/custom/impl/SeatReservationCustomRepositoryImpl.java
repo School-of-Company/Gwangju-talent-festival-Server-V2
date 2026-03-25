@@ -33,7 +33,7 @@ public class SeatReservationCustomRepositoryImpl implements SeatReservationCusto
     }
 
     @Override
-    public Set<Integer> findSeatNumbersBySeatSection(Character seatSection) {
+    public Set<Integer> findSeatNumbersBySeatSection(String seatSection) {
         return new HashSet<>(queryFactory
                 .select(seat.seatNumber)
                 .from(seat)

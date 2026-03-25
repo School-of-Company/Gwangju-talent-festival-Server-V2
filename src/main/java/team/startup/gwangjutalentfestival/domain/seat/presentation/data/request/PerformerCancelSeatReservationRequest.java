@@ -3,12 +3,14 @@ package team.startup.gwangjutalentfestival.domain.seat.presentation.data.request
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 public record PerformerCancelSeatReservationRequest(
         @Pattern(
                 regexp = "^[A-J]$",
                 message = "좌석 섹션은 A부터 J까지 존재합니다."
         )
+        @Size(max = 1)
         String seatSection,
 
         @Min(value = 1, message = "좌석 번호는 최소 1번부터 존재합니다.")

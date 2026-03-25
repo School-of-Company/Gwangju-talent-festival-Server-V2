@@ -21,15 +21,13 @@ public class BanSeatServiceImpl implements BanSeatService {
     @Override
     @Transactional
     public void execute(BanSeatRequest request) {
-        Character seatSection = request.seatSection().charAt(0);
-
         if (seatBanRepository
-                .existsBySeatSectionAndSeatNumber(seatSection, request.seatNumber())) {
+                .existsBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())) {
             throw new SeatAlreadyReservedException();
         }
 
         SeatBanEntity seatBan = SeatBanEntity.builder()
-                .seatSection(seatSection)
+                .seatSection(request.seatSection())
                 .seatNumber(request.seatNumber())
                 .role(request.role())
                 .build();

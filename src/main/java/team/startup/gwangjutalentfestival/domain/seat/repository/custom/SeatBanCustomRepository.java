@@ -8,5 +8,5 @@ import java.util.Set;
 
 public interface SeatBanCustomRepository {
     List<SectionSeatNumber> findSeatNumbersByRole(Role role);
-    Set<Integer> findSeatNumbersBySeatSectionAndRole(Character seatSection, Role role);
+    Set<Integer> findSeatNumbersBySeatSectionAndRole(String seatSection, Role role);
 }

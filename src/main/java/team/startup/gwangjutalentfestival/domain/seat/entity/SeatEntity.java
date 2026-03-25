@@ -25,8 +25,8 @@ public class SeatEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, name = "seat_section")
-    private Character seatSection;
+    @Column(nullable = false, name = "seat_section", length = 1)
+    private String seatSection;
 
     @Column(nullable = false, name = "seat_number")
     private Integer seatNumber;

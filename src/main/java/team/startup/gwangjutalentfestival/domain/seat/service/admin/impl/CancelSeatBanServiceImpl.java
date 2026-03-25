@@ -21,10 +21,8 @@ public class CancelSeatBanServiceImpl implements CancelSeatBanService {
     @Override
     @Transactional
     public void execute(CancelSeatBanRequest request) {
-        Character seatSection = request.seatSection().charAt(0);
-
         SeatBanEntity seatBan = seatBanRepository
-                .findBySeatSectionAndSeatNumber(seatSection, request.seatNumber())
+                .findBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())
                 .orElseThrow(SeatBanNotFoundException::new);
 
         seatBanRepository.delete(seatBan);
