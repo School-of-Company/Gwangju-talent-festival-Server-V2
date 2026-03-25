@@ -6,7 +6,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -32,8 +31,8 @@ public class SeatSseEmitterManager {
         return emitter;
     }
 
-    public Optional<SseEmitter> getEmitter(UUID userId) {
-        return Optional.ofNullable(emitters.get(userId));
+    public Optional<SseEmitter> getEmitter(String phoneNumber) {
+        return Optional.ofNullable(emitters.get(phoneNumber));
     }
 
     public Collection<SseEmitter> getAllEmitters() {
