@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
-import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.CancelSeatReservationService;
