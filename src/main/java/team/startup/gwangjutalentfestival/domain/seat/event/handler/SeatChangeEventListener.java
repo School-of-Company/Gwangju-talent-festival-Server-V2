@@ -17,12 +17,14 @@ public class SeatChangeEventListener {
 
     private final SeatSseEmitterManager sseEmitterManager;
 
+    private static final String SEAT_CHANGE_EVENT_NAME = "SEAT_CHANGE";
+
     @Async("asyncExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void execute(SeatChangeEvent data) {
         for (SseEmitter emitter : sseEmitterManager.getAllEmitters()) {
             try {
-                emitter.send(SseEmitter.event().name("SEAT_CHANGE").data(data));
+                emitter.send(SseEmitter.event().name(SEAT_CHANGE_EVENT_NAME).data(data));
             } catch (IOException e) {
                 emitter.completeWithError(e);
             }

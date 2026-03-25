@@ -18,6 +18,9 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
     private final SeatSseEmitterManager sseEmitterManager;
     private final UserUtil userUtil;
 
+    private static final String CONNECTED_EVENT_NAME = "connected";
+    private static final String HEARTBEAT_EVENT_NAME = "heartbeat";
+
     @Override
     public SseEmitter execute() {
         String phoneNumber = userUtil.getCurrentUser().getPhoneNumber();
@@ -25,7 +28,7 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
 
         try {
             emitter.send(SseEmitter.event()
-                    .name("connected")
+                    .name(CONNECTED_EVENT_NAME)
                     .id(String.valueOf(System.currentTimeMillis()))
                     .data("ok"));
         } catch (IOException e) {
@@ -36,7 +39,7 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
         var beat = scheduler.scheduleAtFixedRate(() -> {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("heartbeat")
+                        .name(HEARTBEAT_EVENT_NAME)
                         .id(String.valueOf(System.currentTimeMillis()))
                         .data("ok"));
             } catch (IOException e) {
