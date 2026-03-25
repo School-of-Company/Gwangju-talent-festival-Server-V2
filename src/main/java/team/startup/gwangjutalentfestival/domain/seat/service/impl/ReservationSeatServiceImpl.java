@@ -1,9 +1,12 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
+import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInSectionException;
@@ -13,9 +16,6 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanReposito
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
-import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
-import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
@@ -27,8 +27,9 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
 
     private final SeatReservationRepository seatReservationRepository;
     private final SeatBanRepository seatBanRepository;
-    private final UserRepository userRepository;
     private final SeatUtil seatUtil;
+    private final UserUtil userUtil;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int PERFORMER_SEAT_LIMIT = 3;
     private static final int DEFAULT_SEAT_LIMIT = 1;
@@ -52,8 +53,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
             throw new SeatBannedException();
         }
 
-        UserEntity user = userRepository.findById(UserUtil.getCurrentUserId())
-                .orElseThrow(UserNotFoundException::new);
+        UserEntity user = userUtil.getCurrentUser();
 
         long reserveCount = seatReservationRepository.countByUser(user);
 
@@ -74,5 +74,11 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
         } catch (DataIntegrityViolationException e) {
             throw new SeatAlreadyReservedException();
         }
+
+        applicationEventPublisher.publishEvent(new SeatChangeEvent(
+                request.seatSection(),
+                request.seatNumber(),
+                false
+        ));
     }
 }
