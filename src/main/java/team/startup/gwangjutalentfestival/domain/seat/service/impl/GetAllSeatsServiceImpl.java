@@ -26,8 +26,6 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
     private final SeatBanCustomRepository seatBanCustomRepository;
     private final SeatReservationCustomRepository seatReservationCustomRepository;
 
-    private static final List<Character> SEAT_SECTIONS = List.of('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J');
-
     @Override
     @Transactional(readOnly = true)
     public GetAllSeatsResponse execute() {
@@ -50,7 +48,7 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
 
         Map<String, GetSeatsBySectionResponse> responseMap = new LinkedHashMap<>();
 
-        for (Character section : SEAT_SECTIONS) {
+        for (Character section : seatUtil.getSections()) {
             Set<Integer> bans = seatBansMap.getOrDefault(section, Set.of());
             Set<Integer> reservations = seatReservationMap.getOrDefault(section, Set.of());
             responseMap.put(section.toString(), getSeatResponse(section, bans, reservations));
