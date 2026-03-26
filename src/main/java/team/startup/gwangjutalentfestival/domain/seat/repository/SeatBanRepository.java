@@ -6,7 +6,7 @@ import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
 import java.util.Optional;
 
 public interface SeatBanRepository extends JpaRepository<SeatBanEntity, Long> {
-    boolean existsBySeatSectionAndSeatNumber(Character seatSection, Integer seatNumber);
+    boolean existsBySeatSectionAndSeatNumber(String seatSection, Integer seatNumber);
 
-    Optional<SeatBanEntity> findBySeatSectionAndSeatNumber(Character seatSection, Integer seatNumber);
+    Optional<SeatBanEntity> findBySeatSectionAndSeatNumber(String seatSection, Integer seatNumber);
 }

@@ -1,13 +1,11 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
@@ -20,16 +18,15 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservation
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
-import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
-import java.util.Optional;
+import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationSeatServiceImplTest {
@@ -44,28 +41,17 @@ class ReservationSeatServiceImplTest {
     private SeatBanRepository seatBanRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private SeatUtil seatUtil;
 
-    private MockedStatic<UserUtil> userUtilMock;
+    @Mock
+    private UserUtil userUtil;
 
-    private static final Long USER_ID = 1L;
-    private static final Character SEAT_SECTION = 'A';
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    private static final String SEAT_SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
     private static final Integer MAX_SEATS = 77;
-
-    @BeforeEach
-    void setUp() {
-        userUtilMock = mockStatic(UserUtil.class);
-        userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
-    }
-
-    @AfterEach
-    void tearDown() {
-        userUtilMock.close();
-    }
 
     private ReservationSeatRequest request() {
         return new ReservationSeatRequest(String.valueOf(SEAT_SECTION), SEAT_NUMBER);
@@ -73,7 +59,7 @@ class ReservationSeatServiceImplTest {
 
     private UserEntity userOf(Role role) {
         return UserEntity.builder()
-                .id(USER_ID)
+                .id(1L)
                 .role(role)
                 .build();
     }
@@ -83,12 +69,13 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(userOf(Role.USER)));
+        given(userUtil.getCurrentUser()).willReturn(userOf(Role.USER));
         given(seatReservationRepository.countByUser(any())).willReturn(0L);
 
         reservationSeatService.execute(request());
 
         verify(seatReservationRepository).saveAndFlush(any(SeatEntity.class));
+        verify(applicationEventPublisher).publishEvent(new SeatChangeEvent(String.valueOf(SEAT_SECTION), SEAT_NUMBER, false));
     }
 
     @Test
@@ -96,12 +83,13 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(userOf(Role.PERFORMER)));
+        given(userUtil.getCurrentUser()).willReturn(userOf(Role.PERFORMER));
         given(seatReservationRepository.countByUser(any())).willReturn(2L);
 
         reservationSeatService.execute(request());
 
         verify(seatReservationRepository).saveAndFlush(any(SeatEntity.class));
+        verify(applicationEventPublisher).publishEvent(new SeatChangeEvent(String.valueOf(SEAT_SECTION), SEAT_NUMBER, false));
     }
 
     @Test
@@ -137,7 +125,7 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.empty());
+        given(userUtil.getCurrentUser()).willThrow(UserNotFoundException.class);
 
         assertThatThrownBy(() -> reservationSeatService.execute(request()))
                 .isInstanceOf(UserNotFoundException.class);
@@ -148,7 +136,7 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(userOf(Role.USER)));
+        given(userUtil.getCurrentUser()).willReturn(userOf(Role.USER));
         given(seatReservationRepository.countByUser(any())).willReturn(1L);
 
         assertThatThrownBy(() -> reservationSeatService.execute(request()))
@@ -160,7 +148,7 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(userOf(Role.PERFORMER)));
+        given(userUtil.getCurrentUser()).willReturn(userOf(Role.PERFORMER));
         given(seatReservationRepository.countByUser(any())).willReturn(3L);
 
         assertThatThrownBy(() -> reservationSeatService.execute(request()))
@@ -172,7 +160,7 @@ class ReservationSeatServiceImplTest {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         given(seatReservationRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
         given(seatBanRepository.existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(false);
-        given(userRepository.findById(USER_ID)).willReturn(Optional.of(userOf(Role.USER)));
+        given(userUtil.getCurrentUser()).willReturn(userOf(Role.USER));
         given(seatReservationRepository.countByUser(any())).willReturn(0L);
         given(seatReservationRepository.saveAndFlush(any())).willThrow(DataIntegrityViolationException.class);
 

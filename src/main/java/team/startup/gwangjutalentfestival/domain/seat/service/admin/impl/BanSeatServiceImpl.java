@@ -1,11 +1,12 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
+import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
-import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
@@ -15,23 +16,28 @@ import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatServi
 public class BanSeatServiceImpl implements BanSeatService {
 
     private final SeatBanRepository seatBanRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
     public void execute(BanSeatRequest request) {
-        Character seatSection = request.seatSection().charAt(0);
-
         if (seatBanRepository
-                .existsBySeatSectionAndSeatNumber(seatSection, request.seatNumber())) {
+                .existsBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())) {
             throw new SeatAlreadyReservedException();
         }
 
         SeatBanEntity seatBan = SeatBanEntity.builder()
-                .seatSection(seatSection)
+                .seatSection(request.seatSection())
                 .seatNumber(request.seatNumber())
                 .role(request.role())
                 .build();
 
         seatBanRepository.save(seatBan);
+
+        applicationEventPublisher.publishEvent(new SeatChangeEvent(
+                request.seatSection(),
+                request.seatNumber(),
+                false
+        ));
     }
 }

@@ -24,8 +24,8 @@ public class SeatBanEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "seat_section", nullable = false)
-    private Character seatSection;
+    @Column(name = "seat_section", nullable = false, length = 1)
+    private String seatSection;
 
     @Column(name = "seat_number", nullable = false)
     private Integer seatNumber;
