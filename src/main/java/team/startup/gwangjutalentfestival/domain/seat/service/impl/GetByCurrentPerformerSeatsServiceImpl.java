@@ -16,15 +16,16 @@ import java.util.List;
 public class GetByCurrentPerformerSeatsServiceImpl implements GetByCurrentPerformerSeatsService {
 
     private final SeatReservationRepository seatReservationRepository;
+    private final UserUtil userUtil;
 
     @Override
     @Transactional(readOnly = true)
     public List<GetSeatResponse> execute() {
-        List<SeatEntity> seats = seatReservationRepository.findAllByUserId(UserUtil.getCurrentUserId());
+        List<SeatEntity> seats = seatReservationRepository.findAllByUserId(userUtil.getCurrentUser().getId());
 
         return seats.stream()
                 .map(seat -> new GetSeatResponse(
-                        seat.getSeatSection().toString(),
+                        seat.getSeatSection(),
                         seat.getSeatNumber()
                 ))
                 .toList();
