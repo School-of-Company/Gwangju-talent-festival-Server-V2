@@ -46,4 +46,8 @@ public class TeamEntity {
     public void updateOrder(Integer order) {
         this.performOrder = order;
     }
+
+    public void updateTotalScore(Integer totalScore) {
+        this.totalScore = totalScore;
+    }
 }
