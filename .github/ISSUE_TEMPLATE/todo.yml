@@ -1,4 +1,6 @@
+name: "Todo"
 description: "해야할 것이 있나요??🤔"
+labels: 할일
 body:
   - type: textarea
     attributes:
