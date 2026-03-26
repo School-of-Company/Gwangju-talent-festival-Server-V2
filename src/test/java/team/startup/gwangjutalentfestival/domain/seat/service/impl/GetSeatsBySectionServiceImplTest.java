@@ -38,7 +38,7 @@ class GetSeatsBySectionServiceImplTest {
     @Mock
     private SeatBanCustomRepository seatBanCustomRepository;
 
-    private static final Character SECTION = 'A';
+    private static final String SECTION = "A";
     private static final Integer MAX_SEATS = 5;
 
     private UserEntity userOf(Role role) {
@@ -91,9 +91,9 @@ class GetSeatsBySectionServiceImplTest {
     @Test
     void 잘못된_구역_예외() {
         given(userUtil.getCurrentUser()).willReturn(userOf(Role.USER));
-        given(seatUtil.getMaxSeats('Z')).willThrow(InvalidSeatSectionException.class);
+        given(seatUtil.getMaxSeats("Z")).willThrow(InvalidSeatSectionException.class);
 
-        assertThatThrownBy(() -> getSeatsBySectionService.execute('Z'))
+        assertThatThrownBy(() -> getSeatsBySectionService.execute("Z"))
                 .isInstanceOf(InvalidSeatSectionException.class);
     }
 }

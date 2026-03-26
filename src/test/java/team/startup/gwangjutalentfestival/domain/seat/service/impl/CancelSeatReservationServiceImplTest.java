@@ -42,7 +42,7 @@ class CancelSeatReservationServiceImplTest {
 
     private SeatEntity seat() {
         return SeatEntity.builder()
-                .seatSection('A')
+                .seatSection("A")
                 .seatNumber(1)
                 .user(user())
                 .build();

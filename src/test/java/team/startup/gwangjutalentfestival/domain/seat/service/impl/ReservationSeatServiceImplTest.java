@@ -49,7 +49,7 @@ class ReservationSeatServiceImplTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private static final Character SEAT_SECTION = 'A';
+    private static final String SEAT_SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
     private static final Integer MAX_SEATS = 77;
 

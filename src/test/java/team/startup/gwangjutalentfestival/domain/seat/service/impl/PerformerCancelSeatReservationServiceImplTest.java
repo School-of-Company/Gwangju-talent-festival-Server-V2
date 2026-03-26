@@ -50,7 +50,7 @@ class PerformerCancelSeatReservationServiceImplTest {
 
     private SeatEntity seat() {
         return SeatEntity.builder()
-                .seatSection(SEAT_SECTION.charAt(0))
+                .seatSection(SEAT_SECTION)
                 .seatNumber(SEAT_NUMBER)
                 .user(user())
                 .build();

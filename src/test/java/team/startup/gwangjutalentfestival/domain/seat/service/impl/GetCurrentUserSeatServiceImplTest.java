@@ -37,7 +37,7 @@ class GetCurrentUserSeatServiceImplTest {
 
     private SeatEntity seat() {
         return SeatEntity.builder()
-                .seatSection('B')
+                .seatSection("B")
                 .seatNumber(5)
                 .user(user())
                 .build();
