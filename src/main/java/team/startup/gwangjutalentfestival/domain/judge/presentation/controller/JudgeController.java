@@ -50,7 +50,7 @@ public class JudgeController {
     @SecurityRequirement(name = "Authorization")
     @PatchMapping("/{temaId}")
     public ResponseEntity<Void> saveJudgementScore(
-            @PathVariable String temaId,
+            @PathVariable Long temaId,
             @RequestBody @Valid SaveJudgementScoreRequest request) {
         saveJudgementScoreService.execute(request,temaId);
         return ResponseEntity.noContent().build();
