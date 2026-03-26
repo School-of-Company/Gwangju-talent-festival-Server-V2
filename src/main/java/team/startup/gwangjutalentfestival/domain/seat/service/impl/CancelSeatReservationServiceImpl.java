@@ -31,7 +31,7 @@ public class CancelSeatReservationServiceImpl implements CancelSeatReservationSe
         seatReservationRepository.delete(seat);
 
         applicationEventPublisher.publishEvent(new SeatChangeEvent(
-                seat.getSeatSection().toString(),
+                seat.getSeatSection(),
                 seat.getSeatNumber(),
                 true
         ));

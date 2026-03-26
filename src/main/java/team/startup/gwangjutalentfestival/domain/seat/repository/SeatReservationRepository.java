@@ -16,5 +16,5 @@ public interface SeatReservationRepository extends JpaRepository<SeatEntity, Lon
 
     Optional<SeatEntity> findBySeatSectionAndSeatNumberAndUser(String seatSection, Integer seatNumber, UserEntity user);
 
-    List<SeatEntity> findAllByUserId(Long userId);
+    List<SeatEntity> findAllByUser(UserEntity user);
 }

@@ -27,7 +27,7 @@ public class GetCurrentUserSeatServiceImpl implements GetCurrentUserSeatService 
                 .orElseThrow(SeatNotFoundException::new);
 
         return new GetSeatResponse(
-                seat.getSeatSection().toString(),
+                seat.getSeatSection(),
                 seat.getSeatNumber()
         );
     }
