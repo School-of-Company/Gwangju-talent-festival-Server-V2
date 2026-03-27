@@ -55,6 +55,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
         int newTotal = total != null ? total : 0;
         if (newTotal > 100) {
             throw new JudgementTotalScoreExceededException();
+            //TODO 총 점수가 몇점인지 나오면 예외처리 구문 변경
         }
         team.updateTotalScore(newTotal);
     }
