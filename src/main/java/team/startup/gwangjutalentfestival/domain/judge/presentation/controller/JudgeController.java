@@ -48,11 +48,11 @@ public class JudgeController {
             @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음")
     })
     @SecurityRequirement(name = "Authorization")
-    @PatchMapping("/{temaId}")
+    @PatchMapping("/{teamId}")
     public ResponseEntity<Void> saveJudgementScore(
-            @PathVariable Long temaId,
+            @PathVariable Long teamId,
             @RequestBody @Valid SaveJudgementScoreRequest request) {
-        saveJudgementScoreService.execute(request,temaId);
+        saveJudgementScoreService.execute(request, teamId);
         return ResponseEntity.noContent().build();
     }
 
