@@ -13,14 +13,10 @@ import java.util.Optional;
 public interface JudgementRepository extends JpaRepository<JudgementEntity, Long> {
     Optional<JudgementEntity> findByTeamAndUser(TeamEntity team, UserEntity user);
 
-    @Query("SELECT SUM(" +
-            "j.expressionCommunicationScore + " +
-            "j.technicalCompletenessScore + " +
-            "j.creativityCompositionScore + " +
-            "j.stagePresencePerformanceScore + " +
-            "j.teamworkStageHarmonyScore) " +
-            "FROM JudgementEntity j" +
-            " WHERE j.team = :team")
+    @Query("""
+            SELECT SUM(j.expressionCommunicationScore + j.technicalCompletenessScore + j.creativityCompositionScore + j.stagePresencePerformanceScore + j.teamworkStageHarmonyScore)
+            FROM JudgementEntity j
+            WHERE j.team = :team""")
     Integer sumTotalScoreByTeam(@Param("team") TeamEntity team);
 
     List<JudgementEntity> findAllByUser(UserEntity user);
