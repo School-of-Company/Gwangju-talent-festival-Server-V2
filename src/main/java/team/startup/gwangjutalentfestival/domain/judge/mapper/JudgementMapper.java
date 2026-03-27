@@ -1,13 +1,11 @@
 package team.startup.gwangjutalentfestival.domain.judge.mapper;
 
-import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.enums.TeamStatus;
 
-@Component
-public class JudgementMapper {
+public final class JudgementMapper {
 
     private static final int DEFAULT_EXPRESSION_COMMUNICATION_SCORE = 40;
     private static final int DEFAULT_TECHNICAL_COMPLETENESS_SCORE = 30;
