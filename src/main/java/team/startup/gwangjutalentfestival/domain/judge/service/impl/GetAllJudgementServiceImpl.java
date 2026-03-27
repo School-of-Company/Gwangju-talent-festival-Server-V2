@@ -28,14 +28,14 @@ public class GetAllJudgementServiceImpl implements GetAllJudgementService {
     @Transactional(readOnly = true)
     public List<GetJudgementResponse> execute() {
         UserEntity user = userUtil.getCurrentUser();
-        List<JudgementEntity> judgement = judgementRepository.findAllByUser(user);
+        List<JudgementEntity> judgements = judgementRepository.findAllByUser(user);
         List<TeamEntity> teams = teamRepository.findAll();
 
-        Map<Long, JudgementEntity> judgementMap = judgement.stream()
+        Map<Long, JudgementEntity> judgementMap = judgements.stream()
                 .collect(Collectors.toMap(j -> j.getTeam().getId(), j -> j));
 
         return teams.stream()
-                .map(team -> JudgementMapper.toResponse(team,judgementMap.get(team.getId())))
+                .map(team -> JudgementMapper.toResponse(team, judgementMap.get(team.getId())))
                 .toList();
     }
 }
