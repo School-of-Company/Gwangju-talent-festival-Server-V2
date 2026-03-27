@@ -20,12 +20,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class GetAllJudgementServiceImpl implements GetAllJudgementService {
-    private static final int DEFAULT_EXPRESSION_COMMUNICATION_SCORE = 40;
-    private static final int DEFAULT_TECHNICAL_COMPLETENESS_SCORE = 30;
-    private static final int DEFAULT_CREATIVITY_COMPOSITION_SCORE = 30;
-    private static final int DEFAULT_STAGE_PRESENCE_PERFORMANCE_SCORE = 30;
-    private static final int DEFAULT_TEAMWORK_STAGE_HARMONY_SCORE = 30;
-
     private final JudgementRepository judgementRepository;
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
