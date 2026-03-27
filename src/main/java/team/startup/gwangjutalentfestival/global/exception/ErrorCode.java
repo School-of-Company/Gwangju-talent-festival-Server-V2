@@ -48,7 +48,7 @@ public enum ErrorCode {
     SEAT_BAN_NOT_FOUND(404, "금지되지 않은 상태의 자리입니다."),
 
     // Judge
-    INVALID_JUDGEMENT_SCORE(400, "점수는 0점 이상 40점 이하이어야 합니다."),
+    INVALID_JUDGEMENT_SCORE(400, "입력한 점수가 유효한 범위를 벗어났습니다."),
     JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
 
     // Google Sheets
