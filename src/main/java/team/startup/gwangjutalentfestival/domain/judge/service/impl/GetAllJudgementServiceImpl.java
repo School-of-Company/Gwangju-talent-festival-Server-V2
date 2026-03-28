@@ -1,0 +1,41 @@
+package team.startup.gwangjutalentfestival.domain.judge.service.impl;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
+import team.startup.gwangjutalentfestival.domain.judge.mapper.JudgementMapper;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
+import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
+import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
+import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
+import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
+import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.global.util.UserUtil;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class GetAllJudgementServiceImpl implements GetAllJudgementService {
+    private final JudgementRepository judgementRepository;
+    private final TeamRepository teamRepository;
+    private final UserUtil userUtil;
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<GetJudgementResponse> execute() {
+        UserEntity user = userUtil.getCurrentUser();
+        List<JudgementEntity> judgements = judgementRepository.findAllByUser(user);
+        List<TeamEntity> teams = teamRepository.findAll();
+
+        Map<Long, JudgementEntity> judgementMap = judgements.stream()
+                .collect(Collectors.toMap(j -> j.getTeam().getId(), j -> j));
+
+        return teams.stream()
+                .map(team -> JudgementMapper.toResponse(team, judgementMap.get(team.getId())))
+                .toList();
+    }
+}

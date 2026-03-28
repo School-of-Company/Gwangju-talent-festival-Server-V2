@@ -47,6 +47,10 @@ public enum ErrorCode {
     SEAT_NOT_FOUND(404, "예약된 좌석이 없습니다."),
     SEAT_BAN_NOT_FOUND(404, "금지되지 않은 상태의 자리입니다."),
 
+    // Judge
+    INVALID_JUDGEMENT_SCORE(400, "입력한 점수가 유효한 범위를 벗어났습니다."),
+    JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
+
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),

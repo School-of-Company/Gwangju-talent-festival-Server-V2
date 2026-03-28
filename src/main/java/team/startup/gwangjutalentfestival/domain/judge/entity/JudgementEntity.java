@@ -50,4 +50,18 @@ public class JudgementEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    public void updateScore(
+            Integer expressionCommunicationScore,
+            Integer technicalCompletenessScore,
+            Integer creativityCompositionScore,
+            Integer stagePresencePerformanceScore,
+            Integer teamworkStageHarmonyScore
+    ){
+        this.expressionCommunicationScore = expressionCommunicationScore;
+        this.technicalCompletenessScore = technicalCompletenessScore;
+        this.creativityCompositionScore = creativityCompositionScore;
+        this.stagePresencePerformanceScore = stagePresencePerformanceScore;
+        this.teamworkStageHarmonyScore = teamworkStageHarmonyScore;
+    }
 }
