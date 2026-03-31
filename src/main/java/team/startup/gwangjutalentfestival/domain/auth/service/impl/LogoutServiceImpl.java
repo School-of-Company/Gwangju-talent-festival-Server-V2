@@ -33,8 +33,9 @@ public class LogoutServiceImpl implements LogoutService {
             try {
                 Claims claims = jwtProvider.getClaimsAllowExpired(token);
                 long remaining = jwtProvider.getRemainingExpireTime(claims);
-                if (remaining > 0) {
-                    tokenBlacklistRepository.save(claims.getId(), remaining);
+                String jti = claims.getId();
+                if (jti != null && remaining > 0) {
+                    tokenBlacklistRepository.save(jti, remaining);
                 }
             } catch (JwtException e) {
                 throw new InvalidAccessTokenException();
