@@ -46,7 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             try {
                 Claims claims = jwtProvider.getClaims(token);
-                if (tokenBlacklistRepository.isBlacklisted(claims.getId())) {
+                String jti = claims.getId();
+                if (!jwtProvider.isAccessToken(claims) || (jti != null && tokenBlacklistRepository.isBlacklisted(jti))) {
                     setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                     return;
                 }
