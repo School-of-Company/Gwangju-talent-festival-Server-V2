@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import team.startup.gwangjutalentfestival.domain.auth.repository.TokenBlacklistRepository;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.auth.CustomUserDetails;
 import team.startup.gwangjutalentfestival.global.exception.ErrorCode;
@@ -27,6 +28,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
+    private final TokenBlacklistRepository tokenBlacklistRepository;
     private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
 
@@ -38,9 +40,13 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = jwtProvider.resolveToken(request);
 
         if (token != null) {
+            if (!jwtProvider.validateToken(token)) {
+                setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+                return;
+            }
             try {
                 Claims claims = jwtProvider.getClaims(token);
-                if (!jwtProvider.isAccessToken(claims)) {
+                if (tokenBlacklistRepository.isBlacklisted(claims.getId())) {
                     setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                     return;
                 }
