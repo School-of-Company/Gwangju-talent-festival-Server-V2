@@ -77,8 +77,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰")
     })
     @DeleteMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        logoutService.execute();
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorization) {
+        logoutService.execute(authorization.substring("Bearer ".length()));
         return ResponseEntity.noContent().build();
     }
 
