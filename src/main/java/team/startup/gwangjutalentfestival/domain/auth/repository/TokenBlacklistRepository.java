@@ -23,9 +23,9 @@ public class TokenBlacklistRepository {
         );
     }
 
-    public boolean isBlacklisted(String token) {
+    public boolean isBlacklisted(String jti) {
         try {
-            return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + token));
+            return Boolean.TRUE.equals(redisTemplate.hasKey(BLACKLIST_PREFIX + jti));
         } catch (Exception e) {
             log.error("Redis 블랙리스트 조회 실패", e);
             return false;
