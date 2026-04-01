@@ -78,7 +78,8 @@ public class AuthController {
     })
     @DeleteMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorization) {
-        logoutService.execute(authorization.substring("Bearer ".length()));
+        String bearer = authorization.startsWith("Bearer ") ? authorization.substring(7) : "";
+        logoutService.execute(bearer); logoutService.execute(bearer);
         return ResponseEntity.noContent().build();
     }
 
