@@ -62,6 +62,10 @@ public class JwtFilter extends OncePerRequestFilter {
             } catch (JwtException e) {
                 setErrorResponse(response, ErrorCode.INVALID_TOKEN);
                 return;
+            } catch (Exception e) {
+                log.error("인증 처리 중 오류 발생", e);
+                setErrorResponse(response, ErrorCode.INVALID_TOKEN);
+                return;
             }
         }
 
