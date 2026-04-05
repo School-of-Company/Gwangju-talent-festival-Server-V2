@@ -9,6 +9,7 @@ import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.SloganSheetRowData;
 import team.startup.gwangjutalentfestival.domain.slogan.repository.SloganRepository;
+import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleSheetsAdapter;
 
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ public class SloganSheetSyncScheduler {
         List<SloganEntity> slogans = sloganRepository
                 .findTop50BySheetSyncStatusInAndNextRetryAtBeforeOrderByIdAsc(
                         List.of(SheetSyncStatus.PENDING, SheetSyncStatus.REJECTED),
-                        LocalDateTime.now());
+                        LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID));
 
         if (slogans.isEmpty()) {
             return;
@@ -69,7 +70,7 @@ public class SloganSheetSyncScheduler {
                 ? "Unknown error"
                 : errorMessage.substring(0, Math.min(errorMessage.length(), ERROR_MESSAGE_MAX_LENGTH));
 
-        LocalDateTime nextRetryAt = LocalDateTime.now().plusSeconds(30);
+        LocalDateTime nextRetryAt = LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID).plusSeconds(30);
 
         for (SloganEntity sloganEntity : slogans) {
             if (sloganEntity.getRetryCount() >= MAX_RETRY_COUNT) {

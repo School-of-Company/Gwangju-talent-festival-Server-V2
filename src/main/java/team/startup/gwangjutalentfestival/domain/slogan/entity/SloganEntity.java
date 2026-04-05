@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.domain.slogan.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
+import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 
 import java.time.LocalDateTime;
 
@@ -61,7 +62,7 @@ public class SloganEntity {
 
     public void markDone() {
         this.sheetSyncStatus = SheetSyncStatus.COMPLETED;
-        this.syncedAt = LocalDateTime.now();
+        this.syncedAt = LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID);
     }
 
     public void markFailed(LocalDateTime nextRetryAt, String lastError) {
