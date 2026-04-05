@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -68,6 +69,7 @@ public class JwtProvider {
                 .setSubject(String.valueOf(userId))
                 .claim(ROLE, role.name())
                 .claim(TOKEN_TYPE, type)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -123,6 +125,22 @@ public class JwtProvider {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
+    }
+
+    public long getRemainingExpireTime(Claims claims) {
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
+
+    public Claims getClaimsAllowExpired(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        }
     }
 
     private LocalDateTime toLocalDateTime(Date date) {
