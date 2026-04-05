@@ -69,7 +69,7 @@ public class JwtProvider {
                 .setSubject(String.valueOf(userId))
                 .claim(ROLE, role.name())
                 .claim(TOKEN_TYPE, type)
-                .setId(UUID.randomUUID().toString())  // 추가
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(secretKey, Jwts.SIG.HS256)
