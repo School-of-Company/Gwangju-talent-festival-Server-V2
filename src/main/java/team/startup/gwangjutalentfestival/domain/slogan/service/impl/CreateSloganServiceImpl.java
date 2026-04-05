@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.exception.DuplicatePhoneNumberException;
+import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.exception.SloganSubmissionPeriodException;
@@ -39,10 +40,11 @@ public class CreateSloganServiceImpl implements CreateSloganService {
                 .classNum(request.classNum())
                 .name(request.name())
                 .phoneNumber(request.phoneNumber())
+                .sheetSyncStatus(SheetSyncStatus.PENDING)
+                .nextRetryAt(LocalDateTime.now())
                 .build();
 
         sloganRepository.save(slogan);
-        googleSheetsAdapter.appendSlogan(request);
     }
 
     private void validateDuplicatePhoneNumber(String phoneNumber) {
