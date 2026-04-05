@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.SloganSheetRowData;
@@ -25,30 +25,34 @@ public class SloganSheetSyncScheduler {
 
     private final SloganRepository sloganRepository;
     private final GoogleSheetsAdapter googleSheetsAdapter;
+    private final TransactionTemplate transactionTemplate;
 
-    @Transactional
     @Scheduled(fixedDelay = 10000)
     public void execute() {
-        List<SloganEntity> slogans = sloganRepository
-                .findTop50BySheetSyncStatusInAndNextRetryAtBeforeOrderByIdAsc(
-                        List.of(SheetSyncStatus.PENDING, SheetSyncStatus.REJECTED),
-                        LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID));
+        List<SloganEntity> slogans = transactionTemplate.execute(status -> {
+            List<SloganEntity> fetched = sloganRepository
+                    .findTop50BySheetSyncStatusInAndNextRetryAtBeforeOrderByIdAsc(
+                            List.of(SheetSyncStatus.PENDING, SheetSyncStatus.REJECTED),
+                            LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID));
+            fetched.forEach(SloganEntity::processSheetSyncStatus);
+            return fetched;
+        });
 
-        if (slogans.isEmpty()) {
+        if (slogans == null || slogans.isEmpty()) {
             return;
         }
 
+        List<SloganSheetRowData> rows = slogans.stream()
+                .map(this::toRowData)
+                .toList();
+
         try {
-            slogans.forEach(SloganEntity::processSheetSyncStatus);
-
-            List<SloganSheetRowData> rows = slogans.stream()
-                    .map(this::toRowData)
-                    .toList();
-
             googleSheetsAdapter.appendSlogan(rows);
-            slogans.forEach(SloganEntity::markDone);
+            transactionTemplate.executeWithoutResult(status ->
+                    slogans.forEach(SloganEntity::markDone));
         } catch (Exception e) {
-            markFailed(slogans, e);
+            transactionTemplate.executeWithoutResult(status ->
+                    markFailed(slogans, e));
         }
     }
 
