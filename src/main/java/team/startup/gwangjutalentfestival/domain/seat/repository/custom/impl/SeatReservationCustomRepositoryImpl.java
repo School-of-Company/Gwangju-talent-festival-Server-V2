@@ -2,8 +2,6 @@ package team.startup.gwangjutalentfestival.domain.seat.repository.custom.impl;
 
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import team.startup.gwangjutalentfestival.domain.seat.entity.QSeatEntity;
@@ -19,9 +17,6 @@ import java.util.Set;
 public class SeatReservationCustomRepositoryImpl implements SeatReservationCustomRepository {
 
     private final JPAQueryFactory queryFactory;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     private static final QSeatEntity seat = QSeatEntity.seatEntity;
 
@@ -46,14 +41,4 @@ public class SeatReservationCustomRepositoryImpl implements SeatReservationCusto
                 .fetch());
     }
 
-    @Override
-    public int checkAvailability(String seatSection, Integer seatNumber) {
-        Object result = entityManager.createNativeQuery(
-                "SELECT EXISTS(SELECT 1 FROM seat WHERE seat_section = :section AND seat_number = :number)" +
-                " + EXISTS(SELECT 1 FROM seat_ban WHERE seat_section = :section AND seat_number = :number) * 2"
-        ).setParameter("section", seatSection)
-         .setParameter("number", seatNumber)
-         .getSingleResult();
-        return ((Number) result).intValue();
-    }
 }

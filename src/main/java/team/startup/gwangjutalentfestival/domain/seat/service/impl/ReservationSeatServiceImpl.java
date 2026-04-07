@@ -13,7 +13,6 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInS
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationLimitExceededException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
-import team.startup.gwangjutalentfestival.domain.seat.repository.custom.SeatReservationCustomRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
@@ -25,7 +24,6 @@ import static team.startup.gwangjutalentfestival.domain.user.enums.Role.PERFORME
 public class ReservationSeatServiceImpl implements ReservationSeatService {
 
     private final SeatReservationRepository seatReservationRepository;
-    private final SeatReservationCustomRepository seatReservationCustomRepository;
     private final SeatUtil seatUtil;
     private final UserUtil userUtil;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -46,7 +44,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
             throw new SeatNotExistsInSectionException();
         }
 
-        int availability = seatReservationCustomRepository.checkAvailability(seatSection, seatNumber);
+        int availability = seatReservationRepository.checkAvailability(seatSection, seatNumber);
         if ((availability & RESERVED) != 0) throw new SeatAlreadyReservedException();
         if ((availability & BANNED) != 0) throw new SeatBannedException();
 
