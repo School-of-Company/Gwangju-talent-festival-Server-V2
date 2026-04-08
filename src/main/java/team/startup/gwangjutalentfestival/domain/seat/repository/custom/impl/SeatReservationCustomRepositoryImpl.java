@@ -40,4 +40,5 @@ public class SeatReservationCustomRepositoryImpl implements SeatReservationCusto
                 .where(seat.seatSection.eq(seatSection))
                 .fetch());
     }
+
 }

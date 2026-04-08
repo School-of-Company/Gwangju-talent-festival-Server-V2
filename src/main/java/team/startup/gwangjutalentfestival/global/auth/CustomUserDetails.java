@@ -15,6 +15,7 @@ public class CustomUserDetails implements UserDetails {
     private final Long userId;
     private final String phoneNumber;
     private final String password;
+    @Getter
     private final Role role;
 
     private CustomUserDetails(Long userId, String phoneNumber, String password, Role role) {
