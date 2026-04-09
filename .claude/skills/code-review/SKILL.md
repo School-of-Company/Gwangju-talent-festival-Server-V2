@@ -29,7 +29,8 @@ Read each changed `.java` file with the Read tool for detailed analysis.
 - [ ] Entity has `@Getter`, `@Builder`, `@NoArgsConstructor(access = AccessLevel.PROTECTED)`, `@AllArgsConstructor(access = AccessLevel.PROTECTED)`?
 - [ ] Domain methods used instead of direct field modification (setter)? (e.g. `updateStatus()`)
 - [ ] Service separated into interface + `Impl` implementation?
-- [ ] Core service method named `execute()`?
+- [ ] Service methods are cohesive — all methods belong to the same responsibility? (unrelated logic → separate service class)
+- [ ] Single-purpose service uses `execute()` as the core method name; multi-method services use descriptive method names?
 - [ ] Constructor injection used? (`@RequiredArgsConstructor` + `final` fields)
 - [ ] No unnecessary comments?
 
@@ -63,7 +64,7 @@ Read each changed `.java` file with the Read tool for detailed analysis.
 - [ ] Commit message format follows `type :: Korean description`?
 - [ ] Type is one of `add` / `update` / `fix` / `delete` / `docs` / `test` / `merge` / `init`?
 - [ ] Description is descriptive, not noun-ending? (e.g. `엔티티 필드 추가`, `쿼리 수 최소화`)
-- [ ] Commits split per file?
+- [ ] Commits split by logical unit of change? (related files together, unrelated changes separate)
 
 ### Security
 - [ ] No hardcoded secrets (passwords, API keys, etc.)?

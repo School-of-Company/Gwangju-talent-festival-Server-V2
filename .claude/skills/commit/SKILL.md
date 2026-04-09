@@ -43,11 +43,14 @@ Format: `type :: description`
 ## Commit Flow
 
 1. Inspect changes: `git status`, `git diff`
-2. For each changed file, create one commit:
-    - Stage only that single file: `git add <file>`
-    - Write a commit message that describes the change in that file
+2. Group changed files by logical unit of change:
+    - Same feature or bug fix → one commit
+    - Different concerns (e.g. entity + service + controller for one feature) → one commit
+    - Unrelated changes → separate commits
+3. For each logical group:
+    - Stage the relevant files: `git add <file1> <file2> ...`
+    - Write a commit message that describes the change as a whole
     - `git commit -m "message"`
-3. Repeat for every changed file
 4. Verify with `git log --oneline -n <count>`
 
-> **Rule**: One file = One commit. Never stage multiple files in a single commit.
+> **Rule**: One logical change = One commit. Files that must change together belong in the same commit. Unrelated changes must be split.
