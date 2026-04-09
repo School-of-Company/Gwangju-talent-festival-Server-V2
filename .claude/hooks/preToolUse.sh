@@ -5,13 +5,13 @@
 if [[ "$TOOL_NAME" == "Bash" ]]; then
     COMMAND="$TOOL_PARAMS_COMMAND"
     BLOCKED_PATTERNS=(
-        "rm -rf /"
-        "sudo rm -rf"
-        "> /dev/"
-        "dd if="
-        "mkfs"
-        "curl.*\| sh"
-        "wget.*\| sh"
+        "rm[[:space:]]+-rf[[:space:]]+/"
+        "sudo[[:space:]]+rm[[:space:]]+-rf"
+        ">[[:space:]]*/dev/"
+        "dd[[:space:]]+if="
+        "mkfs[[:space:]]+"
+        "curl[[:space:]]+.*\|[[:space:]]*sh"
+        "wget[[:space:]]+.*\|[[:space:]]*sh"
     )
     for pattern in "${BLOCKED_PATTERNS[@]}"; do
         if [[ "$COMMAND" =~ $pattern ]]; then
