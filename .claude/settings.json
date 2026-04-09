@@ -8,7 +8,12 @@
           {
             "type": "command",
             "command": ".claude/hooks/preToolUse.sh"
-          },
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(git commit*)",
+        "hooks": [
           {
             "type": "command",
             "command": ".claude/hooks/preCommit.sh"

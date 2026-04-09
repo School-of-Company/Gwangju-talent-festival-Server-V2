@@ -2,6 +2,11 @@
 # .claude/hooks/preCommit.sh
 # Run compileJava before commit if any staged file is a Java file
 
+# Only run for git commit commands
+if [[ "$TOOL_PARAMS_COMMAND" != *"git commit"* ]]; then
+    exit 0
+fi
+
 STAGED_JAVA=$(git diff --cached --name-only | grep "\.java$")
 
 if [[ -n "$STAGED_JAVA" ]]; then
