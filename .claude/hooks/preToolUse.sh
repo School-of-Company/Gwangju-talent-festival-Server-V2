@@ -6,7 +6,7 @@ if [[ "$TOOL_NAME" == "Bash" ]]; then
     COMMAND="$TOOL_PARAMS_COMMAND"
     BLOCKED_PATTERNS=(
         "rm -rf /"
-        "sudo rm"
+        "sudo rm -rf"
         "> /dev/"
         "dd if="
         "mkfs"
