@@ -1,7 +1,7 @@
 ---
 name: resolve-pr-comments
 description: For each inline PR review comment, judge whether it has been resolved in the current branch diff and reply with the resolving commit hash. Use after addressing PR feedback.
-allowed-tools: Bash(bash *get-pr-data.sh:*), Bash(gh api:*), Bash(gh pr view:*), Bash(gh repo:*), Bash(git log:*), Bash(rm:*), Read
+allowed-tools: Bash(bash *get-pr-data.sh:*), Bash(gh api:*), Bash(gh pr view:*), Bash(gh repo:*), Bash(git log:*), Bash(git push:*), Bash(rm:*), Read
 ---
 
 ## Step 1 — Collect PR Data
@@ -38,7 +38,13 @@ git log "origin/$(gh pr view --json baseRefName -q .baseRefName)..HEAD" --follow
 
 Select the 7-character short hash of the most relevant commit.
 
-## Step 4 — Post Reply (resolved only)
+## Step 4 — Push & Post Reply (resolved only)
+
+First push any unpushed commits, then post the reply.
+
+```bash
+git push
+```
 
 Always quote variables to prevent shell injection. `path` and `comment_id` come from external PR data and may contain special characters.
 
