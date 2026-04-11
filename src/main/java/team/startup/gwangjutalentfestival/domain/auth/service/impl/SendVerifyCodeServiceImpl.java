@@ -47,7 +47,7 @@ public class SendVerifyCodeServiceImpl implements SendVerifyCodeService {
     }
 
     private void validateSendCount(String phoneNumber) {
-        String key = smsVerifyProperties.getVerifyCountKeyPrefix() + phoneNumber;
+        String key = smsVerifyProperties.getVerifyCountKey(phoneNumber);
         Long count = redisTemplate.opsForValue().increment(key);
         if (count == 1) {
             redisTemplate.expire(key, smsVerifyProperties.getVerifyCountTtl(), TimeUnit.SECONDS);

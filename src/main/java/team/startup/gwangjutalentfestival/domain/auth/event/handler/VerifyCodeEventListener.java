@@ -30,7 +30,7 @@ public class VerifyCodeEventListener {
         } catch (RuntimeException e) {
             log.error("[SMS 전송 실패] phoneNumber={}, message={}", event.phoneNumber(), e.getMessage(), e);
             verifyCodeRepository.deleteById(event.phoneNumber());
-            String key = smsVerifyProperties.getVerifyCountKeyPrefix() + event.phoneNumber();
+            String key = smsVerifyProperties.getVerifyCountKey(event.phoneNumber());
             Long count = redisTemplate.opsForValue().decrement(key);
             if (count != null && count <= 0) {
                 redisTemplate.delete(key);
