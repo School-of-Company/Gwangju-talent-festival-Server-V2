@@ -32,7 +32,7 @@ public class VerifyCodeEventListener {
             verifyCodeRepository.deleteById(event.phoneNumber());
             String key = smsVerifyProperties.getVerifyCountKeyPrefix() + event.phoneNumber();
             Long count = redisTemplate.opsForValue().decrement(key);
-            if (count != null && count < 0) {
+            if (count != null && count <= 0) {
                 redisTemplate.delete(key);
             }
         }
