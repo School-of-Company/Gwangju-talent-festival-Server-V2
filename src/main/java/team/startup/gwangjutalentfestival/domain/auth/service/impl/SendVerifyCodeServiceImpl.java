@@ -1,32 +1,30 @@
 package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import team.startup.gwangjutalentfestival.global.sms.exception.SmsSendFailedException;
 import team.startup.gwangjutalentfestival.domain.auth.entity.VerifyCode;
+import team.startup.gwangjutalentfestival.domain.auth.event.VerifyCodeCreatedEvent;
 import team.startup.gwangjutalentfestival.domain.auth.exception.AlreadyVerifyCodeExistsException;
 import team.startup.gwangjutalentfestival.domain.auth.presentation.data.request.SendVerifyCodeRequest;
 import team.startup.gwangjutalentfestival.domain.auth.repository.VerifyCodeRepository;
 import team.startup.gwangjutalentfestival.domain.auth.service.SendVerifyCodeService;
-import team.startup.gwangjutalentfestival.global.sms.adapter.SmsAdapter;
 import team.startup.gwangjutalentfestival.global.sms.properties.SmsVerifyProperties;
 import team.startup.gwangjutalentfestival.global.util.RandomUtil;
 
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SendVerifyCodeServiceImpl implements SendVerifyCodeService {
 
-    private final SmsAdapter smsAdapter;
     private final VerifyCodeRepository verifyCodeRepository;
     private final RandomUtil randomUtil;
     private final SmsVerifyProperties smsVerifyProperties;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -45,13 +43,7 @@ public class SendVerifyCodeServiceImpl implements SendVerifyCodeService {
                 .ttl(smsVerifyProperties.getVerifyCodeTtl())
                 .build());
 
-        try {
-            smsAdapter.sendSms(request.phoneNumber(), code);
-        } catch (RuntimeException e) {
-            log.error("[SMS 전송 실패] phoneNumber={}, message={}", request.phoneNumber(), e.getMessage(), e);
-            verifyCodeRepository.deleteById(request.phoneNumber());
-            throw new SmsSendFailedException();
-        }
+        applicationEventPublisher.publishEvent(new VerifyCodeCreatedEvent(request.phoneNumber(), code));
     }
 
     private void validateSendCount(String phoneNumber) {
