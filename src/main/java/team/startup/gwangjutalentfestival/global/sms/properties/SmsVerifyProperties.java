@@ -12,4 +12,8 @@ public class SmsVerifyProperties {
     private long verifyCodeTtl;
     private long verifyCountTtl;
     private String verifyCountKeyPrefix;
+
+    public String getVerifyCountKey(String phoneNumber) {
+        return verifyCountKeyPrefix + phoneNumber;
+    }
 }
