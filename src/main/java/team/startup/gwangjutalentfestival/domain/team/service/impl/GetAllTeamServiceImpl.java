@@ -1,11 +1,13 @@
 package team.startup.gwangjutalentfestival.domain.team.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.GetTeamResponse;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.team.service.GetAllTeamService;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ public class GetAllTeamServiceImpl implements GetAllTeamService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.TEAM_ALL, unless = "#result.isEmpty()")
     public List<GetTeamResponse> execute() {
         return teamRepository.findAllByOrderByPerformOrderAsc()
                 .stream()
