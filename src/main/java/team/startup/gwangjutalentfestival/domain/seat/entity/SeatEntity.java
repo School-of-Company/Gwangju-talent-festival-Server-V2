@@ -18,6 +18,9 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
         name = "seat",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"seat_section", "seat_number"})
+        },
+        indexes = {
+                @Index(name = "idx_seat_user_id", columnList = "user_id")
         }
 )
 public class SeatEntity {

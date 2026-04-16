@@ -12,6 +12,9 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
         name = "seat_ban",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"seat_section", "seat_number"})
+        },
+        indexes = {
+                @Index(name = "idx_seat_ban_role", columnList = "role")
         }
 )
 @Getter

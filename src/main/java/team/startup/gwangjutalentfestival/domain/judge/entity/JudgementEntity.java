@@ -19,6 +19,9 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
         name = "judgement",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = {"team_id", "user_id"})
+        },
+        indexes = {
+                @Index(name = "idx_judgement_user_id", columnList = "user_id")
         }
 )
 public class JudgementEntity {
