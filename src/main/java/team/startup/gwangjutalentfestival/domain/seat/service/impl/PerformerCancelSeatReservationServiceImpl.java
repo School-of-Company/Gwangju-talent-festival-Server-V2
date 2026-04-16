@@ -1,9 +1,12 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
@@ -23,6 +26,10 @@ public class PerformerCancelSeatReservationServiceImpl implements PerformerCance
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.SEATS_ALL, allEntries = true),
+            @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
+    })
     public void execute(PerformerCancelSeatReservationRequest request) {
         UserEntity user = userUtil.getCurrentUser();
 
