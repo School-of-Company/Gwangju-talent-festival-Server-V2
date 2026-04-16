@@ -1,7 +1,9 @@
 package team.startup.gwangjutalentfestival.domain.team.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
@@ -23,6 +25,7 @@ public class UpdateTeamOrderServiceImpl implements UpdateTeamOrderService {
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.TEAM_ALL, allEntries = true)
     public void execute(List<TeamOrderItem> orders) {
         List<Long> teamIds = orders.stream()
                 .map(TeamOrderItem::teamId)

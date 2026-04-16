@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetAllSeatsResponse;
@@ -28,8 +30,9 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.SEATS_ALL, key = "@userUtil.currentUserRole()")
     public GetAllSeatsResponse execute() {
-        Role role = userUtil.getCurrentUser().getRole();
+        Role role = userUtil.currentUserRole();
 
         List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();

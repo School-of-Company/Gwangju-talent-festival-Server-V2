@@ -1,7 +1,9 @@
 package team.startup.gwangjutalentfestival.domain.judge.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgementTotalScoreExceededException;
@@ -24,6 +26,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.TEAM_RANKING, allEntries = true)
     public void execute(SaveJudgementScoreRequest request, Long teamId) {
         UserEntity user = userUtil.getCurrentUser();
         TeamEntity team = teamRepository.findById(teamId)

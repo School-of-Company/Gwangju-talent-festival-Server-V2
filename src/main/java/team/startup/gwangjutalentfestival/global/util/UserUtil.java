@@ -37,4 +37,12 @@ public class UserUtil {
     public UserEntity getCurrentUserRef() {
         return userRepository.getReferenceById(getCurrentUserId());
     }
+
+    public Long currentUserId() {
+        return getCurrentUserId();
+    }
+
+    public Role currentUserRole() {
+        return getCurrentUserRole();
+    }
 }

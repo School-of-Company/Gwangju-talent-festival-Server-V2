@@ -1,11 +1,13 @@
 package team.startup.gwangjutalentfestival.domain.team.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.GetTeamRankingResponse;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.team.service.GetTeamRankingService;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ public class GetTeamRankingServiceImpl implements GetTeamRankingService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.TEAM_RANKING, unless = "#result.isEmpty()")
     public List<GetTeamRankingResponse> execute() {
         return teamRepository.getRanking();
     }

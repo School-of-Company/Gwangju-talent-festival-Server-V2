@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatsBySectionResponse;
@@ -26,8 +28,9 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.currentUserRole()")
     public GetSeatsBySectionResponse execute(String section) {
-        Role role = userUtil.getCurrentUser().getRole();
+        Role role = userUtil.currentUserRole();
         Integer seatLastNumber = seatUtil.getMaxSeats(section);
 
         Set<Integer> reservedSeatNumbers = seatReservationCustomRepository.findSeatNumbersBySeatSection(section);
