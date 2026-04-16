@@ -13,7 +13,6 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.custom.SeatRese
 import team.startup.gwangjutalentfestival.domain.seat.service.GetAllSeatsService;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
-import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,7 +31,7 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConfig.SEATS_ALL, key = "@userUtil.currentUserRole()")
     public GetAllSeatsResponse execute() {
-        Role role = UserUtil.getCurrentUserRole();
+        Role role = userUtil.currentUserRole();
 
         List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();

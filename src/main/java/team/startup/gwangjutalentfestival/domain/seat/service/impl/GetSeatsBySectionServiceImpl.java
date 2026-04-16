@@ -11,7 +11,6 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.custom.SeatRese
 import team.startup.gwangjutalentfestival.domain.seat.service.GetSeatsBySectionService;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
-import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.util.List;
 import java.util.Set;
@@ -30,7 +29,7 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.currentUserRole()")
     public GetSeatsBySectionResponse execute(String section) {
-        Role role = UserUtil.getCurrentUserRole();
+        Role role = userUtil.currentUserRole();
         Integer seatLastNumber = seatUtil.getMaxSeats(section);
 
         Set<Integer> reservedSeatNumbers = seatReservationCustomRepository.findSeatNumbersBySeatSection(section);
