@@ -11,6 +11,7 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.custom.SeatRese
 import team.startup.gwangjutalentfestival.domain.seat.service.GetSeatsBySectionService;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
+import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.util.List;
 import java.util.Set;
