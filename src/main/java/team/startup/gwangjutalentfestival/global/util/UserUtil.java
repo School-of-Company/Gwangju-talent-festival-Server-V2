@@ -1,8 +1,6 @@
 package team.startup.gwangjutalentfestival.global.util;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
-import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
@@ -31,7 +29,6 @@ public class UserUtil {
                 .getRole();
     }
 
-    @Cacheable(value = CacheConfig.USERS_CURRENT, key = "@userUtil.currentUserId()")
     public UserEntity getCurrentUser() {
         return userRepository.findById(getCurrentUserId())
                 .orElseThrow(UserNotFoundException::new);

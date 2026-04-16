@@ -30,7 +30,7 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.currentUserRole()")
     public GetSeatsBySectionResponse execute(String section) {
-        Role role = userUtil.getCurrentUser().getRole();
+        Role role = UserUtil.getCurrentUserRole();
         Integer seatLastNumber = seatUtil.getMaxSeats(section);
 
         Set<Integer> reservedSeatNumbers = seatReservationCustomRepository.findSeatNumbersBySeatSection(section);

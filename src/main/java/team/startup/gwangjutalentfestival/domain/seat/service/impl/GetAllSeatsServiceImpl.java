@@ -32,7 +32,7 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConfig.SEATS_ALL, key = "@userUtil.currentUserRole()")
     public GetAllSeatsResponse execute() {
-        Role role = userUtil.getCurrentUser().getRole();
+        Role role = UserUtil.getCurrentUserRole();
 
         List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();
