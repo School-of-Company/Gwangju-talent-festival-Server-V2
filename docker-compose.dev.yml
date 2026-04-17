@@ -1,6 +1,6 @@
 services:
-  mariadb:
-    image: mysql:latest
+  mysql:
+    image: mysql:8.0
     environment:
       - MYSQL_DATABASE=gwangjutalentfestival
       - MYSQL_ROOT_PASSWORD=1234
@@ -13,7 +13,7 @@ services:
       retries: 10
 
   redis:
-    image: redis:latest
+    image: redis:7.4
     ports:
       - "6379:6379"
     healthcheck:
