@@ -1,0 +1,23 @@
+services:
+  mariadb:
+    image: mysql:latest
+    environment:
+      - MYSQL_DATABASE=gwangjutalentfestival
+      - MYSQL_ROOT_PASSWORD=1234
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p1234"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
