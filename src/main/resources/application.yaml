@@ -3,9 +3,9 @@ spring:
     name: gwangjutalentfestival
 
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   data:
@@ -20,6 +20,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  docker:
+    compose:
+      enabled: true
+      file: docker-compose.dev.yml
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:180000000}
