@@ -15,17 +15,14 @@ public abstract class AbstractSseEmitterManager<K> {
 
     public SseEmitter addEmitter(K key) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
-        emitters.put(key, emitter);
+        SseEmitter oldEmitter = emitters.put(key, emitter);
+        if (oldEmitter != null) {
+            oldEmitter.complete();
+        }
 
-        emitter.onCompletion(() -> emitters.remove(key));
-        emitter.onTimeout(() -> {
-            emitter.complete();
-            emitters.remove(key);
-        });
-        emitter.onError(e -> {
-            emitter.completeWithError(e);
-            emitters.remove(key);
-        });
+        emitter.onCompletion(() -> emitters.remove(key, emitter));
+        emitter.onTimeout(() -> emitters.remove(key, emitter));
+        emitter.onError(e -> emitters.remove(key, emitter));
 
         return emitter;
     }
