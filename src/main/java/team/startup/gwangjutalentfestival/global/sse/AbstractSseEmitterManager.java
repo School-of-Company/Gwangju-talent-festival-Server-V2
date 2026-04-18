@@ -11,18 +11,22 @@ public abstract class AbstractSseEmitterManager<K> {
 
     private static final long SSE_TIMEOUT_MILLIS = 60 * 60 * 1000L;
 
-    protected final Map<K, SseEmitter> emitters = new ConcurrentHashMap<>();
+    private final Map<K, SseEmitter> emitters = new ConcurrentHashMap<>();
 
     public SseEmitter addEmitter(K key) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
+
+        emitter.onCompletion(() -> emitters.remove(key, emitter));
+        emitter.onTimeout(() -> {
+            emitter.complete();
+            emitters.remove(key, emitter);
+        });
+        emitter.onError(e -> emitters.remove(key, emitter));
+
         SseEmitter oldEmitter = emitters.put(key, emitter);
         if (oldEmitter != null) {
             oldEmitter.complete();
         }
-
-        emitter.onCompletion(() -> emitters.remove(key, emitter));
-        emitter.onTimeout(() -> emitters.remove(key, emitter));
-        emitter.onError(e -> emitters.remove(key, emitter));
 
         return emitter;
     }
