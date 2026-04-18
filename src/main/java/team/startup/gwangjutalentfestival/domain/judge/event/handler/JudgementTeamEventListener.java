@@ -1,33 +1,34 @@
 package team.startup.gwangjutalentfestival.domain.judge.event.handler;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team.startup.gwangjutalentfestival.domain.judge.event.JudgementTeamEvent;
+import team.startup.gwangjutalentfestival.global.sse.AbstractSseEmitterManager;
+import team.startup.gwangjutalentfestival.global.sse.AbstractSseEventListener;
 import team.startup.gwangjutalentfestival.global.sse.JudgeSseEmitterManager;
-
-import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
-public class JudgementTeamEventListener {
+public class JudgementTeamEventListener extends AbstractSseEventListener<JudgementTeamEvent> {
+
     private final JudgeSseEmitterManager judgeSseEmitterManager;
+
+    @Override
+    protected AbstractSseEmitterManager<?> getEmitterManager() {
+        return judgeSseEmitterManager;
+    }
+
+    @Override
+    protected String getEventName() {
+        return "PERFORM_TEAM_CHANGE";
+    }
 
     @Async("asyncExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void execute(JudgementTeamEvent event) {
-        for (SseEmitter emitter : judgeSseEmitterManager.getAllEmitters()) {
-            try {
-                emitter.send(SseEmitter.event().name("PERFORM_TEAM_CHANGE").data(event));
-            } catch (IOException e) {
-                log.error("SSE 전송 실패" ,e);
-                emitter.completeWithError(e);
-            }
-        }
+        sendToAll(event);
     }
 }
