@@ -17,10 +17,7 @@ public abstract class AbstractSseEmitterManager<K> {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
 
         emitter.onCompletion(() -> emitters.remove(key, emitter));
-        emitter.onTimeout(() -> {
-            emitter.complete();
-            emitters.remove(key, emitter);
-        });
+        emitter.onTimeout(emitter::complete);
         emitter.onError(e -> emitters.remove(key, emitter));
 
         SseEmitter oldEmitter = emitters.put(key, emitter);
