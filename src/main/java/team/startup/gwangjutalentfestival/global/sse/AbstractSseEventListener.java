@@ -13,11 +13,13 @@ public abstract class AbstractSseEventListener<E> {
 
     protected void sendToAll(E event) {
         for (SseEmitter emitter : getEmitterManager().getAllEmitters()) {
-            try {
-                emitter.send(SseEmitter.event().name(getEventName()).data(event));
-            } catch (Exception e) {
-                log.error("SSE 전송 실패", e);
-                emitter.completeWithError(e);
+            synchronized (emitter) {
+                try {
+                    emitter.send(SseEmitter.event().name(getEventName()).data(event));
+                } catch (Exception e) {
+                    log.error("SSE 전송 실패", e);
+                    emitter.completeWithError(e);
+                }
             }
         }
     }
