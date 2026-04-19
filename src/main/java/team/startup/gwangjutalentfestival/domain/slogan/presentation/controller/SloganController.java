@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
 import team.startup.gwangjutalentfestival.domain.slogan.service.CreateSloganService;
 
+/**
+ * 슬로건 관련 API 엔드포인트를 제공하는 컨트롤러.
+ */
 @Tag(name = "Slogan", description = "슬로건 API")
 @RestController
 @RequestMapping("/slogan")
@@ -27,6 +30,12 @@ public class SloganController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "슬로건 등록 성공")
     })
+    /**
+     * 슬로건을 등록한다.
+     *
+     * @param request 슬로건 등록 요청 데이터
+     * @return 201 Created
+     */
     @PostMapping
     public ResponseEntity<Void> createSlogan(@Valid @RequestBody CreateSloganRequest request) {
         createSloganService.execute(request);

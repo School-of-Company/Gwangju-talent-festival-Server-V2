@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import team.startup.gwangjutalentfestival.domain.team.enums.TeamGenre;
 import team.startup.gwangjutalentfestival.domain.team.enums.TeamStatus;
 
+/**
+ * 공연 팀 엔티티.
+ * 팀 이름, 학교, 공연 상태, 장르, 공연 순서, 총점 정보를 관리한다.
+ */
 @Entity
 @Getter
 @NoArgsConstructor
@@ -39,14 +43,29 @@ public class TeamEntity {
     @Column(name = "total_score", nullable = false)
     private Integer totalScore;
 
+    /**
+     * 팀의 공연 상태를 변경한다.
+     *
+     * @param teamStatus 변경할 공연 상태
+     */
     public void updateStatus(TeamStatus teamStatus) {
         this.teamStatus = teamStatus;
     }
 
+    /**
+     * 팀의 공연 순서를 변경한다.
+     *
+     * @param order 변경할 공연 순서
+     */
     public void updateOrder(Integer order) {
         this.performOrder = order;
     }
 
+    /**
+     * 팀의 총점을 변경한다.
+     *
+     * @param totalScore 변경할 총점
+     */
     public void updateTotalScore(Integer totalScore) {
         this.totalScore = totalScore;
     }

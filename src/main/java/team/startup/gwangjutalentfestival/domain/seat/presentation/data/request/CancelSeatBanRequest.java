@@ -5,6 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 좌석 차단 취소 요청 DTO.
+ *
+ * @param seatSection 차단을 해제할 좌석 구역 (A~J)
+ * @param seatNumber  차단을 해제할 좌석 번호 (1~154)
+ */
 public record CancelSeatBanRequest(
         @Pattern(
                 regexp = "^[A-J]$",

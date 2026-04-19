@@ -22,6 +22,11 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import static team.startup.gwangjutalentfestival.domain.user.enums.Role.PERFORMER;
 
+/**
+ * {@link ReservationSeatService}의 구현체.
+ * 좌석 유효성, 예약·차단 여부, 예약 한도를 검증한 후 좌석을 예약하고 SSE 이벤트를 발행한다.
+ * 동시 요청 충돌은 DB 유니크 제약을 통해 처리하며, 관련 캐시를 무효화한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReservationSeatServiceImpl implements ReservationSeatService {
@@ -36,6 +41,15 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
     private static final int RESERVED = 1;
     private static final int BANNED = 2;
 
+    /**
+     * 요청한 좌석을 현재 로그인한 사용자에게 예약한다.
+     *
+     * @param request 예약할 좌석의 구역 및 번호 정보
+     * @throws team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInSectionException 좌석 번호가 구역 범위를 벗어날 때
+     * @throws team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException 이미 예약된 좌석일 때
+     * @throws team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException 차단된 좌석일 때
+     * @throws team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationLimitExceededException 예약 한도를 초과했을 때
+     */
     @Override
     @Transactional
     @Caching(evict = {

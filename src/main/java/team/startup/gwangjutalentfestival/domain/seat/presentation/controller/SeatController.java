@@ -25,6 +25,9 @@ import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBa
 
 import java.util.List;
 
+/**
+ * 좌석 예약, 차단, 조회, SSE 연결 등 좌석 관련 기능을 제공하는 컨트롤러.
+ */
 @Tag(name = "Seat", description = "좌석 API")
 @RestController
 @RequestMapping("/seat")
@@ -42,6 +45,12 @@ public class SeatController {
     private final GetAllSeatsService getAllSeatsService;
     private final ConnectSseSeatEventService connectSseSeatEventService;
 
+    /**
+     * 좌석을 예약한다.
+     *
+     * @param reservationSeatRequest 예약할 좌석의 구역 및 번호 정보
+     * @return 201 Created
+     */
     @Operation(summary = "좌석 예약", description = "좌석을 예약합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -57,6 +66,12 @@ public class SeatController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * 관리자가 특정 좌석을 차단한다.
+     *
+     * @param banSeatRequest 차단할 좌석의 구역, 번호, 적용 역할 정보
+     * @return 201 Created
+     */
     @Operation(summary = "좌석 차단", description = "관리자가 특정 좌석을 차단합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -73,6 +88,11 @@ public class SeatController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * 현재 로그인한 사용자의 예약 좌석을 조회한다.
+     *
+     * @return 예약 좌석의 구역 및 번호
+     */
     @Operation(summary = "내 좌석 조회", description = "현재 로그인한 사용자의 예약 좌석을 조회합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -85,6 +105,11 @@ public class SeatController {
         return ResponseEntity.ok(getCurrentUserSeatService.execute());
     }
 
+    /**
+     * 현재 로그인한 공연자가 예약한 좌석 목록을 조회한다.
+     *
+     * @return 공연자의 예약 좌석 구역 및 번호 목록
+     */
     @Operation(summary = "공연자 예약 좌석 목록 조회", description = "현재 로그인한 공연자의 예약 좌석 목록을 조회합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -97,6 +122,12 @@ public class SeatController {
         return ResponseEntity.ok(getByCurrentPerformerSeatsService.execute());
     }
 
+    /**
+     * 특정 구역의 좌석 예약 가능 여부 목록을 조회한다.
+     *
+     * @param section 조회할 좌석 구역 (A~J)
+     * @return 해당 구역의 좌석별 예약 가능 여부 목록
+     */
     @Operation(summary = "구역별 좌석 현황 조회", description = "특정 구역의 좌석 예약 가능 여부 목록을 조회합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -110,6 +141,11 @@ public class SeatController {
         return ResponseEntity.ok(getSeatsBySectionService.execute(section));
     }
 
+    /**
+     * 전체 구역의 좌석 현황을 조회한다.
+     *
+     * @return 구역별 좌석 예약 가능 여부 맵
+     */
     @Operation(summary = "전체 좌석 조회", description = "전체 좌석 현황을 조회합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -122,6 +158,11 @@ public class SeatController {
         return ResponseEntity.ok(getAllSeatsService.execute());
     }
 
+    /**
+     * 좌석 실시간 이벤트를 수신하기 위한 SSE 연결을 생성한다.
+     *
+     * @return SSE 이미터 객체
+     */
     @Operation(summary = "좌석 SSE 연결", description = "좌석 실시간 이벤트를 수신하기 위한 SSE 연결을 맺습니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -133,6 +174,11 @@ public class SeatController {
         return connectSseSeatEventService.execute();
     }
 
+    /**
+     * 현재 로그인한 사용자의 좌석 예약을 취소한다.
+     *
+     * @return 204 No Content
+     */
     @Operation(summary = "좌석 예약 취소", description = "본인의 좌석 예약을 취소합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -146,6 +192,12 @@ public class SeatController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 관리자가 특정 좌석의 차단을 해제한다.
+     *
+     * @param cancelSeatBanRequest 차단 해제할 좌석의 구역 및 번호 정보
+     * @return 204 No Content
+     */
     @Operation(summary = "좌석 차단 취소", description = "관리자가 특정 좌석의 차단을 취소합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -161,6 +213,12 @@ public class SeatController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 공연자가 본인이 예약한 특정 좌석을 취소한다.
+     *
+     * @param request 취소할 좌석의 구역 및 번호 정보
+     * @return 204 No Content
+     */
     @Operation(summary = "공연자 좌석 예약 취소", description = "공연자가 특정 사용자의 좌석 예약을 취소합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({

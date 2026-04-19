@@ -12,6 +12,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * {@link SeatReservationCustomRepository}의 QueryDSL 구현체.
+ */
 @Repository
 @RequiredArgsConstructor
 public class SeatReservationCustomRepositoryImpl implements SeatReservationCustomRepository {
@@ -20,6 +23,9 @@ public class SeatReservationCustomRepositoryImpl implements SeatReservationCusto
 
     private static final QSeatEntity seat = QSeatEntity.seatEntity;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SectionSeatNumber> findAllSeatNumbers() {
         return queryFactory
@@ -32,6 +38,9 @@ public class SeatReservationCustomRepositoryImpl implements SeatReservationCusto
                 .fetch();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Integer> findSeatNumbersBySeatSection(String seatSection) {
         return new HashSet<>(queryFactory

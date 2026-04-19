@@ -18,6 +18,10 @@ import team.startup.gwangjutalentfestival.domain.team.service.UpdateTeamPerforma
 
 import java.util.List;
 
+/**
+ * 팀 관련 REST API 컨트롤러.
+ * 팀 조회, 랭킹 조회, 공연 상태 변경, 공연 순서 변경 엔드포인트를 제공한다.
+ */
 @Tag(name = "Team", description = "팀 API")
 @RestController
 @RequestMapping("/team")
@@ -29,6 +33,11 @@ public class TeamController {
     private final UpdateTeamPerformanceService updateTeamPerformanceService;
     private final UpdateTeamOrderService updateTeamOrderService;
 
+    /**
+     * 등록된 모든 팀을 공연 순서 오름차순으로 조회한다.
+     *
+     * @return 전체 팀 목록
+     */
     @Operation(summary = "전체 팀 조회", description = "등록된 모든 팀의 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "전체 팀 조회 성공")
@@ -38,6 +47,11 @@ public class TeamController {
         return ResponseEntity.ok(getAllTeamService.execute());
     }
 
+    /**
+     * 총점 기준으로 팀 랭킹을 조회한다.
+     *
+     * @return 랭킹 순서로 정렬된 팀 목록
+     */
     @Operation(summary = "팀 랭킹 조회", description = "팀의 랭킹 정보를 조회합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "팀 랭킹 조회 성공")
@@ -47,6 +61,12 @@ public class TeamController {
         return ResponseEntity.ok(getTeamRankingService.execute());
     }
 
+    /**
+     * 특정 팀의 공연 상태를 다음 단계로 변경한다.
+     *
+     * @param teamId 상태를 변경할 팀 ID
+     * @return 204 No Content
+     */
     @Operation(summary = "팀 공연 상태 변경", description = "팀의 공연 상태를 변경합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "공연 상태 변경 성공"),
@@ -60,6 +80,12 @@ public class TeamController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 여러 팀의 공연 순서를 일괄 변경한다.
+     *
+     * @param request 팀별 변경할 공연 순서 목록
+     * @return 204 No Content
+     */
     @Operation(summary = "팀 공연 순서 변경", description = "팀의 공연 순서를 변경합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "공연 순서 변경 성공"),

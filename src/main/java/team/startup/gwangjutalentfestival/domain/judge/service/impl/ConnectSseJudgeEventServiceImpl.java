@@ -13,6 +13,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * {@link ConnectSseJudgeEventService} 구현체.
+ * SSE 연결 수립 후 최초 연결 이벤트를 전송하고, 주기적으로 heartbeat를 전송한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventService {
@@ -24,6 +28,12 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
     private final static String CONNECTED_DATA = "ok";
     private final static long HEARTBEAT_INTERVAL_SECONDS = 15;
 
+    /**
+     * 현재 로그인한 심사위원에 대한 SSE 연결을 생성하고,
+     * 초기 연결 이벤트 전송 및 heartbeat 스케줄러를 설정한 후 반환한다.
+     *
+     * @return 생성된 {@link SseEmitter}
+     */
     @Override
     public SseEmitter execute() {
         Long userId = userUtil.getCurrentUser().getId();

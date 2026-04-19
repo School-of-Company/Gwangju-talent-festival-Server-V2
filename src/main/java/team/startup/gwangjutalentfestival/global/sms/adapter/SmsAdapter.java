@@ -13,6 +13,10 @@ import team.startup.gwangjutalentfestival.global.sms.exception.SmsEmptyResponseE
 import team.startup.gwangjutalentfestival.global.sms.exception.SmsSendFailedException;
 import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties;
 
+/**
+ * Solapi(nurigo SDK)를 이용한 SMS 전송 어댑터.
+ * <p>애플리케이션 시작 시 {@code DefaultMessageService}를 초기화하고, 인증번호 SMS 발송을 처리한다.</p>
+ */
 @Component
 @RequiredArgsConstructor
 public class SmsAdapter {
@@ -31,6 +35,14 @@ public class SmsAdapter {
         );
     }
 
+    /**
+     * 지정된 수신 번호로 인증번호 SMS를 발송한다.
+     *
+     * @param to   수신자 전화번호
+     * @param code 전송할 인증 코드
+     * @throws SmsSendFailedException     SMS 전송에 실패한 경우
+     * @throws SmsEmptyResponseException  SMS 응답이 없는 경우
+     */
     public void sendSms(String to, String code) {
         Message message = new Message();
         message.setFrom(solapiProperties.getSmsPhoneNumber());

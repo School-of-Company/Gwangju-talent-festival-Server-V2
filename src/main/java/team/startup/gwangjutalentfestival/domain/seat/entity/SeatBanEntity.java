@@ -7,6 +7,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
+/**
+ * 관리자가 차단한 좌석 정보를 저장하는 엔티티.
+ * 동일한 구역과 번호의 조합은 유니크 제약으로 중복 차단을 방지한다.
+ */
 @Entity
 @Table(
         name = "seat_ban",

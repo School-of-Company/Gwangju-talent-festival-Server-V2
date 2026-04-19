@@ -5,6 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 공연자의 좌석 예약 취소 요청 DTO.
+ *
+ * @param seatSection 취소할 좌석 구역 (A~J)
+ * @param seatNumber  취소할 좌석 번호 (1~154)
+ */
 public record PerformerCancelSeatReservationRequest(
         @Pattern(
                 regexp = "^[A-J]$",

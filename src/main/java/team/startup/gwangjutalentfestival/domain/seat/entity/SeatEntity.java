@@ -9,6 +9,10 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
+/**
+ * 사용자의 좌석 예약 정보를 저장하는 엔티티.
+ * 동일한 구역과 번호의 조합은 유니크 제약으로 중복 예약을 방지한다.
+ */
 @Entity
 @Getter
 @NoArgsConstructor

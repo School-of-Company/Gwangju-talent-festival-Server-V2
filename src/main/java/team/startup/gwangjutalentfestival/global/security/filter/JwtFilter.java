@@ -23,6 +23,11 @@ import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
 
 import java.io.IOException;
 
+/**
+ * 요청당 한 번 실행되는 JWT 인증 필터.
+ * <p>Authorization 헤더에서 액세스 토큰을 추출하여 유효성 검증 후 {@link org.springframework.security.core.context.SecurityContext}에 인증 정보를 등록한다.
+ * 블랙리스트에 등록된 토큰은 거부한다.</p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor

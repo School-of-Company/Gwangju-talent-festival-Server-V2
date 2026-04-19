@@ -24,6 +24,10 @@ import team.startup.gwangjutalentfestival.global.security.properties.CorsPropert
 
 import java.util.List;
 
+/**
+ * Spring Security 보안 설정.
+ * <p>JWT 필터 등록, URL별 접근 권한, CORS, CSRF, 세션 정책을 구성한다.</p>
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -43,6 +47,13 @@ public class SecurityConfig {
             "/error"
     };
 
+    /**
+     * HTTP 보안 필터 체인을 구성한다.
+     *
+     * @param http {@link HttpSecurity} 객체
+     * @return 구성된 {@link SecurityFilterChain}
+     * @throws Exception 보안 설정 중 예외 발생 시
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -92,6 +103,12 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * CORS 설정 소스를 구성한다.
+     * <p>허용 출처는 {@link CorsProperties}에서 읽어온다.</p>
+     *
+     * @return {@link CorsConfigurationSource} 빈
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

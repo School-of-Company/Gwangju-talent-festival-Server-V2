@@ -20,6 +20,10 @@ import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScor
 
 import java.util.List;
 
+/**
+ * 심사 관련 API 엔드포인트를 제공하는 컨트롤러.
+ * SSE 연결, 점수 저장, 단일/전체 심사 조회 기능을 담당한다.
+ */
 @Tag(name = "Judge", description = "심사 API")
 @RestController
 @RequiredArgsConstructor
@@ -35,6 +39,11 @@ public class JudgeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "SSE 연결 성공")
     })
+    /**
+     * 심사 이벤트 수신을 위한 SSE 연결을 맺는다.
+     *
+     * @return SSE 연결 객체
+     */
     @SecurityRequirement(name = "Authorization")
     @GetMapping(value = "/changes", produces = "text/event-stream")
     public SseEmitter connect() {
@@ -47,6 +56,13 @@ public class JudgeController {
             @ApiResponse(responseCode = "400", description = "잘못된 점수 입력"),
             @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음")
     })
+    /**
+     * 특정 팀에 대한 심사 점수를 저장하거나 수정한다.
+     *
+     * @param teamId  대상 팀 ID
+     * @param request 심사 점수 요청 데이터
+     * @return 204 No Content
+     */
     @SecurityRequirement(name = "Authorization")
     @PatchMapping("/{teamId}")
     public ResponseEntity<Void> saveJudgementScore(
@@ -60,6 +76,11 @@ public class JudgeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공")
     })
+    /**
+     * 현재 로그인한 심사위원의 전체 팀 심사 목록을 조회한다.
+     *
+     * @return 전체 팀 심사 응답 목록
+     */
     @SecurityRequirement(name = "Authorization")
     @GetMapping
     public ResponseEntity<List<GetJudgementResponse>> getAllJudgement() {
@@ -71,6 +92,12 @@ public class JudgeController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음")
     })
+    /**
+     * 현재 로그인한 심사위원의 특정 팀 심사를 조회한다.
+     *
+     * @param teamId 조회할 팀 ID
+     * @return 단일 팀 심사 응답
+     */
     @SecurityRequirement(name = "Authorization")
     @GetMapping("/{teamId}")
     public ResponseEntity<GetJudgementResponse> getJudgement(

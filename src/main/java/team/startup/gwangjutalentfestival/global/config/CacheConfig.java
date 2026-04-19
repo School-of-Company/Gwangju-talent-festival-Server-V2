@@ -11,6 +11,10 @@ import org.springframework.context.annotation.Configuration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Caffeine 기반 인메모리 캐시 설정.
+ * <p>팀 목록, 팀 랭킹, 좌석 전체/구역별 조회에 대한 캐시를 구성한다.</p>
+ */
 @EnableCaching
 @Configuration
 public class CacheConfig {
@@ -20,6 +24,11 @@ public class CacheConfig {
     public static final String SEATS_ALL     = "seats:all";
     public static final String SEATS_SECTION = "seats:section";
 
+    /**
+     * Caffeine 캐시 매니저를 생성한다.
+     *
+     * @return 설정된 {@link CacheManager} 빈
+     */
     @Bean
     public CacheManager cacheManager() {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
