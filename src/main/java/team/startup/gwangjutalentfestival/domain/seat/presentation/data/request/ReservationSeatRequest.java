@@ -5,6 +5,12 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
+/**
+ * 좌석 예약 요청 DTO.
+ *
+ * @param seatSection 예약할 좌석 구역 (A~J)
+ * @param seatNumber  예약할 좌석 번호 (1~154)
+ */
 public record ReservationSeatRequest(
         @Pattern(
                 regexp = "^[A-J]$",

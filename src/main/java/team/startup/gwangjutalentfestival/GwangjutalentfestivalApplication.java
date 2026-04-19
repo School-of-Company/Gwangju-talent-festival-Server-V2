@@ -12,6 +12,10 @@ import team.startup.gwangjutalentfestival.global.security.properties.CorsPropert
 import team.startup.gwangjutalentfestival.global.sms.properties.SmsVerifyProperties;
 import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties;
 
+/**
+ * 광주 탤런트 페스티벌 서버 애플리케이션의 진입점.
+ * <p>비동기 처리, 스케줄링, OpenFeign 클라이언트, 설정 프로퍼티를 활성화한다.</p>
+ */
 @EnableFeignClients
 @EnableAsync
 @EnableScheduling
@@ -19,6 +23,11 @@ import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties
 @SpringBootApplication
 public class GwangjutalentfestivalApplication {
 
+    /**
+     * 애플리케이션을 시작한다.
+     *
+     * @param args 커맨드라인 인수
+     */
     public static void main(String[] args) {
         SpringApplication.run(GwangjutalentfestivalApplication.class, args);
     }

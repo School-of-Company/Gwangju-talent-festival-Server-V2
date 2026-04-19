@@ -17,6 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * {@link GetAllJudgementService} 구현체.
+ * 모든 팀 목록과 현재 심사위원의 심사 데이터를 결합하여 응답을 반환한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class GetAllJudgementServiceImpl implements GetAllJudgementService {
@@ -24,6 +28,12 @@ public class GetAllJudgementServiceImpl implements GetAllJudgementService {
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
 
+    /**
+     * 현재 로그인한 심사위원의 전체 팀 심사 목록을 반환한다.
+     * 심사 데이터가 없는 팀은 기본 점수로 응답을 구성한다.
+     *
+     * @return 전체 팀 심사 응답 목록
+     */
     @Override
     @Transactional(readOnly = true)
     public List<GetJudgementResponse> execute() {

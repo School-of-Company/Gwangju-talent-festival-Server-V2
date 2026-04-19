@@ -21,6 +21,10 @@ import team.startup.gwangjutalentfestival.domain.auth.service.ReissueTokenServic
 import team.startup.gwangjutalentfestival.domain.auth.service.SendVerifyCodeService;
 import team.startup.gwangjutalentfestival.domain.auth.service.SignUpService;
 
+/**
+ * 인증 관련 API 엔드포인트를 처리하는 컨트롤러.
+ * <p>인증번호 발송, 회원가입, 로그인, 로그아웃, 토큰 재발급 기능을 제공합니다.</p>
+ */
 @Tag(name = "Auth", description = "인증 API")
 @RestController
 @RequestMapping("/auth")
@@ -33,6 +37,12 @@ public class AuthController {
     private final LogoutService logoutService;
     private final ReissueTokenService reissueTokenService;
 
+    /**
+     * 입력한 휴대폰 번호로 SMS 인증번호를 발송합니다.
+     *
+     * @param request 인증번호를 발송할 휴대폰 번호 요청 객체
+     * @return 204 No Content
+     */
     @Operation(summary = "인증번호 발송", description = "입력한 휴대폰 번호로 SMS 인증번호를 발송합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "인증번호 발송 성공"),
@@ -45,6 +55,12 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * 휴대폰 인증 후 비밀번호를 설정하여 회원가입합니다.
+     *
+     * @param request 휴대폰 번호, 비밀번호, 인증번호를 포함한 회원가입 요청 객체
+     * @return 201 Created
+     */
     @Operation(summary = "회원가입", description = "휴대폰 인증 후 비밀번호를 설정하여 회원가입합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "회원가입 성공"),
@@ -58,6 +74,12 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    /**
+     * 휴대폰 번호와 비밀번호로 로그인하고 JWT 토큰을 반환합니다.
+     *
+     * @param request 휴대폰 번호와 비밀번호를 포함한 로그인 요청 객체
+     * @return AccessToken 및 RefreshToken을 포함한 {@link TokenResponse}
+     */
     @Operation(summary = "로그인", description = "휴대폰 번호와 비밀번호로 로그인합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
@@ -70,6 +92,12 @@ public class AuthController {
         return ResponseEntity.ok(loginService.execute(request));
     }
 
+    /**
+     * 현재 로그인된 사용자의 RefreshToken을 삭제하고 AccessToken을 블랙리스트에 등록합니다.
+     *
+     * @param authorization Bearer 형식의 AccessToken이 담긴 Authorization 헤더
+     * @return 204 No Content
+     */
     @Operation(summary = "로그아웃", description = "현재 로그인된 사용자의 RefreshToken을 삭제합니다.")
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
@@ -83,6 +111,12 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    /**
+     * RefreshToken으로 새로운 AccessToken과 RefreshToken을 재발급합니다.
+     *
+     * @param refreshToken Refresh-Token 헤더에 담긴 RefreshToken 문자열
+     * @return 새로 발급된 AccessToken 및 RefreshToken을 포함한 {@link TokenResponse}
+     */
     @Operation(summary = "토큰 재발급", description = "RefreshToken으로 새로운 AccessToken과 RefreshToken을 발급합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),

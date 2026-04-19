@@ -4,6 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
+/**
+ * 일반 사용자 엔티티.
+ * 전화번호, 비밀번호, 역할(Role)을 포함한 사용자 정보를 관리한다.
+ */
 @Entity
 @Getter
 @Builder

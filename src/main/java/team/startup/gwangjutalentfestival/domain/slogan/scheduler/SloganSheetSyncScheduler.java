@@ -15,6 +15,11 @@ import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.Googl
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 슬로건 데이터를 Google Sheets에 주기적으로 동기화하는 스케줄러.
+ * 10초 간격으로 실행되며, 대기 중이거나 재시도 대상인 슬로건을 최대 50건씩 처리한다.
+ * 동기화 실패 시 재시도 횟수를 증가시키며, 최대 재시도 횟수 초과 시 포기 처리한다.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,10 @@ public class SloganSheetSyncScheduler {
     private final GoogleSheetsAdapter googleSheetsAdapter;
     private final TransactionTemplate transactionTemplate;
 
+    /**
+     * 10초 간격으로 실행되어 대기 또는 재시도 대상 슬로건을 Google Sheets에 동기화한다.
+     * 처리할 데이터가 없으면 즉시 반환한다.
+     */
     @Scheduled(fixedDelay = 10000)
     public void execute() {
         List<SloganEntity> slogans = transactionTemplate.execute(status -> {

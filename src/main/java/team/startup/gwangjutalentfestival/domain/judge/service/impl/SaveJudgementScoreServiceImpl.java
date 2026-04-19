@@ -16,6 +16,11 @@ import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
+/**
+ * {@link SaveJudgementScoreService} 구현체.
+ * 심사 점수를 저장 또는 수정하고, 팀 총점을 갱신한다.
+ * 점수 저장 후 팀 랭킹 캐시를 초기화한다.
+ */
 @Service
 @RequiredArgsConstructor
 public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService {
@@ -24,6 +29,14 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
 
+    /**
+     * 현재 로그인한 심사위원의 특정 팀 심사 점수를 저장하거나 수정한다.
+     * 기존 심사 데이터가 있으면 점수를 갱신하고, 없으면 새로 생성한다.
+     * 저장 후 팀 총점을 재계산하며, 총점이 100점을 초과하면 예외를 발생시킨다.
+     *
+     * @param request 심사 점수 요청 데이터
+     * @param teamId  대상 팀 ID
+     */
     @Override
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.TEAM_RANKING, allEntries = true)

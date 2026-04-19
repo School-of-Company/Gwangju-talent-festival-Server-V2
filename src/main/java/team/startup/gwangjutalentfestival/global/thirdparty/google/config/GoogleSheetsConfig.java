@@ -19,11 +19,23 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
+/**
+ * Google Sheets API 클라이언트 빈 설정.
+ * <p>서비스 계정 자격증명을 통해 인증된 {@link Sheets} 빈을 생성하여 등록한다.
+ * 초기화 실패 시 {@link GoogleSheetsInitException}을 던진다.</p>
+ */
 @Slf4j
 @Configuration
 @EnableConfigurationProperties(GoogleSheetsProperties.class)
 public class GoogleSheetsConfig {
 
+    /**
+     * Google Sheets API 클라이언트를 생성한다.
+     *
+     * @param properties Google Sheets 설정 프로퍼티
+     * @return 인증된 {@link Sheets} 빈
+     * @throws GoogleSheetsInitException 인증 파일 읽기 실패 또는 TLS 초기화 실패 시
+     */
     @Bean
     public Sheets sheets(GoogleSheetsProperties properties) {
         try {

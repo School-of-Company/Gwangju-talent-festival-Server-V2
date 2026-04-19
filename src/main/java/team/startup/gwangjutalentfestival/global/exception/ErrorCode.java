@@ -3,6 +3,10 @@ package team.startup.gwangjutalentfestival.global.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 애플리케이션 전반에서 사용하는 에러 코드 열거형.
+ * <p>각 항목은 HTTP 상태 코드와 사용자 메시지를 포함한다.</p>
+ */
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {

@@ -6,6 +6,13 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
+/**
+ * 좌석 차단 요청 DTO.
+ *
+ * @param seatSection 차단할 좌석 구역 (A~J)
+ * @param seatNumber  차단할 좌석 번호 (1~154)
+ * @param role        차단을 적용할 사용자 역할
+ */
 public record BanSeatRequest(
         @Pattern(
                 regexp = "^[A-J]$",

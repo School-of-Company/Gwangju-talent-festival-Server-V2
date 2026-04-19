@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * {@link SeatBanCustomRepository}의 QueryDSL 구현체.
+ */
 @Repository
 @RequiredArgsConstructor
 public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
@@ -21,6 +24,9 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
 
     private static final QSeatBanEntity seatBan = QSeatBanEntity.seatBanEntity;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<SectionSeatNumber> findSeatNumbersByRole(Role role) {
         return queryFactory
@@ -34,6 +40,9 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
                 .fetch();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Set<Integer> findSeatNumbersBySeatSectionAndRole(String seatSection, Role role) {
         return new HashSet<>(queryFactory

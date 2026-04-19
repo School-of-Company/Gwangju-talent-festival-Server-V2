@@ -2,6 +2,11 @@ package team.startup.gwangjutalentfestival.domain.auth.presentation.data.request
 
 import jakarta.validation.constraints.Pattern;
 
+/**
+ * SMS 인증번호 발송 요청 DTO.
+ *
+ * @param phoneNumber 인증번호를 받을 휴대폰 번호 (010으로 시작하는 11자리)
+ */
 public record SendVerifyCodeRequest(
         @Pattern(
                 regexp = "^010\\d{8}$",
