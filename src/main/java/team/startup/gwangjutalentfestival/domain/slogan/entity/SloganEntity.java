@@ -25,10 +25,10 @@ public class SloganEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "slogan", columnDefinition = "TEXT")
+    @Column(name = "slogan", columnDefinition = "TEXT", nullable = false)
     private String slogan;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
 
     @Column(name = "school")

@@ -26,12 +26,15 @@ public record CreateSloganRequest(
         @NotBlank
         String phoneNumber,
 
-        @NotNull
+        @NotBlank
         SchoolStatus schoolStatus,
 
-        // ENROLLED 전용
+        @NotBlank
         String slogan,
+
+        @NotBlank
         String description,
+
         String school,
 
         @Min(1)
