@@ -17,6 +17,11 @@ import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 
 import java.time.LocalDateTime;
 
+/**
+ * {@link CreateSloganService} 구현체.
+ * 접수 기간 유효성 및 전화번호 중복을 검증한 후 슬로건을 저장한다.
+ * schoolStatus에 따라 수집 필드를 분기하며, 저장된 슬로건은 Google Sheets 동기화 대기 상태({@link SheetSyncStatus#PENDING})로 설정된다.
+ */
 @Service
 @RequiredArgsConstructor
 public class CreateSloganServiceImpl implements CreateSloganService {
@@ -24,6 +29,14 @@ public class CreateSloganServiceImpl implements CreateSloganService {
     private final SloganRepository sloganRepository;
     private final SloganSubmissionProperties sloganSubmissionProperties;
 
+    /**
+     * 슬로건을 등록한다.
+     * 접수 기간이 아니면 {@link SloganSubmissionPeriodException},
+     * 동일 전화번호가 이미 존재하면 {@link DuplicatePhoneNumberException},
+     * schoolStatus별 필수 필드가 누락되면 {@link SloganRequiredFieldMissingException}이 발생한다.
+     *
+     * @param request 슬로건 등록 요청 데이터
+     */
     @Override
     @Transactional
     public void execute(CreateSloganRequest request) {
