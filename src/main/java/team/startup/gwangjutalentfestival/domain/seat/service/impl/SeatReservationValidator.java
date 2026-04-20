@@ -16,6 +16,7 @@ import static team.startup.gwangjutalentfestival.domain.user.enums.Role.PERFORME
 public class SeatReservationValidator {
 
     private final SeatReservationRepository seatReservationRepository;
+    private final UserUtil userUtil;
 
     private static final int PERFORMER_SEAT_LIMIT = 3;
     private static final int DEFAULT_SEAT_LIMIT = 1;
@@ -34,9 +35,10 @@ public class SeatReservationValidator {
         if ((availability & BANNED) != 0) throw new SeatBannedException();
     }
 
-    public void validateReservationLimit(long userId) {
+    public void validateReservationLimit() {
+        long userId = userUtil.getCurrentUserId();
         long reserveCount = seatReservationRepository.countByUserId(userId);
-        int limit = UserUtil.getCurrentUserRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
+        int limit = userUtil.currentUserRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
         if (reserveCount >= limit) {
             throw new SeatReservationLimitExceededException();
         }
