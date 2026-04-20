@@ -54,7 +54,7 @@ public class CreateSloganServiceImpl implements CreateSloganService {
 
     private SloganEntity buildEnrolledSlogan(CreateSloganRequest request) {
         if (isBlank(request.slogan()) || isBlank(request.description())
-                || isBlank(request.school()) || request.grade() == null) {
+                || isBlank(request.school()) || request.grade() == null || request.classNum() == null) {
             throw new SloganRequiredFieldMissingException();
         }
 
