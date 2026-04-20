@@ -58,6 +58,8 @@ public class CreateSloganServiceImpl implements CreateSloganService {
         return SloganEntity.builder()
                 .name(request.name())
                 .phoneNumber(request.phoneNumber())
+                .slogan(request.slogan())
+                .description(request.description())
                 .birthDate(request.birthDate())
                 .schoolStatus(SchoolStatus.OUT_OF_SCHOOL)
                 .sheetSyncStatus(SheetSyncStatus.PENDING)
