@@ -26,6 +26,7 @@ public record CreateSloganRequest(
         @NotBlank
         String phoneNumber,
 
+        @NotNull
         SchoolStatus schoolStatus,
 
         @NotBlank
