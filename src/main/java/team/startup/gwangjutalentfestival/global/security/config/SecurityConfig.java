@@ -44,7 +44,9 @@ public class SecurityConfig {
             "/health/**",
             "/excel/**",
             "/vote/{teamId}",
-            "/error"
+            "/error",
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
     };
 
     /**
