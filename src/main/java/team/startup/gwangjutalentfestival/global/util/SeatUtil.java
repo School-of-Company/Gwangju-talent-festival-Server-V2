@@ -2,9 +2,12 @@ package team.startup.gwangjutalentfestival.global.util;
 
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.seat.exception.InvalidSeatSectionException;
+import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatsBySectionResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * 좌석 구역 및 최대 좌석 수 관리 유틸리티.
@@ -38,5 +41,12 @@ public class SeatUtil {
             throw new InvalidSeatSectionException();
         }
         return SEAT_MAP.get(section);
+    }
+
+    public GetSeatsBySectionResponse buildSeatAvailability(String section, Set<Integer> bans, Set<Integer> reservations) {
+        List<Boolean> seats = IntStream.rangeClosed(1, getMaxSeats(section))
+                .mapToObj(i -> !bans.contains(i) && !reservations.contains(i))
+                .toList();
+        return new GetSeatsBySectionResponse(seats);
     }
 }
