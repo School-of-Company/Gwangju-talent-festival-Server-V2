@@ -13,6 +13,7 @@ import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.Go
 import com.google.api.services.sheets.v4.model.ValueRange;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -64,7 +65,7 @@ public class GoogleSheetsAdapter {
 
     private List<List<Object>> getList(List<SloganSheetRowData> data) {
         return data.stream()
-                .map(s -> java.util.Arrays.<Object>asList(
+                .map(s -> Arrays.<Object>asList(
                         s.slogan(),
                         s.description(),
                         s.school(),
