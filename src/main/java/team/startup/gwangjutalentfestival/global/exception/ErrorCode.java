@@ -41,6 +41,7 @@ public enum ErrorCode {
     ALREADY_VERIFY_CODE_EXISTS(429, "이미 인증번호가 발송되었습니다. 만료 후 다시 요청해주세요."),
     // Slogan
     SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
+    SLOGAN_REQUIRED_FIELD_MISSING(400, "필수 항목이 누락되었습니다."),
 
     // Seat
     SEAT_NOT_EXISTS_IN_SECTION(400, "해당 섹션에 존재하지 않는 좌석입니다."),

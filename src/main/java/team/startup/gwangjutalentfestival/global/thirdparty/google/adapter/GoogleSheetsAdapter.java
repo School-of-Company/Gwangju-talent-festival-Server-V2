@@ -64,14 +64,15 @@ public class GoogleSheetsAdapter {
 
     private List<List<Object>> getList(List<SloganSheetRowData> data) {
         return data.stream()
-                .map(s -> List.<Object>of(
+                .map(s -> java.util.Arrays.<Object>asList(
                         s.slogan(),
                         s.description(),
                         s.school(),
                         s.name(),
                         s.grade(),
                         s.classNum(),
-                        s.phoneNumber()
+                        s.phoneNumber(),
+                        s.birthDate() != null ? s.birthDate().toString() : null
                 ))
                 .toList();
     }

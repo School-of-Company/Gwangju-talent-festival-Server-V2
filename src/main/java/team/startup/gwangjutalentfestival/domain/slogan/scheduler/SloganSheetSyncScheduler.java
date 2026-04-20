@@ -73,7 +73,8 @@ public class SloganSheetSyncScheduler {
                 s.getName(),
                 s.getGrade(),
                 s.getClassNum(),
-                s.getPhoneNumber()
+                s.getPhoneNumber(),
+                s.getBirthDate()
         );
     }
 

@@ -2,9 +2,11 @@ package team.startup.gwangjutalentfestival.domain.slogan.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import team.startup.gwangjutalentfestival.domain.slogan.enums.SchoolStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
 import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -23,26 +25,29 @@ public class SloganEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "slogan", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "slogan", columnDefinition = "TEXT")
     private String slogan;
 
-    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "school", nullable = false)
+    @Column(name = "school")
     private String school;
 
-    @Column(name = "grade", nullable = false)
+    @Column(name = "grade")
     private Integer grade;
 
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "class_num", nullable = false)
+    @Column(name = "class_num")
     private Integer classNum;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number")
     private String phoneNumber;
+
+    @Column(name = "birth_data")
+    private LocalDate birthDate;
 
     @Column(name = "retry_count")
     private int retryCount;
@@ -59,6 +64,10 @@ public class SloganEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "sheet_sync_status", nullable = false)
     private SheetSyncStatus sheetSyncStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "school_status", nullable = false)
+    private SchoolStatus schoolStatus;
 
     /**
      * 시트 동기화 상태를 {@link SheetSyncStatus#PROCESSING}으로 변경한다.
