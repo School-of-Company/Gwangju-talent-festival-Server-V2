@@ -10,6 +10,8 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * {@link ConnectSseJudgeEventService} 구현체.
@@ -35,9 +37,9 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
     public SseEmitter execute() {
         Long userId = UserUtil.getCurrentUserId();
 
-        var beatHolder = new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.ScheduledFuture<?>>();
+        AtomicReference<ScheduledFuture<?>> beatHolder = new AtomicReference<>();
         SseEmitter emitter = judgeSseEmitterManager.addEmitter(userId,
-                () -> { var b = beatHolder.get(); if (b != null) b.cancel(true); });
+                () -> { ScheduledFuture<?> b = beatHolder.get(); if (b != null) b.cancel(true); });
 
         try {
             emitter.send(SseEmitter.event()
@@ -49,7 +51,7 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
             return emitter;
         }
 
-        var beat = taskScheduler.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> beat = taskScheduler.scheduleAtFixedRate(() -> {
             try {
                 emitter.send(SseEmitter.event()
                         .name(HEARTBEAT_EVENT)
