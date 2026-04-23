@@ -20,7 +20,6 @@ import java.time.Duration;
 public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventService {
 
     private final SeatSseEmitterManager sseEmitterManager;
-    private final UserUtil userUtil;
     private final TaskScheduler taskScheduler;
 
     private static final String CONNECTED_EVENT_NAME = "connected";
@@ -34,8 +33,11 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
      */
     @Override
     public SseEmitter execute() {
-        String phoneNumber = userUtil.getCurrentUser().getPhoneNumber();
-        SseEmitter emitter = sseEmitterManager.addEmitter(phoneNumber);
+        Long userId = UserUtil.getCurrentUserId();
+
+        var beatHolder = new java.util.concurrent.atomic.AtomicReference<java.util.concurrent.ScheduledFuture<?>>();
+        SseEmitter emitter = sseEmitterManager.addEmitter(userId,
+                () -> { var b = beatHolder.get(); if (b != null) b.cancel(true); });
 
         try {
             emitter.send(SseEmitter.event()
@@ -57,10 +59,7 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
                 emitter.completeWithError(e);
             }
         }, Duration.ofSeconds(15));
-
-        emitter.onCompletion(() -> beat.cancel(true));
-        emitter.onTimeout(() -> beat.cancel(true));
-        emitter.onError(e -> beat.cancel(true));
+        beatHolder.set(beat);
 
         return emitter;
     }
