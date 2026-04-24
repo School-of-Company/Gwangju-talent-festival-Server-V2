@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.judge.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEventService;
@@ -8,9 +9,9 @@ import team.startup.gwangjutalentfestival.global.sse.JudgeSseEmitterManager;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
+import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -21,12 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventService {
     private final JudgeSseEmitterManager judgeSseEmitterManager;
-    private final UserUtil userUtil;
+    private final TaskScheduler taskScheduler;
 
-    private final static String CONNECTED_EVENT = "connected";
-    private final static String HEARTBEAT_EVENT = "heartbeat";
-    private final static String CONNECTED_DATA = "ok";
-    private final static long HEARTBEAT_INTERVAL_SECONDS = 15;
+    private static final String CONNECTED_EVENT = "connected";
+    private static final String HEARTBEAT_EVENT = "heartbeat";
+    private static final String CONNECTED_DATA = "ok";
 
     /**
      * 현재 로그인한 심사위원에 대한 SSE 연결을 생성하고,
@@ -36,8 +36,16 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
      */
     @Override
     public SseEmitter execute() {
-        Long userId = userUtil.getCurrentUser().getId();
-        SseEmitter emitter = judgeSseEmitterManager.addEmitter(userId);
+        Long userId = UserUtil.getCurrentUserId();
+
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<ScheduledFuture<?>> beatHolder = new AtomicReference<>();
+        SseEmitter emitter = judgeSseEmitterManager.addEmitter(userId, () -> {
+            cancelled.set(true);
+            ScheduledFuture<?> b = beatHolder.get();
+            if (b != null) b.cancel(true);
+        });
+
         try {
             emitter.send(SseEmitter.event()
                     .name(CONNECTED_EVENT)
@@ -48,28 +56,19 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
             return emitter;
         }
 
-        var scheduler = Executors.newSingleThreadScheduledExecutor();
-        AtomicReference<ScheduledFuture<?>> beatRef = new AtomicReference<>();
-
-        ScheduledFuture<?> beat = scheduler.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> beat = taskScheduler.scheduleAtFixedRate(() -> {
             try {
                 emitter.send(SseEmitter.event()
                         .name(HEARTBEAT_EVENT)
                         .id(String.valueOf(System.currentTimeMillis()))
                         .data(CONNECTED_DATA));
             } catch (IOException e) {
-                ScheduledFuture<?> b = beatRef.get();
-                if (b != null) b.cancel(true);
-                scheduler.shutdown();
                 emitter.completeWithError(e);
             }
-        }, HEARTBEAT_INTERVAL_SECONDS, HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS);
+        }, Duration.ofSeconds(15));
+        beatHolder.set(beat);
+        if (cancelled.get()) beat.cancel(true);
 
-        beatRef.set(beat);
-
-        emitter.onCompletion(() -> { beat.cancel(true); scheduler.shutdown(); });
-        emitter.onTimeout(() -> { beat.cancel(true); scheduler.shutdown(); });
-        emitter.onError(e -> { beat.cancel(true); scheduler.shutdown(); });
         return emitter;
     }
 }

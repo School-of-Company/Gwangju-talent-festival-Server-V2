@@ -37,7 +37,7 @@ public abstract class AbstractSseEventListener<E> {
      * @param event 전송할 이벤트 데이터
      */
     protected void sendToAll(E event) {
-        for (SseEmitter emitter : getEmitterManager().getAllEmitters()) {
+        getEmitterManager().getAllEmitters().forEach(emitter -> {
             synchronized (emitter) {
                 try {
                     emitter.send(SseEmitter.event().name(getEventName()).data(event));
@@ -46,6 +46,6 @@ public abstract class AbstractSseEventListener<E> {
                     emitter.completeWithError(e);
                 }
             }
-        }
+        });
     }
 }

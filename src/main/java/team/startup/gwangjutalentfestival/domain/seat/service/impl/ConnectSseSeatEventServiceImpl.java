@@ -10,6 +10,9 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * {@link ConnectSseSeatEventService}의 구현체.
@@ -20,7 +23,6 @@ import java.time.Duration;
 public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventService {
 
     private final SeatSseEmitterManager sseEmitterManager;
-    private final UserUtil userUtil;
     private final TaskScheduler taskScheduler;
 
     private static final String CONNECTED_EVENT_NAME = "connected";
@@ -34,8 +36,15 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
      */
     @Override
     public SseEmitter execute() {
-        String phoneNumber = userUtil.getCurrentUser().getPhoneNumber();
-        SseEmitter emitter = sseEmitterManager.addEmitter(phoneNumber);
+        Long userId = UserUtil.getCurrentUserId();
+
+        AtomicBoolean cancelled = new AtomicBoolean(false);
+        AtomicReference<ScheduledFuture<?>> beatHolder = new AtomicReference<>();
+        SseEmitter emitter = sseEmitterManager.addEmitter(userId, () -> {
+            cancelled.set(true);
+            ScheduledFuture<?> b = beatHolder.get();
+            if (b != null) b.cancel(true);
+        });
 
         try {
             emitter.send(SseEmitter.event()
@@ -47,7 +56,7 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
             return emitter;
         }
 
-        var beat = taskScheduler.scheduleAtFixedRate(() -> {
+        ScheduledFuture<?> beat = taskScheduler.scheduleAtFixedRate(() -> {
             try {
                 emitter.send(SseEmitter.event()
                         .name(HEARTBEAT_EVENT_NAME)
@@ -57,10 +66,8 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
                 emitter.completeWithError(e);
             }
         }, Duration.ofSeconds(15));
-
-        emitter.onCompletion(() -> beat.cancel(true));
-        emitter.onTimeout(() -> beat.cancel(true));
-        emitter.onError(e -> beat.cancel(true));
+        beatHolder.set(beat);
+        if (cancelled.get()) beat.cancel(true);
 
         return emitter;
     }

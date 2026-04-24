@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class AbstractSseEmitterManager<K> {
 
-    private static final long SSE_TIMEOUT_MILLIS = 60 * 60 * 1000L;
+    private static final long SSE_TIMEOUT_MILLIS = 30 * 60 * 1000L;
 
     private final Map<K, SseEmitter> emitters = new ConcurrentHashMap<>();
 
@@ -28,12 +28,17 @@ public abstract class AbstractSseEmitterManager<K> {
      * @param key Emitter를 식별하는 키
      * @return 생성된 {@link SseEmitter}
      */
-    public SseEmitter addEmitter(K key) {
+    public SseEmitter addEmitter(K key, Runnable onCleanup) {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MILLIS);
 
-        emitter.onCompletion(() -> emitters.remove(key, emitter));
-        emitter.onTimeout(emitter::complete);
-        emitter.onError(e -> emitters.remove(key, emitter));
+        Runnable cleanup = () -> {
+            emitters.remove(key, emitter);
+            if (onCleanup != null) onCleanup.run();
+        };
+
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(() -> { emitter.complete(); });
+        emitter.onError(e -> cleanup.run());
 
         SseEmitter oldEmitter = emitters.put(key, emitter);
         if (oldEmitter != null) {

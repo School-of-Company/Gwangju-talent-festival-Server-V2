@@ -19,14 +19,14 @@ class JudgeSseEmitterManagerTest {
 
     @Test
     void addEmitter_호출_시_SseEmitter가_반환된다() {
-        SseEmitter emitter = manager.addEmitter(1L);
+        SseEmitter emitter = manager.addEmitter(1L, null);
 
         assertThat(emitter).isNotNull();
     }
 
     @Test
     void addEmitter_후_getEmitter로_동일한_emitter를_조회할_수_있다() {
-        SseEmitter emitter = manager.addEmitter(1L);
+        SseEmitter emitter = manager.addEmitter(1L, null);
 
         Optional<SseEmitter> found = manager.getEmitter(1L);
 
@@ -43,17 +43,17 @@ class JudgeSseEmitterManagerTest {
 
     @Test
     void getAllEmitters는_등록된_모든_emitter를_반환한다() {
-        manager.addEmitter(1L);
-        manager.addEmitter(2L);
-        manager.addEmitter(3L);
+        manager.addEmitter(1L, null);
+        manager.addEmitter(2L, null);
+        manager.addEmitter(3L, null);
 
         assertThat(manager.getAllEmitters()).hasSize(3);
     }
 
     @Test
     void 동일한_userId로_재연결하면_새로운_emitter로_교체된다() {
-        SseEmitter first = manager.addEmitter(1L);
-        SseEmitter second = manager.addEmitter(1L);
+        SseEmitter first = manager.addEmitter(1L, null);
+        SseEmitter second = manager.addEmitter(1L, null);
 
         Optional<SseEmitter> found = manager.getEmitter(1L);
 
