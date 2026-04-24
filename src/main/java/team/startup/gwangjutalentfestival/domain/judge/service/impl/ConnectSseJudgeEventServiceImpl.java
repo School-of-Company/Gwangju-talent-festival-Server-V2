@@ -11,6 +11,7 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -37,9 +38,13 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
     public SseEmitter execute() {
         Long userId = UserUtil.getCurrentUserId();
 
+        AtomicBoolean cancelled = new AtomicBoolean(false);
         AtomicReference<ScheduledFuture<?>> beatHolder = new AtomicReference<>();
-        SseEmitter emitter = judgeSseEmitterManager.addEmitter(userId,
-                () -> { ScheduledFuture<?> b = beatHolder.get(); if (b != null) b.cancel(true); });
+        SseEmitter emitter = judgeSseEmitterManager.addEmitter(userId, () -> {
+            cancelled.set(true);
+            ScheduledFuture<?> b = beatHolder.get();
+            if (b != null) b.cancel(true);
+        });
 
         try {
             emitter.send(SseEmitter.event()
@@ -62,6 +67,7 @@ public class ConnectSseJudgeEventServiceImpl implements ConnectSseJudgeEventServ
             }
         }, Duration.ofSeconds(15));
         beatHolder.set(beat);
+        if (cancelled.get()) beat.cancel(true);
 
         return emitter;
     }

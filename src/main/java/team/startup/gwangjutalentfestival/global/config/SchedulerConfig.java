@@ -24,7 +24,6 @@ public class SchedulerConfig {
         int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors() * 2);
         scheduler.setPoolSize(poolSize);
         scheduler.setThreadNamePrefix("sse-heartbeat-");
-        scheduler.initialize();
         return scheduler;
     }
 }
