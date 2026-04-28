@@ -39,6 +39,19 @@ public abstract class AbstractSseEmitterManager<K> {
         return emitter;
     }
 
+    public void executeSafe(K key, Consumer<SseEmitter> action) {
+        SseEmitter emitter = emitters.get(key);
+        if (emitter == null) return;
+        ReentrantLock lock = locks.get(emitter);
+        if (lock == null) return;
+        lock.lock();
+        try {
+            action.accept(emitter);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public void forEachEmitterSafe(Consumer<SseEmitter> action) {
         emitters.values().forEach(emitter -> {
             ReentrantLock lock = locks.get(emitter);
