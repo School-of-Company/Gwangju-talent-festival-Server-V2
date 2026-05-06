@@ -17,6 +17,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Google Sheets API 연동 어댑터.
+ * <p>슬로건 데이터를 Google Sheets에 행(row) 단위로 추가하는 기능을 제공한다.
+ * API 오류, IO 오류, 예상치 못한 오류를 각각 도메인 예외로 변환하여 던진다.</p>
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -25,10 +30,20 @@ public class GoogleSheetsAdapter {
     private final Sheets sheets;
     private final GoogleSheetsProperties properties;
 
+    /**
+     * 재학생 슬로건 데이터 목록을 재학생 시트에 추가한다.
+     *
+     * @param data 추가할 재학생 슬로건 행 데이터 목록
+     */
     public void appendEnrolledSlogan(List<EnrolledSloganSheetRowData> data) {
         append(properties.enrolledSheetPage(), toEnrolledRows(data));
     }
 
+    /**
+     * 학교 밖 청소년 슬로건 데이터 목록을 학교 밖 청소년 시트에 추가한다.
+     *
+     * @param data 추가할 학교 밖 청소년 슬로건 행 데이터 목록
+     */
     public void appendOutOfSchoolSlogan(List<OutOfSchoolSloganSheetRowData> data) {
         append(properties.outOfSchoolSheetPage(), toOutOfSchoolRows(data));
     }
@@ -76,7 +91,7 @@ public class GoogleSheetsAdapter {
                         s.description(),
                         s.name(),
                         s.phoneNumber(),
-                        s.birthDate().toString()
+                        s.birthDate() != null ? s.birthDate().toString() : null
                 ))
                 .toList();
     }

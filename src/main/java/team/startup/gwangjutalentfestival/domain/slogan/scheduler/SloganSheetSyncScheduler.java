@@ -53,28 +53,40 @@ public class SloganSheetSyncScheduler {
             return;
         }
 
-        List<EnrolledSloganSheetRowData> enrolledRows = slogans.stream()
+        List<SloganEntity> enrolledSlogans = slogans.stream()
                 .filter(s -> s.getSchoolStatus() == SchoolStatus.ENROLLED)
-                .map(this::toEnrolledRowData)
                 .toList();
 
-        List<OutOfSchoolSloganSheetRowData> outOfSchoolRows = slogans.stream()
+        List<SloganEntity> outOfSchoolSlogans = slogans.stream()
                 .filter(s -> s.getSchoolStatus() == SchoolStatus.OUT_OF_SCHOOL)
-                .map(this::toOutOfSchoolRowData)
                 .toList();
 
-        try {
-            if (!enrolledRows.isEmpty()) {
+        if (!enrolledSlogans.isEmpty()) {
+            List<EnrolledSloganSheetRowData> enrolledRows = enrolledSlogans.stream()
+                    .map(this::toEnrolledRowData)
+                    .toList();
+            try {
                 googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
+                transactionTemplate.executeWithoutResult(status ->
+                        enrolledSlogans.forEach(SloganEntity::markDone));
+            } catch (Exception e) {
+                transactionTemplate.executeWithoutResult(status ->
+                        markFailed(enrolledSlogans, e));
             }
-            if (!outOfSchoolRows.isEmpty()) {
+        }
+
+        if (!outOfSchoolSlogans.isEmpty()) {
+            List<OutOfSchoolSloganSheetRowData> outOfSchoolRows = outOfSchoolSlogans.stream()
+                    .map(this::toOutOfSchoolRowData)
+                    .toList();
+            try {
                 googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
+                transactionTemplate.executeWithoutResult(status ->
+                        outOfSchoolSlogans.forEach(SloganEntity::markDone));
+            } catch (Exception e) {
+                transactionTemplate.executeWithoutResult(status ->
+                        markFailed(outOfSchoolSlogans, e));
             }
-            transactionTemplate.executeWithoutResult(status ->
-                    slogans.forEach(SloganEntity::markDone));
-        } catch (Exception e) {
-            transactionTemplate.executeWithoutResult(status ->
-                    markFailed(slogans, e));
         }
     }
 
