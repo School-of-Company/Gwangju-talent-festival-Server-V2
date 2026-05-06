@@ -6,8 +6,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
+import team.startup.gwangjutalentfestival.domain.slogan.enums.SchoolStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
-import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.SloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.EnrolledSloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.OutOfSchoolSloganSheetRowData;
 import team.startup.gwangjutalentfestival.domain.slogan.repository.SloganRepository;
 import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleSheetsAdapter;
@@ -51,12 +53,23 @@ public class SloganSheetSyncScheduler {
             return;
         }
 
-        List<SloganSheetRowData> rows = slogans.stream()
-                .map(this::toRowData)
+        List<EnrolledSloganSheetRowData> enrolledRows = slogans.stream()
+                .filter(s -> s.getSchoolStatus() == SchoolStatus.ENROLLED)
+                .map(this::toEnrolledRowData)
+                .toList();
+
+        List<OutOfSchoolSloganSheetRowData> outOfSchoolRows = slogans.stream()
+                .filter(s -> s.getSchoolStatus() == SchoolStatus.OUT_OF_SCHOOL)
+                .map(this::toOutOfSchoolRowData)
                 .toList();
 
         try {
-            googleSheetsAdapter.appendSlogan(rows);
+            if (!enrolledRows.isEmpty()) {
+                googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
+            }
+            if (!outOfSchoolRows.isEmpty()) {
+                googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
+            }
             transactionTemplate.executeWithoutResult(status ->
                     slogans.forEach(SloganEntity::markDone));
         } catch (Exception e) {
@@ -65,14 +78,23 @@ public class SloganSheetSyncScheduler {
         }
     }
 
-    private SloganSheetRowData toRowData(SloganEntity s) {
-        return new SloganSheetRowData(
+    private EnrolledSloganSheetRowData toEnrolledRowData(SloganEntity s) {
+        return new EnrolledSloganSheetRowData(
                 s.getSlogan(),
                 s.getDescription(),
                 s.getSchool(),
-                s.getName(),
                 s.getGrade(),
                 s.getClassNum(),
+                s.getName(),
+                s.getPhoneNumber()
+        );
+    }
+
+    private OutOfSchoolSloganSheetRowData toOutOfSchoolRowData(SloganEntity s) {
+        return new OutOfSchoolSloganSheetRowData(
+                s.getSlogan(),
+                s.getDescription(),
+                s.getName(),
                 s.getPhoneNumber(),
                 s.getBirthDate()
         );

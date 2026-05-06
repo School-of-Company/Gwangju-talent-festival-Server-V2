@@ -65,12 +65,13 @@ google:
   sheets:
     account-credential: ${GOOGLE_ACCOUNT_CREDENTIAL}
     sheet-id: ${GOOGLE_SHEET_ID}
-    sheet-page: ${GOOGLE_SHEET_PAGE}
+    enrolled-sheet-page: ${GOOGLE_ENROLLED_SHEET_PAGE}
+    out-of-school-sheet-page: ${GOOGLE_OUT_OF_SCHOOL_SHEET_PAGE}
 
 slogan:
   submission:
-    start-at: ${START_AT:2026-05-18T00:00:00}
-    end-at: ${END_AT:2026-05-28T23:59:59}
+    start-at: ${START_AT:2026-04-18T00:00:00}
+    end-at: ${END_AT:2026-05-28T18:00:00}
 
 management:
   endpoints:
