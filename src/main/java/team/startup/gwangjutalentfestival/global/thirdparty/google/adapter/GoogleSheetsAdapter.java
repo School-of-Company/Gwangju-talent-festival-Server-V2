@@ -5,7 +5,8 @@ import com.google.api.services.sheets.v4.Sheets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.SloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.EnrolledSloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.OutOfSchoolSloganSheetRowData;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsApiException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsIoException;
@@ -30,23 +31,29 @@ public class GoogleSheetsAdapter {
     private final GoogleSheetsProperties properties;
 
     /**
-     * 슬로건 데이터 목록을 Google Sheets에 추가한다.
+     * 재학생 슬로건 데이터 목록을 재학생 시트에 추가한다.
      *
-     * @param data 추가할 슬로건 행 데이터 목록
-     * @throws GoogleSheetsApiException Google Sheets API 오류 발생 시
-     * @throws GoogleSheetsIoException  네트워크/IO 오류 발생 시
-     * @throws GoogleSheetsException    그 외 예기치 못한 오류 발생 시
+     * @param data 추가할 재학생 슬로건 행 데이터 목록
      */
-    public void appendSlogan(List<SloganSheetRowData> data) {
-        List<List<Object>> rows = getList(data);
-        String sheetId = properties.sheetId();
-        String sheetPage = properties.sheetPage();
+    public void appendEnrolledSlogan(List<EnrolledSloganSheetRowData> data) {
+        append(properties.enrolledSheetPage(), toEnrolledRows(data));
+    }
 
+    /**
+     * 학교 밖 청소년 슬로건 데이터 목록을 학교 밖 청소년 시트에 추가한다.
+     *
+     * @param data 추가할 학교 밖 청소년 슬로건 행 데이터 목록
+     */
+    public void appendOutOfSchoolSlogan(List<OutOfSchoolSloganSheetRowData> data) {
+        append(properties.outOfSchoolSheetPage(), toOutOfSchoolRows(data));
+    }
+
+    private void append(String sheetPage, List<List<Object>> rows) {
         try {
             ValueRange valueRange = new ValueRange().setValues(rows);
 
             sheets.spreadsheets().values()
-                    .append(sheetId, sheetPage, valueRange)
+                    .append(properties.sheetId(), sheetPage, valueRange)
                     .setValueInputOption("RAW")
                     .setInsertDataOption("INSERT_ROWS")
                     .execute();
@@ -63,15 +70,26 @@ public class GoogleSheetsAdapter {
         }
     }
 
-    private List<List<Object>> getList(List<SloganSheetRowData> data) {
+    private List<List<Object>> toEnrolledRows(List<EnrolledSloganSheetRowData> data) {
         return data.stream()
                 .map(s -> Arrays.<Object>asList(
                         s.slogan(),
                         s.description(),
                         s.school(),
-                        s.name(),
                         s.grade(),
                         s.classNum(),
+                        s.name(),
+                        s.phoneNumber()
+                ))
+                .toList();
+    }
+
+    private List<List<Object>> toOutOfSchoolRows(List<OutOfSchoolSloganSheetRowData> data) {
+        return data.stream()
+                .map(s -> Arrays.<Object>asList(
+                        s.slogan(),
+                        s.description(),
+                        s.name(),
                         s.phoneNumber(),
                         s.birthDate() != null ? s.birthDate().toString() : null
                 ))

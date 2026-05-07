@@ -6,8 +6,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
+import team.startup.gwangjutalentfestival.domain.slogan.enums.SchoolStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
-import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.SloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.EnrolledSloganSheetRowData;
+import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.OutOfSchoolSloganSheetRowData;
 import team.startup.gwangjutalentfestival.domain.slogan.repository.SloganRepository;
 import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleSheetsAdapter;
@@ -51,28 +53,60 @@ public class SloganSheetSyncScheduler {
             return;
         }
 
-        List<SloganSheetRowData> rows = slogans.stream()
-                .map(this::toRowData)
+        List<SloganEntity> enrolledSlogans = slogans.stream()
+                .filter(s -> s.getSchoolStatus() == SchoolStatus.ENROLLED)
                 .toList();
 
-        try {
-            googleSheetsAdapter.appendSlogan(rows);
-            transactionTemplate.executeWithoutResult(status ->
-                    slogans.forEach(SloganEntity::markDone));
-        } catch (Exception e) {
-            transactionTemplate.executeWithoutResult(status ->
-                    markFailed(slogans, e));
+        List<SloganEntity> outOfSchoolSlogans = slogans.stream()
+                .filter(s -> s.getSchoolStatus() == SchoolStatus.OUT_OF_SCHOOL)
+                .toList();
+
+        if (!enrolledSlogans.isEmpty()) {
+            List<EnrolledSloganSheetRowData> enrolledRows = enrolledSlogans.stream()
+                    .map(this::toEnrolledRowData)
+                    .toList();
+            try {
+                googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
+                transactionTemplate.executeWithoutResult(status ->
+                        enrolledSlogans.forEach(SloganEntity::markDone));
+            } catch (Exception e) {
+                transactionTemplate.executeWithoutResult(status ->
+                        markFailed(enrolledSlogans, e));
+            }
+        }
+
+        if (!outOfSchoolSlogans.isEmpty()) {
+            List<OutOfSchoolSloganSheetRowData> outOfSchoolRows = outOfSchoolSlogans.stream()
+                    .map(this::toOutOfSchoolRowData)
+                    .toList();
+            try {
+                googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
+                transactionTemplate.executeWithoutResult(status ->
+                        outOfSchoolSlogans.forEach(SloganEntity::markDone));
+            } catch (Exception e) {
+                transactionTemplate.executeWithoutResult(status ->
+                        markFailed(outOfSchoolSlogans, e));
+            }
         }
     }
 
-    private SloganSheetRowData toRowData(SloganEntity s) {
-        return new SloganSheetRowData(
+    private EnrolledSloganSheetRowData toEnrolledRowData(SloganEntity s) {
+        return new EnrolledSloganSheetRowData(
                 s.getSlogan(),
                 s.getDescription(),
                 s.getSchool(),
-                s.getName(),
                 s.getGrade(),
                 s.getClassNum(),
+                s.getName(),
+                s.getPhoneNumber()
+        );
+    }
+
+    private OutOfSchoolSloganSheetRowData toOutOfSchoolRowData(SloganEntity s) {
+        return new OutOfSchoolSloganSheetRowData(
+                s.getSlogan(),
+                s.getDescription(),
+                s.getName(),
                 s.getPhoneNumber(),
                 s.getBirthDate()
         );
