@@ -11,26 +11,9 @@ services:
     environment:
       - REDIS_HOST=redis
     depends_on:
-      db:
-        condition: service_healthy
       redis:
         condition: service_healthy
     restart: always
-
-  db:
-    image: mysql:8.0
-    container_name: mysql-db
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=gwangjutalentfestival
-    volumes:
-      - mysql-data:/var/lib/mysql
-    restart: always
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:7.0
@@ -41,6 +24,3 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-volumes:
-  mysql-data:
