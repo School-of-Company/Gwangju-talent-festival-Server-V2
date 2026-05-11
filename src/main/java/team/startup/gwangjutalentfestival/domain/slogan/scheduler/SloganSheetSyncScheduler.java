@@ -61,40 +61,37 @@ public class SloganSheetSyncScheduler {
                 .filter(s -> s.getSchoolStatus() == SchoolStatus.OUT_OF_SCHOOL)
                 .toList();
 
-        if (!enrolledSlogans.isEmpty()) {
+        syncSlogans(enrolledSlogans, () -> {
             List<EnrolledSloganSheetRowData> enrolledRows = enrolledSlogans.stream()
                     .map(this::toEnrolledRowData)
                     .toList();
-            try {
-                googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
-                transactionTemplate.executeWithoutResult(status -> {
-                    enrolledSlogans.forEach(SloganEntity::markDone);
-                    sloganRepository.saveAll(enrolledSlogans);
-                });
-            } catch (Exception e) {
-                transactionTemplate.executeWithoutResult(status -> {
-                    markFailed(enrolledSlogans, e);
-                    sloganRepository.saveAll(enrolledSlogans);
-                });
-            }
-        }
+            googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
+        });
 
-        if (!outOfSchoolSlogans.isEmpty()) {
+        syncSlogans(outOfSchoolSlogans, () -> {
             List<OutOfSchoolSloganSheetRowData> outOfSchoolRows = outOfSchoolSlogans.stream()
                     .map(this::toOutOfSchoolRowData)
                     .toList();
-            try {
-                googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
-                transactionTemplate.executeWithoutResult(status -> {
-                    outOfSchoolSlogans.forEach(SloganEntity::markDone);
-                    sloganRepository.saveAll(outOfSchoolSlogans);
-                });
-            } catch (Exception e) {
-                transactionTemplate.executeWithoutResult(status -> {
-                    markFailed(outOfSchoolSlogans, e);
-                    sloganRepository.saveAll(outOfSchoolSlogans);
-                });
-            }
+            googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
+        });
+    }
+
+    private void syncSlogans(List<SloganEntity> slogans, Runnable appendToSheet) {
+        if (slogans.isEmpty()) {
+            return;
+        }
+
+        try {
+            appendToSheet.run();
+            transactionTemplate.executeWithoutResult(status -> {
+                slogans.forEach(SloganEntity::markDone);
+                sloganRepository.saveAll(slogans);
+            });
+        } catch (Exception e) {
+            transactionTemplate.executeWithoutResult(status -> {
+                markFailed(slogans, e);
+                sloganRepository.saveAll(slogans);
+            });
         }
     }
 
