@@ -67,11 +67,15 @@ public class SloganSheetSyncScheduler {
                     .toList();
             try {
                 googleSheetsAdapter.appendEnrolledSlogan(enrolledRows);
-                transactionTemplate.executeWithoutResult(status ->
-                        enrolledSlogans.forEach(SloganEntity::markDone));
+                transactionTemplate.executeWithoutResult(status -> {
+                    enrolledSlogans.forEach(SloganEntity::markDone);
+                    sloganRepository.saveAll(enrolledSlogans);
+                });
             } catch (Exception e) {
-                transactionTemplate.executeWithoutResult(status ->
-                        markFailed(enrolledSlogans, e));
+                transactionTemplate.executeWithoutResult(status -> {
+                    markFailed(enrolledSlogans, e);
+                    sloganRepository.saveAll(enrolledSlogans);
+                });
             }
         }
 
@@ -81,11 +85,15 @@ public class SloganSheetSyncScheduler {
                     .toList();
             try {
                 googleSheetsAdapter.appendOutOfSchoolSlogan(outOfSchoolRows);
-                transactionTemplate.executeWithoutResult(status ->
-                        outOfSchoolSlogans.forEach(SloganEntity::markDone));
+                transactionTemplate.executeWithoutResult(status -> {
+                    outOfSchoolSlogans.forEach(SloganEntity::markDone);
+                    sloganRepository.saveAll(outOfSchoolSlogans);
+                });
             } catch (Exception e) {
-                transactionTemplate.executeWithoutResult(status ->
-                        markFailed(outOfSchoolSlogans, e));
+                transactionTemplate.executeWithoutResult(status -> {
+                    markFailed(outOfSchoolSlogans, e);
+                    sloganRepository.saveAll(outOfSchoolSlogans);
+                });
             }
         }
     }
