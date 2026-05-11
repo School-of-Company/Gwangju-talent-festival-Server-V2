@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.thirdparty.google.adapter;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class GoogleSheetsAdapterTest {
 
@@ -18,5 +19,19 @@ class GoogleSheetsAdapterTest {
         String range = GoogleSheetsAdapter.toAppendRange("학생's");
 
         assertThat(range).isEqualTo("'학생''s'!A1");
+    }
+
+    @Test
+    void nullSheetPageThrowsException() {
+        assertThatThrownBy(() -> GoogleSheetsAdapter.toAppendRange(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sheetPage must not be null or blank");
+    }
+
+    @Test
+    void blankSheetPageThrowsException() {
+        assertThatThrownBy(() -> GoogleSheetsAdapter.toAppendRange(" "))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("sheetPage must not be null or blank");
     }
 }

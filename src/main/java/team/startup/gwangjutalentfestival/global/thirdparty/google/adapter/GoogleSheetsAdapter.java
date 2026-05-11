@@ -71,6 +71,9 @@ public class GoogleSheetsAdapter {
     }
 
     static String toAppendRange(String sheetPage) {
+        if (sheetPage == null || sheetPage.isBlank()) {
+            throw new IllegalArgumentException("sheetPage must not be null or blank");
+        }
         return "'" + sheetPage.replace("'", "''") + "'!A1";
     }
 
