@@ -53,7 +53,7 @@ public class GoogleSheetsAdapter {
             ValueRange valueRange = new ValueRange().setValues(rows);
 
             sheets.spreadsheets().values()
-                    .append(properties.sheetId(), sheetPage, valueRange)
+                    .append(properties.sheetId(), toAppendRange(sheetPage), valueRange)
                     .setValueInputOption("RAW")
                     .setInsertDataOption("INSERT_ROWS")
                     .execute();
@@ -68,6 +68,10 @@ public class GoogleSheetsAdapter {
             log.error("Google Sheets 예기치 못한 오류 발생 - message: {}", e.getMessage());
             throw new GoogleSheetsException();
         }
+    }
+
+    static String toAppendRange(String sheetPage) {
+        return "'" + sheetPage.replace("'", "''") + "'!A1";
     }
 
     private List<List<Object>> toEnrolledRows(List<EnrolledSloganSheetRowData> data) {
