@@ -28,14 +28,8 @@ jobs:
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
 
-      - name: Build with Gradle
-        run: ./gradlew build -x test --no-daemon
-
       - name: Create .env file
-        run: |
-          if [ ! -f .env ]; then
-            echo "${{ secrets.ENV_FILE }}" > .env
-          fi
+        run: echo "${{ secrets.ENV_FILE }}" > .env
 
       - name: Build Docker image
         run: docker build -t gwangju-festival:latest .
