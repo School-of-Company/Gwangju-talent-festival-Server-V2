@@ -28,6 +28,9 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class CreateSloganServiceImpl implements CreateSloganService {
 
+    private static final int MIN_SLOGAN_AGE = 7;
+    private static final int MAX_SLOGAN_AGE = 18;
+
     private final SloganRepository sloganRepository;
     private final SloganSubmissionProperties sloganSubmissionProperties;
 
@@ -92,7 +95,7 @@ public class CreateSloganServiceImpl implements CreateSloganService {
 
     private void validateAge(LocalDate birthDate) {
         int age = LocalDate.now(TimeConstants.SEOUL_ZONE_ID).getYear() - birthDate.getYear();
-        if (age < 7 || age > 18) {
+        if (age < MIN_SLOGAN_AGE || age > MAX_SLOGAN_AGE) {
             throw new InvalidSloganAgeException();
         }
     }

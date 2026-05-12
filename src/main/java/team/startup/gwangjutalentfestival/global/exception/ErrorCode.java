@@ -42,7 +42,7 @@ public enum ErrorCode {
     // Slogan
     SLOGAN_SUBMISSION_PERIOD_INVALID(400, "슬로건 접수 가능 기간이 아닙니다."),
     SLOGAN_REQUIRED_FIELD_MISSING(400, "필수 항목이 누락되었습니다."),
-    INVALID_AGE(400, "나이는 만 7세 이상 만 19세 미만이어야 합니다."),
+    INVALID_AGE(400, "나이는 7세 이상 18세 이하(출생 연도 기준)이어야 합니다."),
 
     // Seat
     SEAT_NOT_EXISTS_IN_SECTION(400, "해당 섹션에 존재하지 않는 좌석입니다."),
