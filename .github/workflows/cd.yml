@@ -41,7 +41,7 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose --env-file .env down
+          docker compose --env-file .env down --remove-orphans
           docker compose --env-file .env up -d
 
       - name: Notify Discord on success
