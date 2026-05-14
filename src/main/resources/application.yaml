@@ -74,14 +74,22 @@ slogan:
     end-at: ${END_AT:2026-05-28T18:00:00}
 
 management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, prometheus
       base-path: /
       path-mapping:
         health: health
-
   endpoint:
     health:
       show-details: never
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
