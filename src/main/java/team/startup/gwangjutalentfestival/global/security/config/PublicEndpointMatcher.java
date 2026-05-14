@@ -13,6 +13,7 @@ public final class PublicEndpointMatcher {
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/auth(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/health(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/excel(?:/.*)?")),
+            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/prometheus(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/vote/[^/]+")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/error")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/swagger-ui(?:/.*)?")),
