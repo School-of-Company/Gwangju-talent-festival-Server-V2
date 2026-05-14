@@ -20,6 +20,7 @@ import team.startup.gwangjutalentfestival.global.auth.CustomUserDetails;
 import team.startup.gwangjutalentfestival.global.exception.ErrorCode;
 import team.startup.gwangjutalentfestival.global.exception.ErrorResponse;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
+import team.startup.gwangjutalentfestival.global.security.config.PublicEndpointMatcher;
 
 import java.io.IOException;
 
@@ -36,6 +37,11 @@ public class JwtFilter extends OncePerRequestFilter {
     private final TokenBlacklistRepository tokenBlacklistRepository;
     private final ObjectMapper objectMapper;
     private final JwtProvider jwtProvider;
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return PublicEndpointMatcher.matcher().matches(request);
+    }
 
     @Override
     protected void doFilterInternal(

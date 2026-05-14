@@ -7,6 +7,7 @@ import team.startup.gwangjutalentfestival.domain.auth.exception.DuplicatePhoneNu
 import team.startup.gwangjutalentfestival.domain.slogan.entity.SloganEntity;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SchoolStatus;
 import team.startup.gwangjutalentfestival.domain.slogan.enums.SheetSyncStatus;
+import team.startup.gwangjutalentfestival.domain.slogan.exception.InvalidSloganAgeException;
 import team.startup.gwangjutalentfestival.domain.slogan.exception.SloganRequiredFieldMissingException;
 import team.startup.gwangjutalentfestival.domain.slogan.exception.SloganSubmissionPeriodException;
 import team.startup.gwangjutalentfestival.domain.slogan.presentation.data.request.CreateSloganRequest;
@@ -15,6 +16,7 @@ import team.startup.gwangjutalentfestival.domain.slogan.repository.SloganReposit
 import team.startup.gwangjutalentfestival.domain.slogan.service.CreateSloganService;
 import team.startup.gwangjutalentfestival.global.constant.TimeConstants;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -25,6 +27,9 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class CreateSloganServiceImpl implements CreateSloganService {
+
+    private static final int MIN_SLOGAN_AGE = 7;
+    private static final int MAX_SLOGAN_AGE = 18;
 
     private final SloganRepository sloganRepository;
     private final SloganSubmissionProperties sloganSubmissionProperties;
@@ -54,6 +59,7 @@ public class CreateSloganServiceImpl implements CreateSloganService {
         if (request.birthDate() == null) {
             throw new SloganRequiredFieldMissingException();
         }
+        validateAge(request.birthDate());
 
         return SloganEntity.builder()
                 .name(request.name())
@@ -85,6 +91,13 @@ public class CreateSloganServiceImpl implements CreateSloganService {
                 .sheetSyncStatus(SheetSyncStatus.PENDING)
                 .nextRetryAt(LocalDateTime.now(TimeConstants.SEOUL_ZONE_ID))
                 .build();
+    }
+
+    private void validateAge(LocalDate birthDate) {
+        int age = LocalDate.now(TimeConstants.SEOUL_ZONE_ID).getYear() - birthDate.getYear();
+        if (age < MIN_SLOGAN_AGE || age > MAX_SLOGAN_AGE) {
+            throw new InvalidSloganAgeException();
+        }
     }
 
     private boolean isBlank(String value) {

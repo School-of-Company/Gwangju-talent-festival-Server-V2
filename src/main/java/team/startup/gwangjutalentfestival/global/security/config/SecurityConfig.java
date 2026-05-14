@@ -39,16 +39,6 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     private final CorsProperties corsProperties;
 
-    private static final String[] PUBLIC_URLS = {
-            "/auth/**",
-            "/health/**",
-            "/excel/**",
-            "/vote/{teamId}",
-            "/error",
-            "/swagger-ui/**",
-            "/v3/api-docs/**"
-    };
-
     /**
      * HTTP 보안 필터 체인을 구성한다.
      *
@@ -72,14 +62,10 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(it ->it
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
-                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers(PublicEndpointMatcher.matchers()).permitAll()
 
                         // team
-                        .requestMatchers(HttpMethod.GET, "/team").permitAll()
                         .requestMatchers("/team/**").hasRole("ADMIN")
-
-                        // slogan
-                        .requestMatchers(HttpMethod.POST, "/slogan").permitAll()
 
                         // seat
                         .requestMatchers(HttpMethod.POST, "/seat").authenticated()
