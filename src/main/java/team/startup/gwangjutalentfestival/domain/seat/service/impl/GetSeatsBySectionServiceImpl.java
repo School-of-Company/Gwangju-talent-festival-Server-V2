@@ -19,14 +19,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
 
-    private final UserUtil userUtil;
     private final SeatUtil seatUtil;
     private final SeatReservationCustomRepository seatReservationCustomRepository;
     private final SeatBanCustomRepository seatBanCustomRepository;
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.getCurrentUserRole()")
+    @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + T(team.startup.gwangjutalentfestival.global.util.UserUtil).getCurrentUserRole()")
     public GetSeatsBySectionResponse execute(String section) {
         Role role = UserUtil.getCurrentUserRole();
 
