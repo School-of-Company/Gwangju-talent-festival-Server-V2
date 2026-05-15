@@ -16,6 +16,8 @@ import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.Googl
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 슬로건 데이터를 Google Sheets에 주기적으로 동기화하는 스케줄러.
@@ -53,13 +55,11 @@ public class SloganSheetSyncScheduler {
             return;
         }
 
-        List<SloganEntity> enrolledSlogans = slogans.stream()
-                .filter(s -> s.getSchoolStatus() == SchoolStatus.ENROLLED)
-                .toList();
+        Map<SchoolStatus, List<SloganEntity>> grouped = slogans.stream()
+                .collect(Collectors.groupingBy(SloganEntity::getSchoolStatus));
 
-        List<SloganEntity> outOfSchoolSlogans = slogans.stream()
-                .filter(s -> s.getSchoolStatus() == SchoolStatus.OUT_OF_SCHOOL)
-                .toList();
+        List<SloganEntity> enrolledSlogans = grouped.getOrDefault(SchoolStatus.ENROLLED, List.of());
+        List<SloganEntity> outOfSchoolSlogans = grouped.getOrDefault(SchoolStatus.OUT_OF_SCHOOL, List.of());
 
         syncSlogans(enrolledSlogans, () -> {
             List<EnrolledSloganSheetRowData> enrolledRows = enrolledSlogans.stream()
