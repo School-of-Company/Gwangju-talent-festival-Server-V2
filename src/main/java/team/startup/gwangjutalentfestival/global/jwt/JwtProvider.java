@@ -181,6 +181,19 @@ public class JwtProvider {
     }
 
     /**
+     * Authorization 헤더 문자열에서 Bearer 토큰을 추출한다.
+     *
+     * @param authorizationHeader Authorization 헤더 값
+     * @return 토큰 문자열, 형식이 맞지 않으면 빈 문자열
+     */
+    public String extractBearerToken(String authorizationHeader) {
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith(BEARER_PREFIX)) {
+            return authorizationHeader.substring(BEARER_PREFIX.length());
+        }
+        return "";
+    }
+
+    /**
      * HTTP 요청의 Authorization 헤더에서 Bearer 토큰을 추출한다.
      *
      * @param request HTTP 서블릿 요청

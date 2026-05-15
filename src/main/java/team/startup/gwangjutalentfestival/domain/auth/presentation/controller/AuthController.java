@@ -20,6 +20,7 @@ import team.startup.gwangjutalentfestival.domain.auth.service.LogoutService;
 import team.startup.gwangjutalentfestival.domain.auth.service.ReissueTokenService;
 import team.startup.gwangjutalentfestival.domain.auth.service.SendVerifyCodeService;
 import team.startup.gwangjutalentfestival.domain.auth.service.SignUpService;
+import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
 
 /**
  * 인증 관련 API 엔드포인트를 처리하는 컨트롤러.
@@ -36,6 +37,7 @@ public class AuthController {
     private final LoginService loginService;
     private final LogoutService logoutService;
     private final ReissueTokenService reissueTokenService;
+    private final JwtProvider jwtProvider;
 
     /**
      * 입력한 휴대폰 번호로 SMS 인증번호를 발송합니다.
@@ -106,8 +108,7 @@ public class AuthController {
     })
     @DeleteMapping("/logout")
     public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authorization) {
-        String bearer = authorization.startsWith("Bearer ") ? authorization.substring(7) : "";
-        logoutService.execute(bearer);
+        logoutService.execute(jwtProvider.extractBearerToken(authorization));
         return ResponseEntity.noContent().build();
     }
 
