@@ -26,9 +26,9 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.currentUserRole()")
+    @Cacheable(value = CacheConfig.SEATS_SECTION, key = "#section + ':' + @userUtil.getCurrentUserRole()")
     public GetSeatsBySectionResponse execute(String section) {
-        Role role = userUtil.currentUserRole();
+        Role role = UserUtil.getCurrentUserRole();
 
         Set<Integer> reservedSeatNumbers = seatReservationCustomRepository.findSeatNumbersBySeatSection(section);
         Set<Integer> bannedSeatNumbers = seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(section, role);
