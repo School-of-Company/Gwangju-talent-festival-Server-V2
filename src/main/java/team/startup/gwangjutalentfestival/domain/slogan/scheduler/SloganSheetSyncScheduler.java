@@ -56,6 +56,7 @@ public class SloganSheetSyncScheduler {
         }
 
         Map<SchoolStatus, List<SloganEntity>> grouped = slogans.stream()
+                .filter(s -> s.getSchoolStatus() != null)
                 .collect(Collectors.groupingBy(SloganEntity::getSchoolStatus));
 
         List<SloganEntity> enrolledSlogans = grouped.getOrDefault(SchoolStatus.ENROLLED, List.of());

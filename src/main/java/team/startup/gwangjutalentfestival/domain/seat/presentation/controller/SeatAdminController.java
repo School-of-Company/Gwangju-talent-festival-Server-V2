@@ -15,6 +15,9 @@ import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
 
+/**
+ * 좌석 관리자 기능(차단/해제)을 제공하는 컨트롤러.
+ */
 @Tag(name = "Seat Admin", description = "좌석 관리자 API")
 @RestController
 @RequestMapping("/seat")

@@ -184,13 +184,10 @@ public class JwtProvider {
      * Authorization 헤더 문자열에서 Bearer 토큰을 추출한다.
      *
      * @param authorizationHeader Authorization 헤더 값
-     * @return 토큰 문자열, 형식이 맞지 않으면 빈 문자열
+     * @return 토큰 문자열, 형식이 맞지 않으면 {@code null}
      */
     public String extractBearerToken(String authorizationHeader) {
-        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith(BEARER_PREFIX)) {
-            return authorizationHeader.substring(BEARER_PREFIX.length());
-        }
-        return "";
+        return extractTokenFromHeader(authorizationHeader);
     }
 
     /**
@@ -200,7 +197,10 @@ public class JwtProvider {
      * @return 토큰 문자열, 헤더가 없거나 형식이 맞지 않으면 {@code null}
      */
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        return extractTokenFromHeader(request.getHeader(AUTHORIZATION_HEADER));
+    }
+
+    private String extractTokenFromHeader(String bearerToken) {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
