@@ -22,16 +22,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class GetAllSeatsServiceImpl implements GetAllSeatsService {
 
-    private final UserUtil userUtil;
     private final SeatUtil seatUtil;
     private final SeatBanCustomRepository seatBanCustomRepository;
     private final SeatReservationCustomRepository seatReservationCustomRepository;
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CacheConfig.SEATS_ALL, key = "@userUtil.currentUserRole()")
+    @Cacheable(value = CacheConfig.SEATS_ALL, key = "T(team.startup.gwangjutalentfestival.global.util.UserUtil).getCurrentUserRole()")
     public GetAllSeatsResponse execute() {
-        Role role = userUtil.currentUserRole();
+        Role role = UserUtil.getCurrentUserRole();
 
         List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();

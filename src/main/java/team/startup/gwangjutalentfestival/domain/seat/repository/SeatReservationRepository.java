@@ -1,8 +1,6 @@
 package team.startup.gwangjutalentfestival.domain.seat.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
@@ -22,20 +20,6 @@ public interface SeatReservationRepository extends JpaRepository<SeatEntity, Lon
      * @return 예약 존재 여부
      */
     boolean existsBySeatSectionAndSeatNumber(String seatSection, Integer seatNumber);
-
-    /**
-     * 특정 좌석의 예약 여부와 차단 여부를 비트 합산하여 반환한다.
-     * 반환값: 0=사용가능, 1=예약됨, 2=차단됨, 3=예약+차단
-     *
-     * @param seatSection 좌석 구역
-     * @param seatNumber  좌석 번호
-     * @return 가용성 비트 플래그
-     */
-    @Query(value =
-            "SELECT EXISTS(SELECT 1 FROM seat WHERE seat_section = :section AND seat_number = :number)" +
-            " + EXISTS(SELECT 1 FROM seat_ban WHERE seat_section = :section AND seat_number = :number) * 2",
-            nativeQuery = true)
-    int checkAvailability(@Param("section") String seatSection, @Param("number") Integer seatNumber);
 
     /**
      * 특정 사용자의 예약 좌석 수를 조회한다.
