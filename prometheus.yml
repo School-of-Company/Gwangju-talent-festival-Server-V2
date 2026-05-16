@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'gwangjutalentfestival'
     metrics_path: '/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8080']
+      - targets: ['app:8080']
