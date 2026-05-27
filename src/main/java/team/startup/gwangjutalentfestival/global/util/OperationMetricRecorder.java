@@ -17,35 +17,36 @@ public class OperationMetricRecorder {
     private final MeterRegistry meterRegistry;
 
     public void record(String timerName, String successCounterName, String failureCounterName,
-                       long startNano, boolean success) {
+                       long durationNano, boolean success) {
         if (success && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
                 public void afterCompletion(int status) {
                     String counterName = (status == STATUS_COMMITTED) ? successCounterName : failureCounterName;
-                    recordMetric(timerName, counterName, startNano);
+                    recordMetric(timerName, counterName, durationNano);
                 }
             });
         } else {
-            recordMetric(timerName, success ? successCounterName : failureCounterName, startNano);
+            recordMetric(timerName, success ? successCounterName : failureCounterName, durationNano);
         }
     }
 
     public void record(String timerName, String successCounterName, String failureCounterName, Runnable action) {
         long start = System.nanoTime();
+        boolean success = false;
         try {
             action.run();
-            record(timerName, successCounterName, failureCounterName, start, true);
-        } catch (Exception e) {
-            record(timerName, successCounterName, failureCounterName, start, false);
-            throw e;
+            success = true;
+        } finally {
+            long durationNano = System.nanoTime() - start;
+            record(timerName, successCounterName, failureCounterName, durationNano, success);
         }
     }
 
-    private void recordMetric(String timerName, String counterName, long startNano) {
+    private void recordMetric(String timerName, String counterName, long durationNano) {
         try {
             meterRegistry.timer(timerName)
-                    .record(System.nanoTime() - startNano, TimeUnit.NANOSECONDS);
+                    .record(durationNano, TimeUnit.NANOSECONDS);
             meterRegistry.counter(counterName).increment();
         } catch (Exception e) {
             log.warn("{} metric 기록 실패", timerName, e);
