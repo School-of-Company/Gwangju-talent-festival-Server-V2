@@ -21,8 +21,9 @@ public class OperationMetricRecorder {
         if (success && TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 @Override
-                public void afterCommit() {
-                    recordMetric(timerName, successCounterName, startNano);
+                public void afterCompletion(int status) {
+                    String counterName = (status == STATUS_COMMITTED) ? successCounterName : failureCounterName;
+                    recordMetric(timerName, counterName, startNano);
                 }
             });
         } else {

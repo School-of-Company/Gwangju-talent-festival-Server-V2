@@ -2,7 +2,7 @@
 
 ## 성공 metric 기준
 
-`seat.reservation.success` / `judge.submit.success` 는 트랜잭션이 활성화된 환경에서는 **DB commit 완료 후(`afterCommit`)** 기록됩니다.
+`seat.reservation.success` / `judge.submit.success` 는 트랜잭션이 활성화된 환경에서는 **DB commit 완료 후(`afterCompletion` 성공 시)** 기록됩니다.
 트랜잭션이 없는 환경(단위 테스트 등)에서는 `execute()` 메서드가 Exception 없이 정상 종료된 시점에 즉시 기록됩니다.
 
 ---
