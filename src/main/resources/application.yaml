@@ -81,9 +81,7 @@ management:
     web:
       exposure:
         include: health, prometheus
-      base-path: /
-      path-mapping:
-        health: health
+      base-path: /actuator
   endpoint:
     health:
       show-details: never
