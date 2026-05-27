@@ -74,8 +74,6 @@ slogan:
     end-at: ${END_AT:2026-05-28T18:00:00}
 
 management:
-  security:
-    enabled: false
   metrics:
     tags:
       application: ${spring.application.name}
