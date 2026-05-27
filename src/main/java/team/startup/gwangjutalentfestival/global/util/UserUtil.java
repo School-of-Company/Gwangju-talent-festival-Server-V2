@@ -65,21 +65,4 @@ public class UserUtil {
         return userRepository.getReferenceById(getCurrentUserId());
     }
 
-    /**
-     * 현재 인증된 사용자의 ID를 반환한다. {@link #getCurrentUserId()}의 인스턴스 메서드 래퍼.
-     *
-     * @return 현재 사용자 ID
-     */
-    public Long currentUserId() {
-        return getCurrentUserId();
-    }
-
-    /**
-     * 현재 인증된 사용자의 역할을 반환한다. {@link #getCurrentUserRole()}의 인스턴스 메서드 래퍼.
-     *
-     * @return 현재 사용자 역할
-     */
-    public Role currentUserRole() {
-        return getCurrentUserRole();
-    }
 }

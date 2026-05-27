@@ -12,16 +12,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
-import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.CancelSeatBanRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.PerformerCancelSeatReservationRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetAllSeatsResponse;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatResponse;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatsBySectionResponse;
 import team.startup.gwangjutalentfestival.domain.seat.service.*;
-import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
-import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
 
 import java.util.List;
 
@@ -37,8 +33,6 @@ public class SeatController {
     private final ReservationSeatService reservationSeatService;
     private final CancelSeatReservationService cancelSeatReservationService;
     private final PerformerCancelSeatReservationService performerCancelSeatReservationService;
-    private final BanSeatService banSeatService;
-    private final CancelSeatBanService cancelSeatBanService;
     private final GetCurrentUserSeatService getCurrentUserSeatService;
     private final GetByCurrentPerformerSeatsService getByCurrentPerformerSeatsService;
     private final GetSeatsBySectionService getSeatsBySectionService;
@@ -63,28 +57,6 @@ public class SeatController {
     public ResponseEntity<Void> reservationSeat(
             @Valid @RequestBody ReservationSeatRequest reservationSeatRequest) {
         reservationSeatService.execute(reservationSeatRequest);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
-    }
-
-    /**
-     * 관리자가 특정 좌석을 차단한다.
-     *
-     * @param banSeatRequest 차단할 좌석의 구역, 번호, 적용 역할 정보
-     * @return 201 Created
-     */
-    @Operation(summary = "좌석 차단", description = "관리자가 특정 좌석을 차단합니다.")
-    @SecurityRequirement(name = "Authorization")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "좌석 차단 성공"),
-            @ApiResponse(responseCode = "400", description = "유효하지 않은 좌석 구역"),
-            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
-            @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "409", description = "이미 차단된 좌석")
-    })
-    @PostMapping("/ban")
-    public ResponseEntity<Void> banSeat(
-            @Valid @RequestBody BanSeatRequest banSeatRequest) {
-        banSeatService.execute(banSeatRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
@@ -189,27 +161,6 @@ public class SeatController {
     @DeleteMapping
     public ResponseEntity<Void> cancelSeat() {
         cancelSeatReservationService.execute();
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
-     * 관리자가 특정 좌석의 차단을 해제한다.
-     *
-     * @param cancelSeatBanRequest 차단 해제할 좌석의 구역 및 번호 정보
-     * @return 204 No Content
-     */
-    @Operation(summary = "좌석 차단 취소", description = "관리자가 특정 좌석의 차단을 취소합니다.")
-    @SecurityRequirement(name = "Authorization")
-    @ApiResponses({
-            @ApiResponse(responseCode = "204", description = "좌석 차단 취소 성공"),
-            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
-            @ApiResponse(responseCode = "403", description = "권한 없음"),
-            @ApiResponse(responseCode = "404", description = "차단된 좌석 없음")
-    })
-    @DeleteMapping("/ban")
-    public ResponseEntity<Void> cancelBan(
-            @Valid @RequestBody CancelSeatBanRequest cancelSeatBanRequest) {
-        cancelSeatBanService.execute(cancelSeatBanRequest);
         return ResponseEntity.noContent().build();
     }
 
