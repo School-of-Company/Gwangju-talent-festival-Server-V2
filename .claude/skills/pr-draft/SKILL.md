@@ -78,7 +78,7 @@ Ask the user to confirm which title to use. If no answer, proceed with the recom
 ## Step 5 — Create PR
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/create-pr.sh" "<confirmed-title>" "PR_BODY.md" "<label1>,<label2>" "School-of-Company/Gwangju-talent-festival-Server"
+bash "${CLAUDE_SKILL_DIR}/scripts/create-pr.sh" "<confirmed-title>" "PR_BODY.md" "<label1>,<label2>" "School-of-Company/Gwangju-talent-festival-Server" "@me"
 ```
 
 After creation, display the PR URL.

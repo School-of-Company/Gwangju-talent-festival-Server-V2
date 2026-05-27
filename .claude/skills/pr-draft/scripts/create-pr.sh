@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-TITLE="${1:?Error: PR title is required. Usage: create-pr.sh <title> <body-file> [label1,label2,...] [reviewer1,reviewer2,...]}"
-BODY_FILE="${2:?Error: Body file is required. Usage: create-pr.sh <title> <body-file> [label1,label2,...] [reviewer1,reviewer2,...]}"
+TITLE="${1:?Error: PR title is required. Usage: create-pr.sh <title> <body-file> [label1,label2,...] [reviewer1,reviewer2,...] [assignee1,assignee2,...]}"
+BODY_FILE="${2:?Error: Body file is required. Usage: create-pr.sh <title> <body-file> [label1,label2,...] [reviewer1,reviewer2,...] [assignee1,assignee2,...]}"
 LABELS="${3:-}"
 REVIEWERS="${4:-}"
+ASSIGNEES="${5:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -54,11 +55,20 @@ if [ -n "$REVIEWERS" ]; then
   done
 fi
 
+if [ -n "$ASSIGNEES" ]; then
+  IFS=',' read -ra ASSIGNEE_ARRAY <<< "$ASSIGNEES"
+  for assignee in "${ASSIGNEE_ARRAY[@]}"; do
+    trimmed=$(echo "$assignee" | xargs)
+    [ -n "$trimmed" ] && ARGS+=(--assignee "$trimmed")
+  done
+fi
+
 echo "Creating PR..."
 echo "  Title    : $TITLE"
 echo "  Base     : $BASE"
 [ -n "$LABELS" ]    && echo "  Labels   : $LABELS"
 [ -n "$REVIEWERS" ] && echo "  Reviewers: $REVIEWERS"
+[ -n "$ASSIGNEES" ] && echo "  Assignees: $ASSIGNEES"
 echo ""
 
 "${ARGS[@]}"
