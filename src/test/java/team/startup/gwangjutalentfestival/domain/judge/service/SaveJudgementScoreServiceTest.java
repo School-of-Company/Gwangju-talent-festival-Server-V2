@@ -18,6 +18,7 @@ import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundExce
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.util.Optional;
@@ -43,7 +44,8 @@ class SaveJudgementScoreServiceTest {
     @Mock
     private UserUtil userUtil;
 
-    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+    private final OperationMetricRecorder metricRecorder =
+            new OperationMetricRecorder(new SimpleMeterRegistry());
 
     private SaveJudgementScoreServiceImpl saveJudgementScoreService;
 
@@ -57,7 +59,7 @@ class SaveJudgementScoreServiceTest {
                 judgementRepository,
                 teamRepository,
                 userUtil,
-                meterRegistry
+                metricRecorder
         );
 
         user = UserEntity.builder()

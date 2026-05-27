@@ -19,6 +19,7 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservation
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
@@ -48,7 +49,8 @@ class ReservationSeatServiceImplTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
-    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+    private final OperationMetricRecorder metricRecorder =
+            new OperationMetricRecorder(new SimpleMeterRegistry());
 
     private static final String SEAT_SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
@@ -62,7 +64,7 @@ class ReservationSeatServiceImplTest {
                 seatUtil,
                 userUtil,
                 applicationEventPublisher,
-                meterRegistry
+                metricRecorder
         );
     }
 

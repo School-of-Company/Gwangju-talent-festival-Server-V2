@@ -1,8 +1,6 @@
 package team.startup.gwangjutalentfestival.domain.judge.service.impl;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
@@ -16,16 +14,14 @@ import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundException;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * {@link SaveJudgementScoreService} 구현체.
  * 심사 점수를 저장 또는 수정하고, 팀 총점을 갱신한다.
  * 점수 저장 후 팀 랭킹 캐시를 초기화한다.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService {
@@ -33,7 +29,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private final JudgementRepository judgementRepository;
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
-    private final MeterRegistry meterRegistry;
+    private final OperationMetricRecorder metricRecorder;
 
     /**
      * 현재 로그인한 심사위원의 특정 팀 심사 점수를 저장하거나 수정한다.
@@ -73,9 +69,19 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
                                     .build()));
             updateTotalScore(team);
 
-            recordJudgeMetric(start, true);
+            metricRecorder.record(
+                    "judge.submit.duration",
+                    "judge.submit.success",
+                    "judge.submit.failure",
+                    start, true
+            );
         } catch (Exception e) {
-            recordJudgeMetric(start, false);
+            metricRecorder.record(
+                    "judge.submit.duration",
+                    "judge.submit.success",
+                    "judge.submit.failure",
+                    start, false
+            );
             throw e;
         }
     }
@@ -87,17 +93,5 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
             throw new JudgementTotalScoreExceededException();
         }
         team.updateTotalScore(newTotal);
-    }
-
-    private void recordJudgeMetric(long startNano, boolean success) {
-        try {
-            meterRegistry.timer("judge.submit.duration")
-                    .record(System.nanoTime() - startNano, TimeUnit.NANOSECONDS);
-            meterRegistry.counter(success
-                    ? "judge.submit.success"
-                    : "judge.submit.failure").increment();
-        } catch (Exception e) {
-            log.warn("judge.submit metric 기록 실패", e);
-        }
     }
 }

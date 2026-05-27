@@ -1,8 +1,6 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,12 +14,10 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReser
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
-import java.util.concurrent.TimeUnit;
-
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservationSeatServiceImpl implements ReservationSeatService {
@@ -31,7 +27,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
     private final SeatUtil seatUtil;
     private final UserUtil userUtil;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final MeterRegistry meterRegistry;
+    private final OperationMetricRecorder metricRecorder;
 
     @Override
     @Transactional
@@ -67,22 +63,20 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
                     false
             ));
 
-            recordSeatMetric(start, true);
+            metricRecorder.record(
+                    "seat.reservation.duration",
+                    "seat.reservation.success",
+                    "seat.reservation.failure",
+                    start, true
+            );
         } catch (Exception e) {
-            recordSeatMetric(start, false);
+            metricRecorder.record(
+                    "seat.reservation.duration",
+                    "seat.reservation.success",
+                    "seat.reservation.failure",
+                    start, false
+            );
             throw e;
-        }
-    }
-
-    private void recordSeatMetric(long startNano, boolean success) {
-        try {
-            meterRegistry.timer("seat.reservation.duration")
-                    .record(System.nanoTime() - startNano, TimeUnit.NANOSECONDS);
-            meterRegistry.counter(success
-                    ? "seat.reservation.success"
-                    : "seat.reservation.failure").increment();
-        } catch (Exception e) {
-            log.warn("seat.reservation metric 기록 실패", e);
         }
     }
 }

@@ -23,7 +23,7 @@ rate(http_server_requests_seconds_count{application="gwangjutalentfestival", sta
 
 ### p95 Latency
 ```promql
-histogram_quantile(0.95, rate(http_server_requests_seconds_bucket{application="gwangjutalentfestival"}[5m]))
+histogram_quantile(0.95, sum by (le, uri, method) (rate(http_server_requests_seconds_bucket{application="gwangjutalentfestival"}[5m])))
 ```
 > endpoint별 p95 응답 시간(초 단위). `uri` 레이블로 특정 endpoint만 필터링 가능.
 
@@ -52,7 +52,7 @@ rate(seat_reservation_failure_total[5m])
 
 ### p95 Duration
 ```promql
-histogram_quantile(0.95, rate(seat_reservation_duration_seconds_bucket[5m]))
+histogram_quantile(0.95, sum by (le) (rate(seat_reservation_duration_seconds_bucket[5m])))
 ```
 > 좌석 예매 `execute()` 전체 소요 시간의 p95 (초 단위).
 
@@ -81,7 +81,7 @@ rate(judge_submit_failure_total[5m])
 
 ### p95 Duration
 ```promql
-histogram_quantile(0.95, rate(judge_submit_duration_seconds_bucket[5m]))
+histogram_quantile(0.95, sum by (le) (rate(judge_submit_duration_seconds_bucket{application="gwangjutalentfestival"}[5m])))
 ```
 > 심사 제출 `execute()` 전체 소요 시간의 p95 (초 단위).
 
