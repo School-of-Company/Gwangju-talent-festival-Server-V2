@@ -1,9 +1,9 @@
 package team.startup.gwangjutalentfestival.domain.judge.service;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
@@ -18,6 +18,7 @@ import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundExce
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import java.util.Optional;
@@ -43,7 +44,9 @@ class SaveJudgementScoreServiceTest {
     @Mock
     private UserUtil userUtil;
 
-    @InjectMocks
+    private final OperationMetricRecorder metricRecorder =
+            new OperationMetricRecorder(new SimpleMeterRegistry());
+
     private SaveJudgementScoreServiceImpl saveJudgementScoreService;
 
     private UserEntity user;
@@ -52,6 +55,13 @@ class SaveJudgementScoreServiceTest {
 
     @BeforeEach
     void setUp() {
+        saveJudgementScoreService = new SaveJudgementScoreServiceImpl(
+                judgementRepository,
+                teamRepository,
+                userUtil,
+                metricRecorder
+        );
+
         user = UserEntity.builder()
                 .id(1L)
                 .role(Role.ADMIN)

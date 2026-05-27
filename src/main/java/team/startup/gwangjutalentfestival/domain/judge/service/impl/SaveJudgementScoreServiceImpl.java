@@ -14,6 +14,7 @@ import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundException;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 /**
@@ -28,6 +29,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private final JudgementRepository judgementRepository;
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
+    private final OperationMetricRecorder metricRecorder;
 
     /**
      * 현재 로그인한 심사위원의 특정 팀 심사 점수를 저장하거나 수정한다.
@@ -41,29 +43,36 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.TEAM_RANKING, allEntries = true)
     public void execute(SaveJudgementScoreRequest request, Long teamId) {
-        UserEntity user = userUtil.getCurrentUser();
-        TeamEntity team = teamRepository.findById(teamId)
-                .orElseThrow(TeamNotFoundException::new);
+        metricRecorder.record(
+                "judge.submit.duration",
+                "judge.submit.success",
+                "judge.submit.failure",
+                () -> {
+                    UserEntity user = userUtil.getCurrentUser();
+                    TeamEntity team = teamRepository.findById(teamId)
+                            .orElseThrow(TeamNotFoundException::new);
 
-        judgementRepository.findByTeamAndUser(team, user)
-                .ifPresentOrElse(
-                        judgement -> judgement.updateScore(
-                                request.expressionCommunicationScore(),
-                                request.technicalCompletenessScore(),
-                                request.creativityCompositionScore(),
-                                request.stagePresencePerformanceScore(),
-                                request.teamworkStageHarmonyScore()
-                        ),
-                        () -> judgementRepository.save(JudgementEntity.builder()
-                                .expressionCommunicationScore(request.expressionCommunicationScore())
-                                .technicalCompletenessScore(request.technicalCompletenessScore())
-                                .creativityCompositionScore(request.creativityCompositionScore())
-                                .stagePresencePerformanceScore(request.stagePresencePerformanceScore())
-                                .teamworkStageHarmonyScore(request.teamworkStageHarmonyScore())
-                                .team(team)
-                                .user(user)
-                                .build()));
-        updateTotalScore(team);
+                    judgementRepository.findByTeamAndUser(team, user)
+                            .ifPresentOrElse(
+                                    judgement -> judgement.updateScore(
+                                            request.expressionCommunicationScore(),
+                                            request.technicalCompletenessScore(),
+                                            request.creativityCompositionScore(),
+                                            request.stagePresencePerformanceScore(),
+                                            request.teamworkStageHarmonyScore()
+                                    ),
+                                    () -> judgementRepository.save(JudgementEntity.builder()
+                                            .expressionCommunicationScore(request.expressionCommunicationScore())
+                                            .technicalCompletenessScore(request.technicalCompletenessScore())
+                                            .creativityCompositionScore(request.creativityCompositionScore())
+                                            .stagePresencePerformanceScore(request.stagePresencePerformanceScore())
+                                            .teamworkStageHarmonyScore(request.teamworkStageHarmonyScore())
+                                            .team(team)
+                                            .user(user)
+                                            .build()));
+                    updateTotalScore(team);
+                }
+        );
     }
 
     private void updateTotalScore(TeamEntity team) {
