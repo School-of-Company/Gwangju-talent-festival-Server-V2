@@ -31,19 +31,18 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon
 
-      - name: Create .env file
-        run: |
-          if [ ! -f .env ]; then
-            echo "${{ secrets.ENV_FILE }}" > .env
-          fi
-
       - name: Build Docker image
         run: docker build -t gwangju-festival:latest .
 
+      - name: Create .env file
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE }}
+        run: printf '%s\n' "$ENV_FILE" > .env
+
       - name: Deploy with Docker Compose
         run: |
-          docker compose down
-          docker compose up -d
+          docker compose --env-file .env down --remove-orphans
+          docker compose --env-file .env up -d
 
       - name: Notify Discord on success
         if: success()
