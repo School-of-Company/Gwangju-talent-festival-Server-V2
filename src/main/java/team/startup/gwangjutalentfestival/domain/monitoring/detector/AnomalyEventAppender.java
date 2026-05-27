@@ -7,8 +7,6 @@ import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventE
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class AnomalyEventAppender {
@@ -30,7 +28,6 @@ public class AnomalyEventAppender {
                         .detectedValue(detectedValue)
                         .thresholdValue(rule.threshold())
                         .reason(rule.reason())
-                        .createdAt(LocalDateTime.now())
                         .build()
         );
 
