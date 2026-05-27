@@ -31,6 +31,17 @@ public class OperationMetricRecorder {
         }
     }
 
+    public void record(String timerName, String successCounterName, String failureCounterName, Runnable action) {
+        long start = System.nanoTime();
+        try {
+            action.run();
+            record(timerName, successCounterName, failureCounterName, start, true);
+        } catch (Exception e) {
+            record(timerName, successCounterName, failureCounterName, start, false);
+            throw e;
+        }
+    }
+
     private void recordMetric(String timerName, String counterName, long startNano) {
         try {
             meterRegistry.timer(timerName)

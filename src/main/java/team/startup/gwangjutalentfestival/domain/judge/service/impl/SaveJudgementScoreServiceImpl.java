@@ -43,47 +43,36 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     @Transactional
     @CacheEvict(cacheNames = CacheConfig.TEAM_RANKING, allEntries = true)
     public void execute(SaveJudgementScoreRequest request, Long teamId) {
-        long start = System.nanoTime();
-        try {
-            UserEntity user = userUtil.getCurrentUser();
-            TeamEntity team = teamRepository.findById(teamId)
-                    .orElseThrow(TeamNotFoundException::new);
+        metricRecorder.record(
+                "judge.submit.duration",
+                "judge.submit.success",
+                "judge.submit.failure",
+                () -> {
+                    UserEntity user = userUtil.getCurrentUser();
+                    TeamEntity team = teamRepository.findById(teamId)
+                            .orElseThrow(TeamNotFoundException::new);
 
-            judgementRepository.findByTeamAndUser(team, user)
-                    .ifPresentOrElse(
-                            judgement -> judgement.updateScore(
-                                    request.expressionCommunicationScore(),
-                                    request.technicalCompletenessScore(),
-                                    request.creativityCompositionScore(),
-                                    request.stagePresencePerformanceScore(),
-                                    request.teamworkStageHarmonyScore()
-                            ),
-                            () -> judgementRepository.save(JudgementEntity.builder()
-                                    .expressionCommunicationScore(request.expressionCommunicationScore())
-                                    .technicalCompletenessScore(request.technicalCompletenessScore())
-                                    .creativityCompositionScore(request.creativityCompositionScore())
-                                    .stagePresencePerformanceScore(request.stagePresencePerformanceScore())
-                                    .teamworkStageHarmonyScore(request.teamworkStageHarmonyScore())
-                                    .team(team)
-                                    .user(user)
-                                    .build()));
-            updateTotalScore(team);
-
-            metricRecorder.record(
-                    "judge.submit.duration",
-                    "judge.submit.success",
-                    "judge.submit.failure",
-                    start, true
-            );
-        } catch (Exception e) {
-            metricRecorder.record(
-                    "judge.submit.duration",
-                    "judge.submit.success",
-                    "judge.submit.failure",
-                    start, false
-            );
-            throw e;
-        }
+                    judgementRepository.findByTeamAndUser(team, user)
+                            .ifPresentOrElse(
+                                    judgement -> judgement.updateScore(
+                                            request.expressionCommunicationScore(),
+                                            request.technicalCompletenessScore(),
+                                            request.creativityCompositionScore(),
+                                            request.stagePresencePerformanceScore(),
+                                            request.teamworkStageHarmonyScore()
+                                    ),
+                                    () -> judgementRepository.save(JudgementEntity.builder()
+                                            .expressionCommunicationScore(request.expressionCommunicationScore())
+                                            .technicalCompletenessScore(request.technicalCompletenessScore())
+                                            .creativityCompositionScore(request.creativityCompositionScore())
+                                            .stagePresencePerformanceScore(request.stagePresencePerformanceScore())
+                                            .teamworkStageHarmonyScore(request.teamworkStageHarmonyScore())
+                                            .team(team)
+                                            .user(user)
+                                            .build()));
+                    updateTotalScore(team);
+                }
+        );
     }
 
     private void updateTotalScore(TeamEntity team) {

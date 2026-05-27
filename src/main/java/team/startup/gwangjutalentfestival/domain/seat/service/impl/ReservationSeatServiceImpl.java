@@ -36,47 +36,36 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
             @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
     })
     public void execute(ReservationSeatRequest request) {
-        long start = System.nanoTime();
-        try {
-            String seatSection = request.seatSection();
-            Integer seatNumber = request.seatNumber();
+        metricRecorder.record(
+                "seat.reservation.duration",
+                "seat.reservation.success",
+                "seat.reservation.failure",
+                () -> {
+                    String seatSection = request.seatSection();
+                    Integer seatNumber = request.seatNumber();
 
-            seatReservationValidator.validateSeatRange(seatNumber, seatUtil.getMaxSeats(seatSection));
-            seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
-            seatReservationValidator.validateReservationLimit();
+                    seatReservationValidator.validateSeatRange(seatNumber, seatUtil.getMaxSeats(seatSection));
+                    seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
+                    seatReservationValidator.validateReservationLimit();
 
-            SeatEntity seat = SeatEntity.builder()
-                    .seatNumber(seatNumber)
-                    .seatSection(seatSection)
-                    .user(userUtil.getCurrentUserRef())
-                    .build();
+                    SeatEntity seat = SeatEntity.builder()
+                            .seatNumber(seatNumber)
+                            .seatSection(seatSection)
+                            .user(userUtil.getCurrentUserRef())
+                            .build();
 
-            try {
-                seatReservationRepository.saveAndFlush(seat);
-            } catch (DataIntegrityViolationException e) {
-                throw new SeatAlreadyReservedException();
-            }
+                    try {
+                        seatReservationRepository.saveAndFlush(seat);
+                    } catch (DataIntegrityViolationException e) {
+                        throw new SeatAlreadyReservedException();
+                    }
 
-            applicationEventPublisher.publishEvent(new SeatChangeEvent(
-                    request.seatSection(),
-                    request.seatNumber(),
-                    false
-            ));
-
-            metricRecorder.record(
-                    "seat.reservation.duration",
-                    "seat.reservation.success",
-                    "seat.reservation.failure",
-                    start, true
-            );
-        } catch (Exception e) {
-            metricRecorder.record(
-                    "seat.reservation.duration",
-                    "seat.reservation.success",
-                    "seat.reservation.failure",
-                    start, false
-            );
-            throw e;
-        }
+                    applicationEventPublisher.publishEvent(new SeatChangeEvent(
+                            request.seatSection(),
+                            request.seatNumber(),
+                            false
+                    ));
+                }
+        );
     }
 }
