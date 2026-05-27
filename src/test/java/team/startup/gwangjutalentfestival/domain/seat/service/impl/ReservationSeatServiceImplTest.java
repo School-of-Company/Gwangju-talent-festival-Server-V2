@@ -1,8 +1,9 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -30,7 +31,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class ReservationSeatServiceImplTest {
 
-    @InjectMocks
     private ReservationSeatServiceImpl reservationSeatService;
 
     @Mock
@@ -48,9 +48,23 @@ class ReservationSeatServiceImplTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     private static final String SEAT_SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
     private static final Integer MAX_SEATS = 77;
+
+    @BeforeEach
+    void setUp() {
+        reservationSeatService = new ReservationSeatServiceImpl(
+                seatReservationRepository,
+                seatReservationValidator,
+                seatUtil,
+                userUtil,
+                applicationEventPublisher,
+                meterRegistry
+        );
+    }
 
     private ReservationSeatRequest request() {
         return new ReservationSeatRequest(SEAT_SECTION, SEAT_NUMBER);
