@@ -98,3 +98,9 @@ management:
     metrics:
       export:
         enabled: true
+
+monitoring:
+  anomaly:
+    enabled: ${ANOMALY_DETECTOR_ENABLED:false}
+    prometheus-base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
+    discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
