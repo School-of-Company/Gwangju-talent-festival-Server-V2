@@ -85,6 +85,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/judge/{teamId}").hasAnyAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.PATCH, "/judge/{teamId}").hasAnyAuthority(Role.ADMIN.name())
 
+                        // monitoring
+                        .requestMatchers("/monitoring/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
