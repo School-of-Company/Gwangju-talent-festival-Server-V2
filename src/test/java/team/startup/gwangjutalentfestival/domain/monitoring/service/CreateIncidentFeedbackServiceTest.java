@@ -13,6 +13,7 @@ import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventS
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.FeedbackLabel;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.IncidentFeedbackEntity;
 import team.startup.gwangjutalentfestival.domain.monitoring.exception.AnomalyEventNotFoundException;
+import team.startup.gwangjutalentfestival.domain.monitoring.exception.AnomalyEventNotOpenException;
 import team.startup.gwangjutalentfestival.domain.monitoring.exception.FeedbackAlreadyExistsException;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.request.CreateIncidentFeedbackRequest;
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
@@ -43,6 +44,7 @@ class CreateIncidentFeedbackServiceTest {
     private CreateIncidentFeedbackServiceImpl createIncidentFeedbackService;
 
     private AnomalyEventEntity openEvent;
+    private AnomalyEventEntity resolvedEvent;
 
     @BeforeEach
     void setUp() {
@@ -51,6 +53,16 @@ class CreateIncidentFeedbackServiceTest {
                 .domain("seat")
                 .metricName("failure_rate")
                 .status(AnomalyEventStatus.OPEN)
+                .detectedValue(7.0)
+                .thresholdValue(5.0)
+                .reason("좌석 예매 실패율이 기준치를 초과했습니다.")
+                .build();
+
+        resolvedEvent = AnomalyEventEntity.builder()
+                .id(EVENT_ID)
+                .domain("seat")
+                .metricName("failure_rate")
+                .status(AnomalyEventStatus.RESOLVED)
                 .detectedValue(7.0)
                 .thresholdValue(5.0)
                 .reason("좌석 예매 실패율이 기준치를 초과했습니다.")
@@ -91,6 +103,15 @@ class CreateIncidentFeedbackServiceTest {
 
         assertThat(openEvent.getStatus()).isEqualTo(AnomalyEventStatus.IGNORED);
         assertThat(openEvent.getResolvedAt()).isNotNull();
+    }
+
+    @Test
+    void OPEN_상태가_아닌_이벤트에_피드백_등록_시_AnomalyEventNotOpenException이_발생한다() {
+        given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(resolvedEvent));
+
+        assertThatThrownBy(() -> createIncidentFeedbackService.execute(
+                EVENT_ID, new CreateIncidentFeedbackRequest(FeedbackLabel.TRUE_INCIDENT, null)
+        )).isInstanceOf(AnomalyEventNotOpenException.class);
     }
 
     @Test

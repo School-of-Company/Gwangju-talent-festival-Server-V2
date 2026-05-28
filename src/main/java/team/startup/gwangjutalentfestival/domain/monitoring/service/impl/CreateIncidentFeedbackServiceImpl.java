@@ -7,7 +7,9 @@ import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventEntity;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.FeedbackLabel;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.IncidentFeedbackEntity;
+import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
 import team.startup.gwangjutalentfestival.domain.monitoring.exception.AnomalyEventNotFoundException;
+import team.startup.gwangjutalentfestival.domain.monitoring.exception.AnomalyEventNotOpenException;
 import team.startup.gwangjutalentfestival.domain.monitoring.exception.FeedbackAlreadyExistsException;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.request.CreateIncidentFeedbackRequest;
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
@@ -28,6 +30,10 @@ public class CreateIncidentFeedbackServiceImpl implements CreateIncidentFeedback
     public void execute(Long anomalyEventId, CreateIncidentFeedbackRequest request) {
         AnomalyEventEntity event = anomalyEventRepository.findById(anomalyEventId)
                 .orElseThrow(AnomalyEventNotFoundException::new);
+
+        if (event.getStatus() != AnomalyEventStatus.OPEN) {
+            throw new AnomalyEventNotOpenException();
+        }
 
         if (incidentFeedbackRepository.existsByAnomalyEventId(anomalyEventId)) {
             throw new FeedbackAlreadyExistsException();

@@ -26,8 +26,8 @@ public class GetAnomalyEventListServiceImpl implements GetAnomalyEventListServic
         PageRequest pageRequest = PageRequest.of(safePage, safeSize, Sort.by("createdAt").descending());
 
         Page<AnomalyEventEntity> events = (status == null)
-                ? anomalyEventRepository.findAllByOrderByCreatedAtDesc(pageRequest)
-                : anomalyEventRepository.findAllByStatusOrderByCreatedAtDesc(status, pageRequest);
+                ? anomalyEventRepository.findAll(pageRequest)
+                : anomalyEventRepository.findAllByStatus(status, pageRequest);
 
         return events.map(e -> new AnomalyEventListResponse(
                 e.getId(), e.getDomain(), e.getMetricName(), e.getStatus(),

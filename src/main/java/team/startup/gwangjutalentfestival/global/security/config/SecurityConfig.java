@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/judge/{teamId}").hasAnyAuthority(Role.ADMIN.name())
 
                         // monitoring
-                        .requestMatchers("/monitoring/**").hasRole("ADMIN")
+                        .requestMatchers("/monitoring/**").hasAnyAuthority(Role.ADMIN.name())
 
                         .anyRequest().authenticated()
                 )

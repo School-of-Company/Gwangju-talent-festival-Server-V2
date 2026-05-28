@@ -61,6 +61,7 @@ public enum ErrorCode {
     // Monitoring
     ANOMALY_EVENT_NOT_FOUND(404, "이상 탐지 이벤트를 찾을 수 없습니다."),
     FEEDBACK_ALREADY_EXISTS(409, "이미 피드백이 등록된 이벤트입니다."),
+    ANOMALY_EVENT_NOT_OPEN(400, "이미 처리된 이상 탐지 이벤트입니다."),
 
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),

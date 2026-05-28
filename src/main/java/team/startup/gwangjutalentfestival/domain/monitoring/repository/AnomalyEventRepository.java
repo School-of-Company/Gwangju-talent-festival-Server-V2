@@ -12,9 +12,9 @@ public interface AnomalyEventRepository extends JpaRepository<AnomalyEventEntity
             String domain, String metricName, AnomalyEventStatus status
     );
 
-    Page<AnomalyEventEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<AnomalyEventEntity> findAll(Pageable pageable);
 
-    Page<AnomalyEventEntity> findAllByStatusOrderByCreatedAtDesc(AnomalyEventStatus status, Pageable pageable);
+    Page<AnomalyEventEntity> findAllByStatus(AnomalyEventStatus status, Pageable pageable);
 
     long countByStatus(AnomalyEventStatus status);
 }
