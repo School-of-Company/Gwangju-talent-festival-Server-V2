@@ -39,7 +39,7 @@ public class DiscordWebhookClient {
                     .retrieve()
                     .toBodilessEntity();
         } catch (Exception e) {
-            log.warn("Discord 알림 전송 실패. error={}", e.getMessage());
+            log.warn("Discord 알림 전송 실패.", e);
         }
     }
 }

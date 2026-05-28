@@ -25,8 +25,8 @@ public class PrometheusClient {
     }
 
     public Optional<Double> query(String promql) {
+        String resolvedPromql = promql.replace("{application}", applicationName);
         try {
-            String resolvedPromql = promql.replace("{application}", applicationName);
             PrometheusResponse response = prometheusRestClient.get()
                     .uri("/api/v1/query?query={promql}", resolvedPromql)
                     .retrieve()
@@ -43,23 +43,24 @@ public class PrometheusClient {
                 return Optional.empty();
             }
 
-            List<Object> valueList = response.data().result().get(0).value();
-            if (valueList == null || valueList.size() < 2) {
+            PrometheusResult firstResult = response.data().result().get(0);
+            if (firstResult == null || firstResult.value() == null || firstResult.value().size() < 2) {
                 log.warn("Prometheus query 결과의 value 형식이 올바르지 않습니다. promql={}", resolvedPromql);
                 return Optional.empty();
             }
 
+            List<Object> valueList = firstResult.value();
             String rawValue = valueList.get(1).toString();
             double value = Double.parseDouble(rawValue);
 
             if (Double.isNaN(value) || Double.isInfinite(value)) {
-                log.warn("Prometheus query 값이 NaN 또는 Infinite입니다. promql={}, value={}", promql, rawValue);
+                log.debug("Prometheus query 값이 NaN 또는 Infinite입니다. promql={}, value={}", resolvedPromql, rawValue);
                 return Optional.empty();
             }
 
             return Optional.of(value);
         } catch (Exception e) {
-            log.warn("Prometheus query 실패. promql={}, error={}", promql, e.getMessage());
+            log.warn("Prometheus query 실패. promql={}", resolvedPromql, e);
             return Optional.empty();
         }
     }
