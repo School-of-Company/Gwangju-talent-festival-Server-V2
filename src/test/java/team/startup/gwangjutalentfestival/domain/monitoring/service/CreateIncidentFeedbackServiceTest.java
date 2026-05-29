@@ -73,7 +73,7 @@ class CreateIncidentFeedbackServiceTest {
     void TRUE_INCIDENT_피드백_등록_시_anomaly_event가_RESOLVED_상태로_변경된다() {
         given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(openEvent));
         given(incidentFeedbackRepository.existsByAnomalyEventId(EVENT_ID)).willReturn(false);
-        given(incidentFeedbackRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(incidentFeedbackRepository.saveAndFlush(any())).willAnswer(inv -> inv.getArgument(0));
 
         createIncidentFeedbackService.execute(EVENT_ID, new CreateIncidentFeedbackRequest(FeedbackLabel.TRUE_INCIDENT, null));
 
@@ -85,7 +85,7 @@ class CreateIncidentFeedbackServiceTest {
     void FALSE_POSITIVE_피드백_등록_시_anomaly_event가_RESOLVED_상태로_변경된다() {
         given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(openEvent));
         given(incidentFeedbackRepository.existsByAnomalyEventId(EVENT_ID)).willReturn(false);
-        given(incidentFeedbackRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(incidentFeedbackRepository.saveAndFlush(any())).willAnswer(inv -> inv.getArgument(0));
 
         createIncidentFeedbackService.execute(EVENT_ID, new CreateIncidentFeedbackRequest(FeedbackLabel.FALSE_POSITIVE, "정상 트래픽 증가"));
 
@@ -97,7 +97,7 @@ class CreateIncidentFeedbackServiceTest {
     void IGNORED_피드백_등록_시_anomaly_event가_IGNORED_상태로_변경된다() {
         given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(openEvent));
         given(incidentFeedbackRepository.existsByAnomalyEventId(EVENT_ID)).willReturn(false);
-        given(incidentFeedbackRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
+        given(incidentFeedbackRepository.saveAndFlush(any())).willAnswer(inv -> inv.getArgument(0));
 
         createIncidentFeedbackService.execute(EVENT_ID, new CreateIncidentFeedbackRequest(FeedbackLabel.IGNORED, null));
 
@@ -137,7 +137,7 @@ class CreateIncidentFeedbackServiceTest {
     void 동시_요청으로_DataIntegrityViolationException_발생_시_FeedbackAlreadyExistsException으로_변환된다() {
         given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(openEvent));
         given(incidentFeedbackRepository.existsByAnomalyEventId(EVENT_ID)).willReturn(false);
-        given(incidentFeedbackRepository.save(any(IncidentFeedbackEntity.class)))
+        given(incidentFeedbackRepository.saveAndFlush(any(IncidentFeedbackEntity.class)))
                 .willThrow(new DataIntegrityViolationException("unique constraint"));
 
         assertThatThrownBy(() -> createIncidentFeedbackService.execute(
@@ -150,13 +150,13 @@ class CreateIncidentFeedbackServiceTest {
         given(anomalyEventRepository.findById(EVENT_ID)).willReturn(Optional.of(openEvent));
         given(incidentFeedbackRepository.existsByAnomalyEventId(EVENT_ID)).willReturn(false);
         ArgumentCaptor<IncidentFeedbackEntity> captor = ArgumentCaptor.forClass(IncidentFeedbackEntity.class);
-        given(incidentFeedbackRepository.save(captor.capture())).willAnswer(inv -> inv.getArgument(0));
+        given(incidentFeedbackRepository.saveAndFlush(captor.capture())).willAnswer(inv -> inv.getArgument(0));
 
         createIncidentFeedbackService.execute(EVENT_ID, new CreateIncidentFeedbackRequest(FeedbackLabel.TRUE_INCIDENT, "실제 장애"));
 
         IncidentFeedbackEntity saved = captor.getValue();
         assertThat(saved.getLabel()).isEqualTo(FeedbackLabel.TRUE_INCIDENT);
         assertThat(saved.getNote()).isEqualTo("실제 장애");
-        verify(incidentFeedbackRepository).save(any(IncidentFeedbackEntity.class));
+        verify(incidentFeedbackRepository).saveAndFlush(any(IncidentFeedbackEntity.class));
     }
 }

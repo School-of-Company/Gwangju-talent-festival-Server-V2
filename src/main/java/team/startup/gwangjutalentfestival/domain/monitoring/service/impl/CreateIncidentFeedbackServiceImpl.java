@@ -40,7 +40,7 @@ public class CreateIncidentFeedbackServiceImpl implements CreateIncidentFeedback
         }
 
         try {
-            incidentFeedbackRepository.save(
+            incidentFeedbackRepository.saveAndFlush(
                     IncidentFeedbackEntity.builder()
                             .anomalyEvent(event)
                             .label(request.label())
