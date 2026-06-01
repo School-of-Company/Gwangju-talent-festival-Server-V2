@@ -62,6 +62,10 @@ public enum ErrorCode {
     ANOMALY_EVENT_NOT_FOUND(404, "이상 탐지 이벤트를 찾을 수 없습니다."),
     FEEDBACK_ALREADY_EXISTS(409, "이미 피드백이 등록된 이벤트입니다."),
     ANOMALY_EVENT_NOT_OPEN(400, "이미 처리된 이상 탐지 이벤트입니다."),
+    EXPORT_INVALID_PERIOD(400, "end는 start보다 이후여야 합니다."),
+    EXPORT_PERIOD_EXCEEDED(400, "export 기간은 최대 7일입니다."),
+    EXPORT_INVALID_FILTER(400, "허용되지 않는 domain 또는 metricName입니다."),
+    EXPORT_FAILED(500, "데이터셋 export 중 오류가 발생했습니다."),
 
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),

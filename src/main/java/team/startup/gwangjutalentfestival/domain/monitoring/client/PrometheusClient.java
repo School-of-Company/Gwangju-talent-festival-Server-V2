@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -62,6 +63,55 @@ public class PrometheusClient {
         } catch (Exception e) {
             log.warn("Prometheus query 실패. promql={}", resolvedPromql, e);
             return Optional.empty();
+        }
+    }
+
+    public List<PrometheusRangePoint> queryRange(String promql, long start, long end, int stepSeconds) {
+        String resolvedPromql = promql.replace("{application}", applicationName);
+        try {
+            PrometheusRangeResponse response = prometheusRestClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/api/v1/query_range")
+                            .queryParam("query", resolvedPromql)
+                            .queryParam("start", start)
+                            .queryParam("end", end)
+                            .queryParam("step", stepSeconds)
+                            .build())
+                    .retrieve()
+                    .body(PrometheusRangeResponse.class);
+
+            if (response == null || !"success".equals(response.status())) {
+                log.warn("Prometheus queryRange 호출 실패 또는 에러 응답. promql={}", resolvedPromql);
+                return List.of();
+            }
+
+            if (response.data() == null || response.data().result() == null || response.data().result().isEmpty()) {
+                log.debug("Prometheus queryRange 결과가 비어있습니다. promql={}", resolvedPromql);
+                return List.of();
+            }
+
+            List<PrometheusRangePoint> points = new ArrayList<>();
+            for (PrometheusRangeSeries series : response.data().result()) {
+                if (series.values() == null) continue;
+                for (List<Object> pair : series.values()) {
+                    if (pair == null || pair.size() < 2) continue;
+                    try {
+                        long timestamp = ((Number) pair.get(0)).longValue();
+                        double value = Double.parseDouble(pair.get(1).toString());
+                        if (Double.isNaN(value) || Double.isInfinite(value)) {
+                            log.debug("Prometheus queryRange 값이 NaN 또는 Infinite. promql={}, timestamp={}", resolvedPromql, timestamp);
+                            continue;
+                        }
+                        points.add(new PrometheusRangePoint(timestamp, value));
+                    } catch (Exception e) {
+                        log.debug("Prometheus queryRange 포인트 파싱 실패. pair={}", pair);
+                    }
+                }
+            }
+            return points;
+        } catch (Exception e) {
+            log.warn("Prometheus queryRange 실패. promql={}", resolvedPromql, e);
+            return List.of();
         }
     }
 

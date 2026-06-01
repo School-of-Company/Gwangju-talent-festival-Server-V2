@@ -90,6 +90,9 @@ dependencies {
     // Monitoring
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
+    // CSV
+    implementation 'org.apache.commons:commons-csv:1.12.0'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
