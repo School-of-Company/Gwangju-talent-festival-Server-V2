@@ -181,3 +181,104 @@ curl -H "Authorization: Bearer TOKEN" \
   "falsePositiveRate": 0.4
 }
 ```
+
+## Dataset Export
+
+anomaly_event + incident_feedback 데이터를 Prometheus 시계열과 결합하여 ML 학습용 CSV 데이터셋을 생성합니다.
+Isolation Forest 등 이상 탐지 모델 학습에 사용합니다. 학습 자체는 이 서버의 범위가 아닙니다.
+
+### 환경 변수
+
+| 변수명 | 기본값 | 설명 |
+|--------|--------|------|
+| `MONITORING_DATASET_EXPORT_PATH` | `./exports` | CSV 파일 저장 경로 |
+
+### API
+
+```bash
+# 전체 기간 export (7일 이내, step=60초)
+curl -X POST http://localhost:8080/monitoring/datasets/export \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start": "2026-05-25T00:00:00",
+    "end": "2026-06-01T00:00:00",
+    "stepSeconds": 60
+  }'
+
+# seat 도메인만 export
+curl -X POST http://localhost:8080/monitoring/datasets/export \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start": "2026-05-25T00:00:00",
+    "end": "2026-06-01T00:00:00",
+    "stepSeconds": 60,
+    "domain": "seat"
+  }'
+
+# 특정 메트릭만 export
+curl -X POST http://localhost:8080/monitoring/datasets/export \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start": "2026-05-25T00:00:00",
+    "end": "2026-06-01T00:00:00",
+    "domain": "seat",
+    "metricName": "failure_rate"
+  }'
+```
+
+응답 예시:
+```json
+{
+  "filePath": "./exports/dataset_20260601_143205.csv",
+  "rowCount": 10080
+}
+```
+
+### 요청 파라미터
+
+| 파라미터 | 타입 | 필수 | 설명 |
+|----------|------|------|------|
+| start | ISO-8601 | ✓ | 조회 시작 시각 (Asia/Seoul 기준) |
+| end | ISO-8601 | ✓ | 조회 종료 시각, start보다 이후여야 함 |
+| stepSeconds | Integer | - | step 간격(초), 60~3600, 기본값 60 |
+| domain | String | - | seat 또는 judge, null이면 전체 |
+| metricName | String | - | failure_rate 또는 p95_duration, null이면 전체 |
+
+### CSV 스키마
+
+```csv
+domain,metricName,timestamp,value,hourOfDay,dayOfWeek,label
+seat,failure_rate,2026-06-01T09:00:00,0.023,9,MONDAY,normal
+seat,failure_rate,2026-06-01T09:01:00,0.087,9,MONDAY,anomaly
+seat,p95_duration,2026-06-01T09:00:00,1.234,9,MONDAY,normal
+```
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| domain | String | seat / judge |
+| metricName | String | failure_rate / p95_duration |
+| timestamp | ISO-8601 | step 단위 정규화, Asia/Seoul 기준 |
+| value | double | Prometheus 관측값 |
+| hourOfDay | int | 0~23 (Asia/Seoul 기준) |
+| dayOfWeek | String | MONDAY~SUNDAY |
+| label | String | anomaly / normal |
+
+### label 매핑 규칙
+
+| 조건 | label | CSV 포함 |
+|------|-------|--------|
+| TRUE_INCIDENT feedback 있는 포인트 | anomaly | ✓ |
+| FALSE_POSITIVE feedback 있는 포인트 | normal | ✓ |
+| anomaly_event가 없는 일반 시계열 포인트 | normal | ✓ |
+| IGNORED feedback 있는 포인트 | — | ✗ 제외 |
+| feedback 없는 OPEN anomaly_event 포인트 | — | ✗ 제외 |
+
+### label 정책 한계
+
+- 일반 시계열 포인트는 별도 incident feedback이 없는 구간이므로 normal로 간주합니다. 실제 탐지되지 않은 이상 징후가 포함될 수 있습니다.
+- TRUE_INCIDENT는 createdAt이 속한 step bucket 1개만 anomaly로 라벨링합니다. 이상 지속 구간 전체를 커버하지 않습니다.
+- IGNORED와 feedback 없는 OPEN 이벤트는 CSV에서 제외됩니다. 학습 데이터 양이 줄어들 수 있습니다.
+- 동일 timestamp에 Prometheus series가 여러 개 반환될 경우 첫 번째 정상 값을 사용합니다. (중복 row 방지)

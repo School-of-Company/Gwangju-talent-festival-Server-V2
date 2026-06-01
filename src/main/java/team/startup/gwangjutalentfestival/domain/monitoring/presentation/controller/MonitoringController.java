@@ -18,10 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.request.CreateIncidentFeedbackRequest;
+import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.request.ExportDatasetRequest;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.response.AnomalyEventDetailResponse;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.response.AnomalyEventListResponse;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.response.AnomalyEventSummaryResponse;
+import team.startup.gwangjutalentfestival.domain.monitoring.presentation.data.response.ExportDatasetResponse;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.CreateIncidentFeedbackService;
+import team.startup.gwangjutalentfestival.domain.monitoring.service.ExportDatasetService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventDetailService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventListService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventSummaryService;
@@ -36,6 +39,7 @@ public class MonitoringController {
     private final GetAnomalyEventDetailService getAnomalyEventDetailService;
     private final CreateIncidentFeedbackService createIncidentFeedbackService;
     private final GetAnomalyEventSummaryService getAnomalyEventSummaryService;
+    private final ExportDatasetService exportDatasetService;
 
     @Operation(summary = "이상 탐지 이벤트 목록 조회", description = "최신순으로 정렬된 이상 탐지 이벤트 목록을 페이지 단위로 조회합니다.")
     @ApiResponses({
@@ -86,5 +90,18 @@ public class MonitoringController {
     ) {
         createIncidentFeedbackService.execute(id, request);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "학습 데이터셋 export", description = "Prometheus 시계열과 incident feedback를 결합해 ML 학습용 CSV 데이터셋을 생성합니다. 최대 7일 기간 지원.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "export 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 기간 또는 필터")
+    })
+    @SecurityRequirement(name = "Authorization")
+    @PostMapping("/datasets/export")
+    public ResponseEntity<ExportDatasetResponse> exportDataset(
+            @Valid @RequestBody ExportDatasetRequest request
+    ) {
+        return ResponseEntity.ok(exportDatasetService.execute(request));
     }
 }
