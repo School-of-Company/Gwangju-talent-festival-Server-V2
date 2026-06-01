@@ -1,5 +1,5 @@
 package team.startup.gwangjutalentfestival.domain.monitoring.entity;
 
-public enum AnomalyEventStatus {
-    OPEN, RESOLVED, IGNORED
+public enum FeedbackLabel {
+    TRUE_INCIDENT, FALSE_POSITIVE, IGNORED
 }

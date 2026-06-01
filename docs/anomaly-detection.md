@@ -95,3 +95,89 @@ curl -X POST https://discord.com/api/webhooks/YOUR_WEBHOOK_URL \
   -H "Content-Type: application/json" \
   -d '{"content": "🚫 [test] anomaly detection 테스트 메시지"}'
 ```
+
+## Feedback Loop
+
+anomaly_event에 대한 운영자 피드백을 등록하고 이벤트 상태를 관리하는 기능입니다.
+
+### 상태 전이 규칙
+
+| FeedbackLabel | anomaly_event 상태 전이 | resolved_at |
+|---------------|------------------------|-------------|
+| `TRUE_INCIDENT` | OPEN → **RESOLVED** | 피드백 등록 시점 |
+| `FALSE_POSITIVE` | OPEN → **RESOLVED** | 피드백 등록 시점 |
+| `IGNORED` | OPEN → **IGNORED** | 피드백 등록 시점 |
+
+### falsePositiveRate 정의
+
+```
+falsePositiveRate = falsePositiveCount / (trueIncidentCount + falsePositiveCount)
+```
+
+- OPEN 또는 IGNORED 상태 이벤트(피드백 없음)는 분모에서 제외됩니다.
+- 분모가 0이면 falsePositiveRate는 0.0입니다.
+
+### API 목록
+
+모든 API는 ADMIN 권한이 필요합니다. `Authorization: Bearer {token}` 헤더를 포함해야 합니다.
+
+#### 이상 탐지 이벤트 목록 조회
+
+```bash
+# 전체 목록 (최신순, 기본 20개)
+curl -H "Authorization: Bearer TOKEN" \
+  'http://localhost:8080/monitoring/anomalies?page=0&size=20'
+
+# OPEN 상태 필터
+curl -H "Authorization: Bearer TOKEN" \
+  'http://localhost:8080/monitoring/anomalies?page=0&size=20&status=OPEN'
+```
+
+#### 이상 탐지 이벤트 단일 조회
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  http://localhost:8080/monitoring/anomalies/1
+```
+
+#### 피드백 등록
+
+```bash
+# 실제 장애로 판단
+curl -X POST http://localhost:8080/monitoring/anomalies/1/feedback \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"label": "TRUE_INCIDENT", "note": "실제 트래픽 급증으로 인한 장애"}'
+
+# 오탐으로 판단
+curl -X POST http://localhost:8080/monitoring/anomalies/1/feedback \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"label": "FALSE_POSITIVE", "note": "정상적인 이벤트 트래픽"}'
+
+# 무시
+curl -X POST http://localhost:8080/monitoring/anomalies/1/feedback \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"label": "IGNORED"}'
+```
+
+#### 요약 조회
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  http://localhost:8080/monitoring/anomalies/summary
+```
+
+응답 예시:
+```json
+{
+  "totalEvents": 10,
+  "openEvents": 3,
+  "resolvedEvents": 5,
+  "ignoredEvents": 2,
+  "trueIncidentCount": 3,
+  "falsePositiveCount": 2,
+  "falsePositiveRate": 0.4
+}
+```

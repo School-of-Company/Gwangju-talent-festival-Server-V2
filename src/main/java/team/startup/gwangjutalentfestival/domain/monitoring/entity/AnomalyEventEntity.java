@@ -54,4 +54,14 @@ public class AnomalyEventEntity {
 
     @Column(name = "resolved_at", nullable = true)
     private LocalDateTime resolvedAt;
+
+    public void resolve(LocalDateTime resolvedAt) {
+        this.status = AnomalyEventStatus.RESOLVED;
+        this.resolvedAt = resolvedAt;
+    }
+
+    public void ignore(LocalDateTime resolvedAt) {
+        this.status = AnomalyEventStatus.IGNORED;
+        this.resolvedAt = resolvedAt;
+    }
 }
