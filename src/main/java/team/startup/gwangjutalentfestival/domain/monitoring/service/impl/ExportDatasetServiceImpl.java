@@ -22,8 +22,9 @@ import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEv
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.IncidentFeedbackRepository;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.ExportDatasetService;
 
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,7 +89,8 @@ public class ExportDatasetServiceImpl implements ExportDatasetService {
                 .build();
 
         long rowCount = 0;
-        try (CSVPrinter printer = new CSVPrinter(new FileWriter(filePath.toFile()), format)) {
+        try (Writer writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
+             CSVPrinter printer = new CSVPrinter(writer, format)) {
             for (DatasetMetricQuery query : queries) {
                 List<PrometheusRangePoint> rawPoints = prometheusClient.queryRange(query.getPromql(), startEpoch, endEpoch, step);
                 if (rawPoints.isEmpty()) {
@@ -189,8 +191,9 @@ public class ExportDatasetServiceImpl implements ExportDatasetService {
                 .stream()
                 .collect(Collectors.toMap(f -> f.getAnomalyEvent().getId(), f -> f));
 
+        long startEpoch = start.toEpochSecond(ZONE_OFFSET);
         for (AnomalyEventEntity event : events) {
-            long floorEpoch = (event.getCreatedAt().toEpochSecond(ZONE_OFFSET) / step) * step;
+            long floorEpoch = startEpoch + ((event.getCreatedAt().toEpochSecond(ZONE_OFFSET) - startEpoch) / step) * step;
             String key = event.getDomain() + ":" + event.getMetricName() + ":" + floorEpoch;
 
             IncidentFeedbackEntity feedback = feedbackMap.get(event.getId());
