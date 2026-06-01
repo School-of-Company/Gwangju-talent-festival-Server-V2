@@ -92,7 +92,7 @@ public class PrometheusClient {
 
             List<PrometheusRangePoint> points = new ArrayList<>();
             for (PrometheusRangeSeries series : response.data().result()) {
-                if (series.values() == null) continue;
+                if (series == null || series.values() == null) continue;
                 for (List<Object> pair : series.values()) {
                     if (pair == null || pair.size() < 2) continue;
                     try {

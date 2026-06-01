@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,7 +72,8 @@ public class ExportDatasetServiceImpl implements ExportDatasetService {
         }
 
         Path exportDir = prepareExportDir();
-        String fileName = "dataset_" + LocalDateTime.now(ZONE).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv";
+        String uniqueId = UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+        String fileName = "dataset_" + LocalDateTime.now(ZONE).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + "_" + uniqueId + ".csv";
         Path filePath = exportDir.resolve(fileName).normalize();
         if (!filePath.startsWith(exportDir)) {
             throw new ExportFailedException();
@@ -130,6 +132,11 @@ public class ExportDatasetServiceImpl implements ExportDatasetService {
             }
         } catch (IOException e) {
             log.error("CSV 파일 작성 실패. path={}", filePath, e);
+            try {
+                Files.deleteIfExists(filePath);
+            } catch (IOException deleteEx) {
+                log.error("불완전한 CSV 파일 삭제 실패. path={}", filePath, deleteEx);
+            }
             throw new ExportFailedException();
         }
 
@@ -189,7 +196,11 @@ public class ExportDatasetServiceImpl implements ExportDatasetService {
         Map<Long, IncidentFeedbackEntity> feedbackMap = incidentFeedbackRepository
                 .findAllByAnomalyEvent_IdIn(eventIds)
                 .stream()
-                .collect(Collectors.toMap(f -> f.getAnomalyEvent().getId(), f -> f));
+                .collect(Collectors.toMap(
+                        f -> f.getAnomalyEvent().getId(),
+                        f -> f,
+                        (existing, replacement) -> existing
+                ));
 
         long startEpoch = start.toEpochSecond(ZONE_OFFSET);
         for (AnomalyEventEntity event : events) {
