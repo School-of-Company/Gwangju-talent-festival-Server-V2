@@ -1,8 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.excel.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgingSummaryExcelService;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
@@ -13,10 +13,12 @@ import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.Googl
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSummaryExcelService {
+
+    private static final int MAX_JUDGE_COUNT = 6;
 
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
@@ -27,11 +29,16 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
         List<TeamEntity> teams = teamRepository.findAllByOrderByPerformOrderAsc();
         List<JudgementEntity> judgements = judgementRepository.findAllWithUserAndTeam();
 
+        long totalJudgeCount = judgements.stream().map(j -> j.getUser().getId()).distinct().count();
+        if (totalJudgeCount > MAX_JUDGE_COUNT) {
+            log.warn("심사위원 수가 최대 허용 인원을 초과하였습니다. - total: {}, max: {}", totalJudgeCount, MAX_JUDGE_COUNT);
+        }
+
         List<Long> judgeIds = judgements.stream()
                 .map(j -> j.getUser().getId())
                 .distinct()
                 .sorted()
-                .limit(6)
+                .limit(MAX_JUDGE_COUNT)
                 .toList();
 
         Map<Long, Map<Long, Integer>> scoreMap = new HashMap<>();

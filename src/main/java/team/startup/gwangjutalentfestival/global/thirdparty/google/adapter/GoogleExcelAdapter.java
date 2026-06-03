@@ -31,8 +31,12 @@ public class GoogleExcelAdapter {
         String sheetId = properties.templateSheetId();
         String page = properties.summaryPage().replace("'", "''");
         String writeRange = "'" + page + "'!A3";
-        String clearRange = "'" + page + "'!A3:J" + (2 + rows.size());
+        String clearRange = "'" + page + "'!A3:J1000";
         try {
+            sheets.spreadsheets().values()
+                    .clear(sheetId, clearRange, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
+                    .execute();
+
             ValueRange valueRange = new ValueRange().setValues(rows);
             sheets.spreadsheets().values()
                     .update(sheetId, writeRange, valueRange)
@@ -60,7 +64,7 @@ public class GoogleExcelAdapter {
                         .clear(sheetId, clearRange, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
                         .execute();
             } catch (Exception e) {
-                log.error("Google Sheets 데이터 초기화 실패 - message: {}", e.getMessage());
+                log.error("Google Sheets 사후 데이터 초기화 실패 - message: {}", e.getMessage());
             }
         }
     }
