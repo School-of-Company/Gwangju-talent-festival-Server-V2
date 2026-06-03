@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.thirdparty.google.adapter;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.model.ClearValuesRequest;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class GoogleExcelAdapter {
         String clearRange = "'" + page + "'!A3:J1000";
         try {
             sheets.spreadsheets().values()
-                    .clear(sheetId, clearRange, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
+                    .clear(sheetId, clearRange, new ClearValuesRequest())
                     .execute();
 
             ValueRange valueRange = new ValueRange().setValues(rows);
@@ -61,9 +62,10 @@ public class GoogleExcelAdapter {
         } finally {
             try {
                 sheets.spreadsheets().values()
-                        .clear(sheetId, clearRange, new com.google.api.services.sheets.v4.model.ClearValuesRequest())
+                        .clear(sheetId, clearRange, new ClearValuesRequest())
                         .execute();
             } catch (Exception e) {
+                // 사후 초기화 실패 시 다음 요청의 사전 초기화(pre-clear)에서 자동으로 처리됩니다.
                 log.error("Google Sheets 사후 데이터 초기화 실패 - message: {}", e.getMessage());
             }
         }

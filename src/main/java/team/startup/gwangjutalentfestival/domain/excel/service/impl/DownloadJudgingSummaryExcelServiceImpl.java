@@ -41,19 +41,36 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
                 .limit(MAX_JUDGE_COUNT)
                 .toList();
 
+        Map<Long, Map<Long, Integer>> scoreMap = buildScoreMap(judgements);
+        Map<Long, Integer> teamTotalMap = buildTeamTotalMap(teams, judgeIds, scoreMap);
+        Map<Long, Integer> rankMap = denseRank(teamTotalMap);
+
+        List<List<Object>> rows = teams.stream()
+                .map(t -> buildRow(t, judgeIds, scoreMap, teamTotalMap, rankMap))
+                .toList();
+
+        return googleExcelAdapter.exportSummary(rows);
+    }
+
+    private Map<Long, Map<Long, Integer>> buildScoreMap(List<JudgementEntity> judgements) {
         Map<Long, Map<Long, Integer>> scoreMap = new HashMap<>();
         for (JudgementEntity j : judgements) {
-            Long teamId = j.getTeam().getId();
-            Long userId = j.getUser().getId();
             int score = nz(j.getExpressionCommunicationScore())
                     + nz(j.getTechnicalCompletenessScore())
                     + nz(j.getCreativityCompositionScore())
                     + nz(j.getStagePresencePerformanceScore())
                     + nz(j.getTeamworkStageHarmonyScore());
-            scoreMap.computeIfAbsent(teamId, k -> new HashMap<>()).put(userId, score);
+            scoreMap.computeIfAbsent(j.getTeam().getId(), k -> new HashMap<>())
+                    .put(j.getUser().getId(), score);
         }
+        return scoreMap;
+    }
 
-        Map<Long, Integer> teamTotalMap = teams.stream()
+    private Map<Long, Integer> buildTeamTotalMap(
+            List<TeamEntity> teams,
+            List<Long> judgeIds,
+            Map<Long, Map<Long, Integer>> scoreMap) {
+        return teams.stream()
                 .collect(Collectors.toMap(
                         TeamEntity::getId,
                         t -> {
@@ -63,31 +80,27 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
                             return trimmedSum(scores);
                         }
                 ));
+    }
 
-        Map<Long, Integer> rankMap = denseRank(teamTotalMap);
-
-        List<List<Object>> rows = teams.stream()
-                .map(t -> {
-                    List<Object> row = new ArrayList<>();
-                    row.add(t.getPerformOrder());
-                    row.add(t.getTeamName());
-                    for (Long judgeId : judgeIds) {
-                        row.add(scoreMap.getOrDefault(t.getId(), Collections.emptyMap()).get(judgeId));
-                    }
-                    for (int i = judgeIds.size(); i < 6; i++) {
-                        row.add(null);
-                    }
-                    row.add(teamTotalMap.get(t.getId()));
-                    row.add(rankMap.get(t.getId()));
-                    return row;
-                })
-                .toList();
-
-        return googleExcelAdapter.exportSummary(rows);
+    private List<Object> buildRow(
+            TeamEntity team,
+            List<Long> judgeIds,
+            Map<Long, Map<Long, Integer>> scoreMap,
+            Map<Long, Integer> teamTotalMap,
+            Map<Long, Integer> rankMap) {
+        List<Object> row = new ArrayList<>();
+        row.add(team.getPerformOrder());
+        row.add(team.getTeamName());
+        judgeIds.forEach(judgeId ->
+                row.add(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).get(judgeId)));
+        row.addAll(Collections.nCopies(MAX_JUDGE_COUNT - judgeIds.size(), null));
+        row.add(teamTotalMap.get(team.getId()));
+        row.add(rankMap.get(team.getId()));
+        return row;
     }
 
     private int nz(Integer v) {
-        return v == null ? 0 : v;
+        return Optional.ofNullable(v).orElse(0);
     }
 
     private int trimmedSum(List<Integer> scores) {
