@@ -2,6 +2,8 @@ package team.startup.gwangjutalentfestival.global.thirdparty.google.config;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.SheetsScopes;
 import com.google.auth.http.HttpCredentialsAdapter;
@@ -11,6 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsInitException;
+import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleExcelProperties;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleSheetsProperties;
 
 import java.io.ByteArrayInputStream;
@@ -26,16 +29,9 @@ import java.util.List;
  */
 @Slf4j
 @Configuration
-@EnableConfigurationProperties(GoogleSheetsProperties.class)
+@EnableConfigurationProperties({GoogleSheetsProperties.class, GoogleExcelProperties.class})
 public class GoogleSheetsConfig {
 
-    /**
-     * Google Sheets API 클라이언트를 생성한다.
-     *
-     * @param properties Google Sheets 설정 프로퍼티
-     * @return 인증된 {@link Sheets} 빈
-     * @throws GoogleSheetsInitException 인증 파일 읽기 실패 또는 TLS 초기화 실패 시
-     */
     @Bean
     public Sheets sheets(GoogleSheetsProperties properties) {
         try {
@@ -62,6 +58,36 @@ public class GoogleSheetsConfig {
             throw new GoogleSheetsInitException();
         } catch (Exception e) {
             log.error("Google Sheets 초기화 중 예기치 못한 오류 발생 - message: {}", e.getMessage());
+            throw new GoogleSheetsInitException();
+        }
+    }
+
+    @Bean
+    public Drive drive(GoogleSheetsProperties properties) {
+        try {
+            GoogleCredentials credentials = GoogleCredentials
+                    .fromStream(
+                            new ByteArrayInputStream(
+                                    properties.accountCredential().getBytes(StandardCharsets.UTF_8)
+                            )
+                    )
+                    .createScoped(List.of(SheetsScopes.SPREADSHEETS, DriveScopes.DRIVE));
+
+            return new Drive.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance(),
+                    new HttpCredentialsAdapter(credentials)
+            )
+                    .setApplicationName("gwangju-talent-festival")
+                    .build();
+        } catch (IOException e) {
+            log.error("Google Drive 인증 파일 읽기 실패 - message: {}", e.getMessage());
+            throw new GoogleSheetsInitException();
+        } catch (GeneralSecurityException e) {
+            log.error("Google Drive TLS 초기화 실패 - message: {}", e.getMessage());
+            throw new GoogleSheetsInitException();
+        } catch (Exception e) {
+            log.error("Google Drive 초기화 중 예기치 못한 오류 발생 - message: {}", e.getMessage());
             throw new GoogleSheetsInitException();
         }
     }

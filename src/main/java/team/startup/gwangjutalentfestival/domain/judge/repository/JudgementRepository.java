@@ -10,6 +10,7 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import java.util.List;
 import java.util.Optional;
 
+
 /**
  * 심사 엔티티에 대한 데이터 접근 인터페이스.
  */
@@ -43,4 +44,7 @@ public interface JudgementRepository extends JpaRepository<JudgementEntity, Long
      * @return 해당 심사위원의 심사 목록
      */
     List<JudgementEntity> findAllByUser(UserEntity user);
+
+    @Query("SELECT j FROM JudgementEntity j JOIN FETCH j.user JOIN FETCH j.team")
+    List<JudgementEntity> findAllWithUserAndTeam();
 }
