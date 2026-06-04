@@ -67,6 +67,9 @@ google:
     sheet-id: ${GOOGLE_SHEET_ID}
     enrolled-sheet-page: ${GOOGLE_ENROLLED_SHEET_PAGE}
     out-of-school-sheet-page: ${GOOGLE_OUT_OF_SCHOOL_SHEET_PAGE}
+  excel:
+    template-sheet-id: ${GOOGLE_EXCEL_TEMPLATE_SHEET_ID}
+    summary-page: ${GOOGLE_EXCEL_SUMMARY_PAGE}
 
 slogan:
   submission:
