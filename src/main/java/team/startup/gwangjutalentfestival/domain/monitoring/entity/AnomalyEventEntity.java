@@ -55,6 +55,15 @@ public class AnomalyEventEntity {
     @Column(name = "resolved_at", nullable = true)
     private LocalDateTime resolvedAt;
 
+    @Column(name = "anomaly_score")
+    private Double anomalyScore;
+
+    @Column(name = "model_version", length = 50)
+    private String modelVersion;
+
+    @Column(name = "predicted_label", length = 20)
+    private String predictedLabel;
+
     public void resolve(LocalDateTime resolvedAt) {
         this.status = AnomalyEventStatus.RESOLVED;
         this.resolvedAt = resolvedAt;
