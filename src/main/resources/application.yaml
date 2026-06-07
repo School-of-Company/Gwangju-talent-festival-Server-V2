@@ -104,5 +104,9 @@ monitoring:
     enabled: ${ANOMALY_DETECTOR_ENABLED:false}
     prometheus-base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
     discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+  ml:
+    enabled: ${ML_ANOMALY_SCORE_ENABLED:false}
+    base-url: ${ML_SERVER_BASE_URL:}
+    timeout-ms: ${ML_SERVER_TIMEOUT_MS:3000}
   dataset:
     export-path: ${MONITORING_DATASET_EXPORT_PATH:./exports}
