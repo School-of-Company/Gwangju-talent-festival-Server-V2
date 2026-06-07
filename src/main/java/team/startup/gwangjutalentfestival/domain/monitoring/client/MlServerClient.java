@@ -59,7 +59,7 @@ public class MlServerClient {
         if (response.anomalyScore() == null) {
             return Optional.empty();
         }
-        if (!VALID_LABELS.contains(response.predictedLabel())) {
+        if (response.predictedLabel() == null || !VALID_LABELS.contains(response.predictedLabel())) {
             log.warn("ML Server 응답의 predictedLabel이 유효하지 않음. predictedLabel={}", response.predictedLabel());
             return Optional.empty();
         }

@@ -14,6 +14,11 @@ public class AnomalyEventAppender {
 
     private final AnomalyEventRepository anomalyEventRepository;
 
+    public boolean hasOpenEvent(AnomalyRule rule) {
+        return anomalyEventRepository.existsByDomainAndMetricNameAndStatus(
+                rule.domain(), rule.metricName(), AnomalyEventStatus.OPEN);
+    }
+
     @Transactional
     public boolean appendIfNotDuplicate(AnomalyRule rule, double detectedValue, @Nullable MlScoreResult mlResult) {
         if (anomalyEventRepository.existsByDomainAndMetricNameAndStatus(

@@ -10,6 +10,7 @@ import team.startup.gwangjutalentfestival.domain.monitoring.client.PrometheusCli
 import team.startup.gwangjutalentfestival.domain.monitoring.client.dto.MlAnomalyScoreRequest;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -17,6 +18,8 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class AnomalyDetector {
+
+    private static final ZoneId ZONE_SEOUL = ZoneId.of("Asia/Seoul");
 
     private final PrometheusClient prometheusClient;
     private final DiscordWebhookClient discordWebhookClient;
@@ -33,6 +36,10 @@ public class AnomalyDetector {
 
             double value = result.get();
             if (value >= rule.threshold()) {
+                if (anomalyEventAppender.hasOpenEvent(rule)) {
+                    continue;
+                }
+
                 MlScoreResult mlScoreResult = callMlServer(rule, value);
 
                 boolean saved;
@@ -58,7 +65,7 @@ public class AnomalyDetector {
             return null;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZONE_SEOUL);
         MlAnomalyScoreRequest mlRequest = new MlAnomalyScoreRequest(
                 rule.domain().toUpperCase(Locale.ROOT),
                 mlMetricName.get(),
