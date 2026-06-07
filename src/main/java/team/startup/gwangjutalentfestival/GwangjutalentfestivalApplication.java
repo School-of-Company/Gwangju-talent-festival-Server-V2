@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.DatasetProperties;
+import team.startup.gwangjutalentfestival.domain.monitoring.properties.MlProperties;
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.MonitoringProperties;
 import team.startup.gwangjutalentfestival.domain.slogan.properties.SloganSubmissionProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
@@ -21,7 +22,7 @@ import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties
 @EnableFeignClients
 @EnableAsync
 @EnableScheduling
-@EnableConfigurationProperties({JwtProperties.class, CorsProperties.class, SolapiProperties.class, SmsVerifyProperties.class, SloganSubmissionProperties.class, MonitoringProperties.class, DatasetProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, CorsProperties.class, SolapiProperties.class, SmsVerifyProperties.class, SloganSubmissionProperties.class, MonitoringProperties.class, DatasetProperties.class, MlProperties.class})
 @SpringBootApplication
 public class GwangjutalentfestivalApplication {
 

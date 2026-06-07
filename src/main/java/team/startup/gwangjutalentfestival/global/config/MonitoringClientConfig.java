@@ -4,7 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
+import team.startup.gwangjutalentfestival.domain.monitoring.properties.MlProperties;
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.MonitoringProperties;
+
+import java.time.Duration;
 
 @Configuration
 public class MonitoringClientConfig {
@@ -25,6 +28,16 @@ public class MonitoringClientConfig {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(3000);
         factory.setReadTimeout(5000);
+        return RestClient.builder()
+                .requestFactory(factory)
+                .build();
+    }
+
+    @Bean
+    public RestClient mlRestClient(MlProperties mlProperties) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofMillis(1000));
+        factory.setReadTimeout(Duration.ofMillis(mlProperties.timeoutMs()));
         return RestClient.builder()
                 .requestFactory(factory)
                 .build();

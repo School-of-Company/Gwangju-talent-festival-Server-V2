@@ -182,6 +182,65 @@ curl -H "Authorization: Bearer TOKEN" \
 }
 ```
 
+## ML Server 연동
+
+rule-based 탐지가 이상을 감지한 경우, 보조 신호로 ML Server의 anomaly score를 함께 요청합니다.
+
+### 역할 분리
+
+- Rule-based threshold 초과가 `anomaly_event` 생성 트리거입니다.
+- ML `predictedLabel`은 이벤트 생성 여부를 결정하지 않습니다.
+- ML이 `normal`을 반환하더라도 rule threshold를 초과했다면 `anomaly_event`는 저장됩니다.
+- `anomalyScore`, `predictedLabel`, `modelVersion`은 운영자 판단을 돕는 보조 정보로만 저장됩니다.
+
+### 환경 변수
+
+| 변수명 | 기본값 | 설명 |
+|--------|--------|------|
+| `ML_ANOMALY_SCORE_ENABLED` | `false` | ML Server 호출 활성화 여부 |
+| `ML_SERVER_BASE_URL` | (없음) | ML Server 주소 (예: `http://<ml-server-host>:<port>`) |
+| `ML_SERVER_TIMEOUT_MS` | `3000` | ML Server read timeout (ms) |
+
+실제 ML Server host / port는 환경 변수로만 주입하고, 코드나 문서에 직접 기재하지 않습니다.
+
+### 요청 스키마
+
+ML Server 호출 URL: `POST {ML_SERVER_BASE_URL}/anomaly-score`
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `domain` | String | `SEAT` 또는 `JUDGE` (대문자) |
+| `metricName` | String | `failure_rate` 또는 `p95_duration` |
+| `value` | double | Prometheus에서 조회한 실제 관측값 |
+| `hourOfDay` | int | 탐지 시점 기준 0~23 |
+| `dayOfWeek` | int | 탐지 시점 기준 1(월)~7(일) |
+
+### Fallback 정책
+
+ML Server 호출이 실패하거나 비활성화된 경우에도 Spring 이상 탐지는 계속 동작합니다.
+
+- `enabled=false` 또는 `baseUrl`이 비어 있으면 ML 호출 자체를 건너뜁니다.
+- HTTP 오류, timeout, `modelLoaded=false`, `anomalyScore=null`, 유효하지 않은 `predictedLabel`은 모두 ML 결과 없음으로 처리합니다.
+- ML 결과가 없으면 `anomalyScore`, `modelVersion`, `predictedLabel`은 `null`로 저장됩니다.
+- ML 결과가 없어도 rule-based `anomaly_event` 저장과 Discord 알림은 정상 진행됩니다.
+
+### Discord 알림 예시
+
+ML 결과 있음:
+```
+🚫 [seat] failure_rate 이상: 7.20% >= 5.00%
+(좌석 예매 실패율이 기준치를 초과했습니다.)
+ML Score: 0.0794 (anomaly)
+Model Version: iforest-v1
+```
+
+ML 결과 없음:
+```
+🚫 [seat] failure_rate 이상: 7.20% >= 5.00%
+(좌석 예매 실패율이 기준치를 초과했습니다.)
+ML: Rule-based only
+```
+
 ## Dataset Export
 
 anomaly_event + incident_feedback 데이터를 Prometheus 시계열과 결합하여 ML 학습용 CSV 데이터셋을 생성합니다.
