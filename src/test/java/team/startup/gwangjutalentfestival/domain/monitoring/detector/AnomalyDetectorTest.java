@@ -11,6 +11,9 @@ import team.startup.gwangjutalentfestival.domain.monitoring.client.MlServerClien
 import team.startup.gwangjutalentfestival.domain.monitoring.client.PrometheusClient;
 import team.startup.gwangjutalentfestival.domain.monitoring.client.dto.MlAnomalyScoreRequest;
 import team.startup.gwangjutalentfestival.domain.monitoring.client.dto.MlAnomalyScoreResponse;
+import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
+import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
+import team.startup.gwangjutalentfestival.domain.monitoring.service.AppendAnomalyEventService;
 
 import java.util.Optional;
 
@@ -31,7 +34,10 @@ class AnomalyDetectorTest {
     private DiscordWebhookClient discordWebhookClient;
 
     @Mock
-    private AnomalyEventAppender anomalyEventAppender;
+    private AppendAnomalyEventService appendAnomalyEventService;
+
+    @Mock
+    private AnomalyEventRepository anomalyEventRepository;
 
     @Mock
     private MlServerClient mlServerClient;
@@ -51,12 +57,12 @@ class AnomalyDetectorTest {
 
         given(prometheusClient.query(seatFailureRule.promql())).willReturn(Optional.of(detectedValue));
         given(mlServerClient.call(any(MlAnomalyScoreRequest.class))).willReturn(Optional.of(mlResponse));
-        given(anomalyEventAppender.appendIfNotDuplicate(eq(seatFailureRule), eq(detectedValue), any(MlScoreResult.class))).willReturn(true);
+        given(appendAnomalyEventService.execute(eq(seatFailureRule), eq(detectedValue), any(MlScoreResult.class))).willReturn(true);
 
         anomalyDetector.detectAll();
 
         ArgumentCaptor<MlScoreResult> mlCaptor = ArgumentCaptor.forClass(MlScoreResult.class);
-        verify(anomalyEventAppender).appendIfNotDuplicate(eq(seatFailureRule), eq(detectedValue), mlCaptor.capture());
+        verify(appendAnomalyEventService).execute(eq(seatFailureRule), eq(detectedValue), mlCaptor.capture());
 
         MlScoreResult captured = mlCaptor.getValue();
         assertThat(captured).isNotNull();
@@ -71,11 +77,11 @@ class AnomalyDetectorTest {
 
         given(prometheusClient.query(seatFailureRule.promql())).willReturn(Optional.of(detectedValue));
         given(mlServerClient.call(any(MlAnomalyScoreRequest.class))).willReturn(Optional.empty());
-        given(anomalyEventAppender.appendIfNotDuplicate(eq(seatFailureRule), eq(detectedValue), eq(null))).willReturn(true);
+        given(appendAnomalyEventService.execute(eq(seatFailureRule), eq(detectedValue), eq(null))).willReturn(true);
 
         anomalyDetector.detectAll();
 
-        verify(anomalyEventAppender).appendIfNotDuplicate(eq(seatFailureRule), eq(detectedValue), eq(null));
+        verify(appendAnomalyEventService).execute(eq(seatFailureRule), eq(detectedValue), eq(null));
         verify(discordWebhookClient).send(any(String.class));
     }
 
@@ -85,7 +91,7 @@ class AnomalyDetectorTest {
 
         given(prometheusClient.query(seatFailureRule.promql())).willReturn(Optional.of(detectedValue));
         given(mlServerClient.call(any(MlAnomalyScoreRequest.class))).willReturn(Optional.empty());
-        given(anomalyEventAppender.appendIfNotDuplicate(any(AnomalyRule.class), anyDouble(), eq(null))).willReturn(true);
+        given(appendAnomalyEventService.execute(any(AnomalyRule.class), anyDouble(), eq(null))).willReturn(true);
 
         anomalyDetector.detectAll();
 
@@ -101,7 +107,7 @@ class AnomalyDetectorTest {
 
         given(prometheusClient.query(seatFailureRule.promql())).willReturn(Optional.of(detectedValue));
         given(mlServerClient.call(any(MlAnomalyScoreRequest.class))).willReturn(Optional.of(mlResponse));
-        given(anomalyEventAppender.appendIfNotDuplicate(any(AnomalyRule.class), anyDouble(), any(MlScoreResult.class))).willReturn(true);
+        given(appendAnomalyEventService.execute(any(AnomalyRule.class), anyDouble(), any(MlScoreResult.class))).willReturn(true);
 
         anomalyDetector.detectAll();
 

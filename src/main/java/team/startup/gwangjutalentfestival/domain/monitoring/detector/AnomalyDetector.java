@@ -8,6 +8,9 @@ import team.startup.gwangjutalentfestival.domain.monitoring.client.DiscordWebhoo
 import team.startup.gwangjutalentfestival.domain.monitoring.client.MlServerClient;
 import team.startup.gwangjutalentfestival.domain.monitoring.client.PrometheusClient;
 import team.startup.gwangjutalentfestival.domain.monitoring.client.dto.MlAnomalyScoreRequest;
+import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
+import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
+import team.startup.gwangjutalentfestival.domain.monitoring.service.AppendAnomalyEventService;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -23,7 +26,8 @@ public class AnomalyDetector {
 
     private final PrometheusClient prometheusClient;
     private final DiscordWebhookClient discordWebhookClient;
-    private final AnomalyEventAppender anomalyEventAppender;
+    private final AppendAnomalyEventService appendAnomalyEventService;
+    private final AnomalyEventRepository anomalyEventRepository;
     private final MlServerClient mlServerClient;
 
     public void detectAll() {
@@ -36,7 +40,8 @@ public class AnomalyDetector {
 
             double value = result.get();
             if (value >= rule.threshold()) {
-                if (anomalyEventAppender.hasOpenEvent(rule)) {
+                if (anomalyEventRepository.existsByDomainAndMetricNameAndStatus(
+                        rule.domain(), rule.metricName(), AnomalyEventStatus.OPEN)) {
                     continue;
                 }
 
@@ -44,7 +49,7 @@ public class AnomalyDetector {
 
                 boolean saved;
                 try {
-                    saved = anomalyEventAppender.appendIfNotDuplicate(rule, value, mlScoreResult);
+                    saved = appendAnomalyEventService.execute(rule, value, mlScoreResult);
                 } catch (Exception e) {
                     log.warn("이상 이벤트 저장 실패. domain={}, metric={}, error={}", rule.domain(), rule.metricName(), e.getMessage());
                     continue;
