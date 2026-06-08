@@ -10,6 +10,30 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: "1234"
+          MYSQL_DATABASE: gwangjutalentfestival
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -p1234"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -25,4 +49,16 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build with Gradle
+        env:
+          SPRING_DOCKER_COMPOSE_ENABLED: "false"
+          JWT_SECRET: "ci-test-secret-key-minimum-256bits-long-enough-for-hmac-sha256-algorithm"
+          COOL_SMS_KEY: "test"
+          COOL_SMS_SECRET: "test"
+          COOL_SMS_PHONENUMBER: "01000000000"
+          GOOGLE_ACCOUNT_CREDENTIAL: "{}"
+          GOOGLE_SHEET_ID: "test"
+          GOOGLE_ENROLLED_SHEET_PAGE: "0"
+          GOOGLE_OUT_OF_SCHOOL_SHEET_PAGE: "0"
+          GOOGLE_EXCEL_TEMPLATE_SHEET_ID: "test"
+          GOOGLE_EXCEL_SUMMARY_PAGE: "0"
         run: ./gradlew clean build
