@@ -1,4 +1,4 @@
-package team.startup.gwangjutalentfestival.domain.monitoring.detector;
+package team.startup.gwangjutalentfestival.domain.monitoring.service.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -6,6 +6,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team.startup.gwangjutalentfestival.domain.monitoring.detector.AnomalyRule;
+import team.startup.gwangjutalentfestival.domain.monitoring.detector.MlScoreResult;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventEntity;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
@@ -15,13 +17,13 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class AnomalyEventAppenderTest {
+class AppendAnomalyEventServiceImplTest {
 
     @Mock
     private AnomalyEventRepository anomalyEventRepository;
 
     @InjectMocks
-    private AnomalyEventAppender anomalyEventAppender;
+    private AppendAnomalyEventServiceImpl appendAnomalyEventService;
 
     private final AnomalyRule rule = AnomalyRule.ALL.stream()
             .filter(r -> "seat".equals(r.domain()) && "failure_rate".equals(r.metricName()))
@@ -34,7 +36,7 @@ class AnomalyEventAppenderTest {
                 .willReturn(false);
         MlScoreResult mlResult = new MlScoreResult(0.0794, "iforest-v1", "anomaly");
 
-        boolean saved = anomalyEventAppender.appendIfNotDuplicate(rule, 0.08, mlResult);
+        boolean saved = appendAnomalyEventService.execute(rule, 0.08, mlResult);
 
         assertThat(saved).isTrue();
         ArgumentCaptor<AnomalyEventEntity> entityCaptor = ArgumentCaptor.forClass(AnomalyEventEntity.class);
@@ -51,7 +53,7 @@ class AnomalyEventAppenderTest {
         given(anomalyEventRepository.existsByDomainAndMetricNameAndStatus("seat", "failure_rate", AnomalyEventStatus.OPEN))
                 .willReturn(false);
 
-        boolean saved = anomalyEventAppender.appendIfNotDuplicate(rule, 0.08, null);
+        boolean saved = appendAnomalyEventService.execute(rule, 0.08, null);
 
         assertThat(saved).isTrue();
         ArgumentCaptor<AnomalyEventEntity> entityCaptor = ArgumentCaptor.forClass(AnomalyEventEntity.class);
@@ -68,7 +70,7 @@ class AnomalyEventAppenderTest {
         given(anomalyEventRepository.existsByDomainAndMetricNameAndStatus("seat", "failure_rate", AnomalyEventStatus.OPEN))
                 .willReturn(true);
 
-        boolean saved = anomalyEventAppender.appendIfNotDuplicate(rule, 0.08, null);
+        boolean saved = appendAnomalyEventService.execute(rule, 0.08, null);
 
         assertThat(saved).isFalse();
     }
