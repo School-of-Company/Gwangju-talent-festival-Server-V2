@@ -1,26 +1,25 @@
-package team.startup.gwangjutalentfestival.domain.monitoring.detector;
+package team.startup.gwangjutalentfestival.domain.monitoring.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.startup.gwangjutalentfestival.domain.monitoring.detector.AnomalyRule;
+import team.startup.gwangjutalentfestival.domain.monitoring.detector.MlScoreResult;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventEntity;
 import team.startup.gwangjutalentfestival.domain.monitoring.entity.AnomalyEventStatus;
 import team.startup.gwangjutalentfestival.domain.monitoring.repository.AnomalyEventRepository;
+import team.startup.gwangjutalentfestival.domain.monitoring.service.AppendAnomalyEventService;
 
 @Service
 @RequiredArgsConstructor
-public class AnomalyEventAppender {
+public class AppendAnomalyEventServiceImpl implements AppendAnomalyEventService {
 
     private final AnomalyEventRepository anomalyEventRepository;
 
-    public boolean hasOpenEvent(AnomalyRule rule) {
-        return anomalyEventRepository.existsByDomainAndMetricNameAndStatus(
-                rule.domain(), rule.metricName(), AnomalyEventStatus.OPEN);
-    }
-
+    @Override
     @Transactional
-    public boolean appendIfNotDuplicate(AnomalyRule rule, double detectedValue, @Nullable MlScoreResult mlResult) {
+    public boolean execute(AnomalyRule rule, double detectedValue, @Nullable MlScoreResult mlResult) {
         if (anomalyEventRepository.existsByDomainAndMetricNameAndStatus(
                 rule.domain(), rule.metricName(), AnomalyEventStatus.OPEN)) {
             return false;
