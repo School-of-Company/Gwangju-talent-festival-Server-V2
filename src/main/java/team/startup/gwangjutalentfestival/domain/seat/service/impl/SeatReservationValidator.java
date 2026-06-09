@@ -8,6 +8,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInS
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationLimitExceededException;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
+import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import static team.startup.gwangjutalentfestival.domain.user.enums.Role.PERFORMER;
@@ -18,6 +19,7 @@ public class SeatReservationValidator {
 
     private final SeatReservationRepository seatReservationRepository;
     private final SeatBanRepository seatBanRepository;
+    private final UserRepository userRepository;
 
     private static final int PERFORMER_SEAT_LIMIT = 3;
     private static final int DEFAULT_SEAT_LIMIT = 1;
@@ -35,9 +37,9 @@ public class SeatReservationValidator {
 
     public void validateReservationLimit() {
         long userId = UserUtil.getCurrentUserId();
-        long reserveCount = seatReservationRepository.countByUserId(userId);
+        userRepository.findByIdForUpdate(userId);
         int limit = UserUtil.getCurrentUserRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
-        if (reserveCount >= limit) {
+        if (seatReservationRepository.countByUserId(userId) >= limit) {
             throw new SeatReservationLimitExceededException();
         }
     }

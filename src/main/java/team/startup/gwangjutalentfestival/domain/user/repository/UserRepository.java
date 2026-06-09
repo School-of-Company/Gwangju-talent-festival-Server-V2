@@ -1,6 +1,10 @@
 package team.startup.gwangjutalentfestival.domain.user.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
 import java.util.Optional;
@@ -25,4 +29,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
      * @return 사용자가 존재하면 {@code true}
      */
     boolean existsByPhoneNumber(String phoneNumber);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM UserEntity u WHERE u.id = :id")
+    Optional<UserEntity> findByIdForUpdate(@Param("id") Long id);
 }
