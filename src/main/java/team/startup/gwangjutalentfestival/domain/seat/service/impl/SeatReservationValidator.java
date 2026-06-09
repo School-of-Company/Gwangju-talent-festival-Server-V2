@@ -35,9 +35,8 @@ public class SeatReservationValidator {
 
     public void validateReservationLimit() {
         long userId = UserUtil.getCurrentUserId();
-        long reserveCount = seatReservationRepository.countByUserId(userId);
         int limit = UserUtil.getCurrentUserRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
-        if (reserveCount >= limit) {
+        if (seatReservationRepository.findAllByUserIdForUpdate(userId).size() >= limit) {
             throw new SeatReservationLimitExceededException();
         }
     }
