@@ -1,10 +1,6 @@
 package team.startup.gwangjutalentfestival.domain.seat.repository;
 
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
@@ -66,8 +62,4 @@ public interface SeatReservationRepository extends JpaRepository<SeatEntity, Lon
      * @return 예약 좌석 목록
      */
     List<SeatEntity> findAllByUserId(Long userId);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT s FROM SeatEntity s WHERE s.user.id = :userId")
-    List<SeatEntity> findAllByUserIdForUpdate(@Param("userId") Long userId);
 }
