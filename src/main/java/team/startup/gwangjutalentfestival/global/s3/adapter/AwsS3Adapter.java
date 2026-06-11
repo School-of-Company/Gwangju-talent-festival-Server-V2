@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.s3.adapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -27,7 +28,8 @@ public class AwsS3Adapter {
 
     public String uploadVideo(MultipartFile file) {
         String key = "videos/" + UUID.randomUUID() + ".mp4";
-        String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "video.mp4";
+        String rawFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "video.mp4";
+        String safeFilename = rawFilename.replaceAll("[\"\\r\\n]", "_");
         try {
             s3Client.putObject(
                     PutObjectRequest.builder()
@@ -38,10 +40,10 @@ public class AwsS3Adapter {
                             .build(),
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-        } catch (IOException e) {
+        } catch (IOException | SdkException e) {
             throw new S3UploadFailedException();
         }
-        return generatePresignedUrl(key, originalFilename);
+        return generatePresignedUrl(key, safeFilename);
     }
 
     private String generatePresignedUrl(String key, String filename) {
