@@ -1,10 +1,10 @@
-package team.startup.gwangjutalentfestival.domain.team.service.impl;
+package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.UploadTeamVideoResponse;
-import team.startup.gwangjutalentfestival.domain.team.service.UploadTeamVideoService;
+import team.startup.gwangjutalentfestival.domain.apply.presentation.data.response.ApplyResponse;
+import team.startup.gwangjutalentfestival.domain.apply.service.ApplyService;
 import team.startup.gwangjutalentfestival.global.s3.adapter.AwsS3Adapter;
 import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
 
@@ -13,17 +13,17 @@ import java.io.InputStream;
 
 @Service
 @RequiredArgsConstructor
-public class UploadTeamVideoServiceImpl implements UploadTeamVideoService {
+public class ApplyServiceImpl implements ApplyService {
 
     private final AwsS3Adapter awsS3Adapter;
 
     @Override
-    public UploadTeamVideoResponse execute(MultipartFile file) {
+    public ApplyResponse execute(MultipartFile file) {
         if (file == null || file.isEmpty() || !isMp4File(file)) {
             throw new InvalidVideoFileException();
         }
         String url = awsS3Adapter.uploadVideo(file);
-        return new UploadTeamVideoResponse(url);
+        return new ApplyResponse(url);
     }
 
     private boolean isMp4File(MultipartFile file) {
