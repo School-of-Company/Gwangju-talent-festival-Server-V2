@@ -19,6 +19,7 @@ public final class PublicEndpointMatcher {
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/swagger-ui(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/v3/api-docs(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(HttpMethod.GET, withOptionalQuery("^/team")),
+            RegexRequestMatcher.regexMatcher(HttpMethod.POST, withOptionalQuery("^/team/video")),
             RegexRequestMatcher.regexMatcher(HttpMethod.POST, withOptionalQuery("^/slogan"))
     );
 

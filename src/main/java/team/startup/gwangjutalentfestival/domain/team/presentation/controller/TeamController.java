@@ -6,15 +6,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.request.UpdateTeamOrderRequest;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.GetTeamRankingResponse;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.GetTeamResponse;
+import team.startup.gwangjutalentfestival.domain.team.presentation.data.response.UploadTeamVideoResponse;
 import team.startup.gwangjutalentfestival.domain.team.service.GetAllTeamService;
 import team.startup.gwangjutalentfestival.domain.team.service.GetTeamRankingService;
 import team.startup.gwangjutalentfestival.domain.team.service.UpdateTeamOrderService;
 import team.startup.gwangjutalentfestival.domain.team.service.UpdateTeamPerformanceService;
+import team.startup.gwangjutalentfestival.domain.team.service.UploadTeamVideoService;
 
 import java.util.List;
 
@@ -32,6 +36,7 @@ public class TeamController {
     private final GetTeamRankingService getTeamRankingService;
     private final UpdateTeamPerformanceService updateTeamPerformanceService;
     private final UpdateTeamOrderService updateTeamOrderService;
+    private final UploadTeamVideoService uploadTeamVideoService;
 
     /**
      * 등록된 모든 팀을 공연 순서 오름차순으로 조회한다.
@@ -95,5 +100,18 @@ public class TeamController {
     public ResponseEntity<Void> updateTeamOrder(@RequestBody UpdateTeamOrderRequest request) {
         updateTeamOrderService.execute(request.orderItems());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "팀 영상 업로드", description = "팀 공연 영상(MP4)을 업로드하고 7일 유효 다운로드 링크를 반환합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "영상 업로드 성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 영상 파일"),
+            @ApiResponse(responseCode = "500", description = "파일 업로드 실패")
+    })
+    @PostMapping(value = "/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<UploadTeamVideoResponse> uploadTeamVideo(
+            @Parameter(description = "업로드할 MP4 파일", required = true)
+            @RequestPart MultipartFile file) {
+        return ResponseEntity.ok(uploadTeamVideoService.execute(file));
     }
 }
