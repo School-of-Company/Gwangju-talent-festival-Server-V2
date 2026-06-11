@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
 import team.startup.gwangjutalentfestival.global.s3.exception.S3UploadFailedException;
 import team.startup.gwangjutalentfestival.global.s3.properties.AwsS3Properties;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -30,18 +31,25 @@ public class AwsS3Adapter {
     public String uploadVideo(MultipartFile file) {
         String key = "videos/" + UUID.randomUUID() + ".mp4";
         String rawFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "video.mp4";
-        try (var inputStream = file.getInputStream()) {
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile("upload_", ".mp4");
+            file.transferTo(tempFile);
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(awsS3Properties.getBucket())
                             .key(key)
                             .contentType("video/mp4")
-                            .contentLength(file.getSize())
+                            .contentLength(tempFile.length())
                             .build(),
-                    RequestBody.fromInputStream(inputStream, file.getSize())
+                    RequestBody.fromFile(tempFile)
             );
         } catch (IOException | SdkException e) {
             throw new S3UploadFailedException();
+        } finally {
+            if (tempFile != null && tempFile.exists()) {
+                tempFile.delete();
+            }
         }
         return generatePresignedUrl(key, rawFilename);
     }

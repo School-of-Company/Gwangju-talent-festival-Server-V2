@@ -15,6 +15,8 @@ import java.io.InputStream;
 @RequiredArgsConstructor
 public class ApplyServiceImpl implements ApplyService {
 
+    private static final int MP4_HEADER_LENGTH = 12;
+
     private final AwsS3Adapter awsS3Adapter;
 
     @Override
@@ -28,9 +30,9 @@ public class ApplyServiceImpl implements ApplyService {
 
     private boolean isMp4File(MultipartFile file) {
         try {
-            byte[] header = new byte[12];
+            byte[] header = new byte[MP4_HEADER_LENGTH];
             try (InputStream is = file.getInputStream()) {
-                if (is.read(header) < 12) return false;
+                if (is.readNBytes(header, 0, MP4_HEADER_LENGTH) < MP4_HEADER_LENGTH) return false;
             }
             // ftyp box: offset 4~7 == 0x66 0x74 0x79 0x70
             return header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70;
