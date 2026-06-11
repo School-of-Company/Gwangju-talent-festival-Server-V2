@@ -19,7 +19,7 @@ public class UploadTeamVideoServiceImpl implements UploadTeamVideoService {
 
     @Override
     public UploadTeamVideoResponse execute(MultipartFile file) {
-        if (file.isEmpty() || !isMp4File(file)) {
+        if (file == null || file.isEmpty() || !isMp4File(file)) {
             throw new InvalidVideoFileException();
         }
         String url = awsS3Adapter.uploadVideo(file);

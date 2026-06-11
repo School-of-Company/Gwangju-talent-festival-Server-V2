@@ -13,6 +13,7 @@ import team.startup.gwangjutalentfestival.global.s3.exception.S3UploadFailedExce
 import team.startup.gwangjutalentfestival.global.s3.properties.AwsS3Properties;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -29,8 +30,7 @@ public class AwsS3Adapter {
     public String uploadVideo(MultipartFile file) {
         String key = "videos/" + UUID.randomUUID() + ".mp4";
         String rawFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "video.mp4";
-        String safeFilename = rawFilename.replaceAll("[\"\\r\\n]", "_");
-        try {
+        try (var inputStream = file.getInputStream()) {
             s3Client.putObject(
                     PutObjectRequest.builder()
                             .bucket(awsS3Properties.getBucket())
@@ -38,21 +38,22 @@ public class AwsS3Adapter {
                             .contentType("video/mp4")
                             .contentLength(file.getSize())
                             .build(),
-                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+                    RequestBody.fromInputStream(inputStream, file.getSize())
             );
         } catch (IOException | SdkException e) {
             throw new S3UploadFailedException();
         }
-        return generatePresignedUrl(key, safeFilename);
+        return generatePresignedUrl(key, rawFilename);
     }
 
     private String generatePresignedUrl(String key, String filename) {
+        String encodedFilename = org.springframework.web.util.UriUtils.encode(filename, StandardCharsets.UTF_8);
         PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(r -> r
                 .signatureDuration(Duration.ofDays(PRESIGNED_URL_DURATION_DAYS))
                 .getObjectRequest(gor -> gor
                         .bucket(awsS3Properties.getBucket())
                         .key(key)
-                        .responseContentDisposition("attachment; filename=\"" + filename + "\"")));
+                        .responseContentDisposition("attachment; filename*=UTF-8''" + encodedFilename)));
         return presigned.url().toString();
     }
 }
