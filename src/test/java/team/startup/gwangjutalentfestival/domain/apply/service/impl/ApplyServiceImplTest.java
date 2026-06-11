@@ -7,20 +7,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import team.startup.gwangjutalentfestival.domain.apply.entity.ApplyEntity;
 import team.startup.gwangjutalentfestival.domain.apply.presentation.data.response.ApplyResponse;
+import team.startup.gwangjutalentfestival.domain.apply.repository.ApplyRepository;
 import team.startup.gwangjutalentfestival.global.s3.adapter.AwsS3Adapter;
 import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ApplyServiceImplTest {
 
     @Mock
     private AwsS3Adapter awsS3Adapter;
+
+    @Mock
+    private ApplyRepository applyRepository;
 
     @InjectMocks
     private ApplyServiceImpl applyService;
@@ -37,13 +45,38 @@ class ApplyServiceImplTest {
     }
 
     @Test
-    void 유효한_MP4_파일이면_업로드_성공_후_URL을_반환한다() {
+    void 유효한_MP4_파일이면_업로드_후_신청_ID와_URL을_반환한다() {
         MockMultipartFile file = new MockMultipartFile("file", "video.mp4", "video/mp4", validMp4Header);
-        given(awsS3Adapter.uploadVideo(any())).willReturn("https://s3.example.com/videos/video.mp4");
+        ApplyEntity savedApply = ApplyEntity.builder()
+                .id(1L)
+                .videoKey("videos/test-key.mp4")
+                .originalFilename("video.mp4")
+                .build();
+        given(awsS3Adapter.uploadVideo(any())).willReturn("videos/test-key.mp4");
+        given(applyRepository.save(any(ApplyEntity.class))).willReturn(savedApply);
+        given(awsS3Adapter.generateVideoDownloadUrl(anyString(), anyString()))
+                .willReturn("https://s3.example.com/videos/test-key.mp4?X-Amz-Signature=abc");
 
         ApplyResponse response = applyService.execute(file);
 
-        assertThat(response.videoUrl()).isEqualTo("https://s3.example.com/videos/video.mp4");
+        assertThat(response.applyId()).isEqualTo(1L);
+        assertThat(response.videoUrl()).isEqualTo("https://s3.example.com/videos/test-key.mp4?X-Amz-Signature=abc");
+    }
+
+    @Test
+    void 업로드_시_S3_key와_원본_파일명이_저장된다() {
+        MockMultipartFile file = new MockMultipartFile("file", "공연영상.mp4", "video/mp4", validMp4Header);
+        given(awsS3Adapter.uploadVideo(any())).willReturn("videos/test-key.mp4");
+        given(applyRepository.save(any(ApplyEntity.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+        given(awsS3Adapter.generateVideoDownloadUrl(anyString(), anyString()))
+                .willReturn("https://s3.example.com/url");
+
+        applyService.execute(file);
+
+        verify(applyRepository).save(argThat(apply ->
+                apply.getVideoKey().equals("videos/test-key.mp4")
+                        && apply.getOriginalFilename().equals("공연영상.mp4")));
     }
 
     @Test

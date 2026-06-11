@@ -22,15 +22,20 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AwsS3Adapter {
 
-    private static final long PRESIGNED_URL_DURATION_DAYS = 7;
+    private static final long PRESIGNED_URL_DURATION_MINUTES = 10;
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final AwsS3Properties awsS3Properties;
 
+    /**
+     * 영상 파일을 S3에 업로드하고 객체 key를 반환한다.
+     *
+     * @param file 업로드할 MP4 파일
+     * @return 업로드된 객체의 S3 key
+     */
     public String uploadVideo(MultipartFile file) {
         String key = "videos/" + UUID.randomUUID() + ".mp4";
-        String rawFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "video.mp4";
         File tempFile = null;
         try {
             tempFile = File.createTempFile("upload_", ".mp4");
@@ -51,13 +56,21 @@ public class AwsS3Adapter {
                 tempFile.delete();
             }
         }
-        return generatePresignedUrl(key, rawFilename);
+        return key;
     }
 
-    private String generatePresignedUrl(String key, String filename) {
+    /**
+     * 객체 key로 다운로드용 Presigned URL을 발급한다.
+     * 서버 로컬 서명 연산이므로 호출마다 새로 발급해도 비용이 발생하지 않는다.
+     *
+     * @param key      S3 객체 key
+     * @param filename 다운로드 시 사용할 원본 파일명
+     * @return 10분간 유효한 Presigned URL
+     */
+    public String generateVideoDownloadUrl(String key, String filename) {
         String encodedFilename = org.springframework.web.util.UriUtils.encode(filename, StandardCharsets.UTF_8);
         PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(r -> r
-                .signatureDuration(Duration.ofDays(PRESIGNED_URL_DURATION_DAYS))
+                .signatureDuration(Duration.ofMinutes(PRESIGNED_URL_DURATION_MINUTES))
                 .getObjectRequest(gor -> gor
                         .bucket(awsS3Properties.getBucket())
                         .key(key)
