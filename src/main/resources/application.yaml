@@ -6,6 +6,11 @@ spring:
     virtual:
       enabled: true
 
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
@@ -101,6 +106,13 @@ management:
     metrics:
       export:
         enabled: true
+
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket: ${AWS_S3_BUCKET}
 
 monitoring:
   anomaly:

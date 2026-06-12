@@ -67,6 +67,13 @@ public enum ErrorCode {
     EXPORT_INVALID_FILTER(400, "허용되지 않는 domain 또는 metricName입니다."),
     EXPORT_FAILED(500, "데이터셋 export 중 오류가 발생했습니다."),
 
+    // S3
+    S3_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
+    INVALID_VIDEO_FILE(400, "유효하지 않은 영상 파일입니다."),
+
+    // Apply
+    APPLY_NOT_FOUND(404, "신청 내역을 찾을 수 없습니다."),
+
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),
