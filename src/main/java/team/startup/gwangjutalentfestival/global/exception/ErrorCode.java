@@ -68,7 +68,6 @@ public enum ErrorCode {
     EXPORT_FAILED(500, "데이터셋 export 중 오류가 발생했습니다."),
 
     // S3
-    S3_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
     INVALID_VIDEO_FILE(400, "유효하지 않은 영상 파일입니다."),
 
     // Apply
