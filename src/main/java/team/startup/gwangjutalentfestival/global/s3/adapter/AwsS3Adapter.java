@@ -2,62 +2,71 @@ package team.startup.gwangjutalentfestival.global.s3.adapter;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-import team.startup.gwangjutalentfestival.global.s3.exception.S3UploadFailedException;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
 import team.startup.gwangjutalentfestival.global.s3.properties.AwsS3Properties;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
 public class AwsS3Adapter {
 
     private static final long PRESIGNED_URL_DURATION_MINUTES = 10;
+    private static final String VIDEO_CONTENT_TYPE = "video/mp4";
 
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
     private final AwsS3Properties awsS3Properties;
 
     /**
-     * 영상 파일을 S3에 업로드하고 객체 key를 반환한다.
+     * 객체 key에 대한 업로드용 Presigned URL을 발급한다.
+     * 클라이언트는 이 URL로 S3에 직접 PUT 업로드하므로 서버는 파일 본문을 거치지 않는다.
+     * Content-Type을 {@code video/mp4}로 고정하므로 클라이언트는 동일한 헤더로 업로드해야 한다.
      *
-     * @param file 업로드할 MP4 파일
-     * @return 업로드된 객체의 S3 key
+     * @param key S3 객체 key
+     * @return 10분간 유효한 업로드용 Presigned URL
      */
-    public String uploadVideo(MultipartFile file) {
-        String key = "videos/" + UUID.randomUUID() + ".mp4";
-        File tempFile = null;
+    public String generateUploadUrl(String key) {
+        PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(r -> r
+                .signatureDuration(Duration.ofMinutes(PRESIGNED_URL_DURATION_MINUTES))
+                .putObjectRequest(por -> por
+                        .bucket(awsS3Properties.getBucket())
+                        .key(key)
+                        .contentType(VIDEO_CONTENT_TYPE)));
+        return presigned.url().toString();
+    }
+
+    /**
+     * S3 객체의 앞부분 바이트만 Range 요청으로 읽어 반환한다.
+     * 대용량 영상 전체를 받지 않고 파일 시그니처 검증에 필요한 만큼만 읽기 위해 사용한다.
+     *
+     * @param key    S3 객체 key
+     * @param length 읽어올 바이트 수
+     * @return 객체 앞부분 바이트 배열
+     * @throws InvalidVideoFileException 객체가 존재하지 않거나 읽기에 실패한 경우
+     */
+    public byte[] readObjectHead(String key, int length) {
         try {
-            tempFile = File.createTempFile("upload_", ".mp4");
-            file.transferTo(tempFile);
-            s3Client.putObject(
-                    PutObjectRequest.builder()
+            ResponseBytes<GetObjectResponse> objectBytes = s3Client.getObjectAsBytes(
+                    GetObjectRequest.builder()
                             .bucket(awsS3Properties.getBucket())
                             .key(key)
-                            .contentType("video/mp4")
-                            .contentLength(tempFile.length())
-                            .build(),
-                    RequestBody.fromFile(tempFile)
-            );
-        } catch (IOException | SdkException e) {
-            throw new S3UploadFailedException();
-        } finally {
-            if (tempFile != null && tempFile.exists()) {
-                tempFile.delete();
-            }
+                            .range("bytes=0-" + (length - 1))
+                            .build());
+            return objectBytes.asByteArray();
+        } catch (SdkException e) {
+            throw new InvalidVideoFileException();
         }
-        return key;
     }
 
     /**
