@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.s3.adapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -68,7 +69,7 @@ public class AwsS3Adapter {
      * @return 10분간 유효한 Presigned URL
      */
     public String generateVideoDownloadUrl(String key, String filename) {
-        String encodedFilename = org.springframework.web.util.UriUtils.encode(filename, StandardCharsets.UTF_8);
+        String encodedFilename = UriUtils.encode(filename, StandardCharsets.UTF_8);
         PresignedGetObjectRequest presigned = s3Presigner.presignGetObject(r -> r
                 .signatureDuration(Duration.ofMinutes(PRESIGNED_URL_DURATION_MINUTES))
                 .getObjectRequest(gor -> gor

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class ApplyController {
 
     @Operation(summary = "공연 신청", description = "팀 공연 영상(MP4)을 업로드하고 신청 ID와 다운로드 링크를 반환합니다.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "신청 성공"),
+            @ApiResponse(responseCode = "201", description = "신청 성공"),
             @ApiResponse(responseCode = "400", description = "유효하지 않은 영상 파일"),
             @ApiResponse(responseCode = "500", description = "파일 업로드 실패")
     })
@@ -39,7 +40,7 @@ public class ApplyController {
     public ResponseEntity<ApplyResponse> apply(
             @Parameter(description = "업로드할 MP4 파일", required = true)
             @RequestPart MultipartFile file) {
-        return ResponseEntity.ok(applyService.execute(file));
+        return ResponseEntity.status(HttpStatus.CREATED).body(applyService.execute(file));
     }
 
     @Operation(summary = "공연 영상 다운로드 링크 조회", description = "신청 ID로 10분간 유효한 영상 다운로드 링크를 발급합니다. 만료 시 다시 호출하면 새 링크가 발급됩니다.")
