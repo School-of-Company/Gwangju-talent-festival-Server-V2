@@ -38,7 +38,7 @@ public class SeatEntity {
     @Column(nullable = false, name = "seat_number")
     private Integer seatNumber;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id")
     private UserEntity user;

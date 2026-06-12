@@ -1,8 +1,9 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
@@ -18,6 +19,7 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservation
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
+import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
@@ -30,7 +32,6 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class ReservationSeatServiceImplTest {
 
-    @InjectMocks
     private ReservationSeatServiceImpl reservationSeatService;
 
     @Mock
@@ -48,9 +49,24 @@ class ReservationSeatServiceImplTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
+    private final OperationMetricRecorder metricRecorder =
+            new OperationMetricRecorder(new SimpleMeterRegistry());
+
     private static final String SEAT_SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
     private static final Integer MAX_SEATS = 77;
+
+    @BeforeEach
+    void setUp() {
+        reservationSeatService = new ReservationSeatServiceImpl(
+                seatReservationRepository,
+                seatReservationValidator,
+                seatUtil,
+                userUtil,
+                applicationEventPublisher,
+                metricRecorder
+        );
+    }
 
     private ReservationSeatRequest request() {
         return new ReservationSeatRequest(SEAT_SECTION, SEAT_NUMBER);

@@ -58,6 +58,22 @@ public enum ErrorCode {
     INVALID_JUDGEMENT_SCORE(400, "입력한 점수가 유효한 범위를 벗어났습니다."),
     JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
 
+    // Monitoring
+    ANOMALY_EVENT_NOT_FOUND(404, "이상 탐지 이벤트를 찾을 수 없습니다."),
+    FEEDBACK_ALREADY_EXISTS(409, "이미 피드백이 등록된 이벤트입니다."),
+    ANOMALY_EVENT_NOT_OPEN(400, "이미 처리된 이상 탐지 이벤트입니다."),
+    EXPORT_INVALID_PERIOD(400, "end는 start보다 이후여야 합니다."),
+    EXPORT_PERIOD_EXCEEDED(400, "export 기간은 최대 7일입니다."),
+    EXPORT_INVALID_FILTER(400, "허용되지 않는 domain 또는 metricName입니다."),
+    EXPORT_FAILED(500, "데이터셋 export 중 오류가 발생했습니다."),
+
+    // S3
+    S3_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
+    INVALID_VIDEO_FILE(400, "유효하지 않은 영상 파일입니다."),
+
+    // Apply
+    APPLY_NOT_FOUND(404, "신청 내역을 찾을 수 없습니다."),
+
     // Google Sheets
     GOOGLE_SHEETS(500, "Google Sheets 연동 중 오류가 발생했습니다."),
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.seat.exception.InvalidSeatSectionException;
@@ -19,15 +20,13 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
 class GetSeatsBySectionServiceImplTest {
 
     @InjectMocks
     private GetSeatsBySectionServiceImpl getSeatsBySectionService;
-
-    @Mock
-    private UserUtil userUtil;
 
     @Spy
     private SeatUtil seatUtil = new SeatUtil();
@@ -42,51 +41,59 @@ class GetSeatsBySectionServiceImplTest {
 
     @Test
     void 모든_좌석_예약_가능() {
-        given(userUtil.currentUserRole()).willReturn(Role.USER);
-        given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of());
-        given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of());
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of());
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of());
 
-        GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
+            GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
 
-        assertThat(response.seats()).hasSize(77);
-        assertThat(response.seats()).containsOnly(true);
+            assertThat(response.seats()).hasSize(77);
+            assertThat(response.seats()).containsOnly(true);
+        }
     }
 
     @Test
     void 예약된_좌석은_false() {
-        given(userUtil.currentUserRole()).willReturn(Role.USER);
-        given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of(2, 4));
-        given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of());
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of(2, 4));
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of());
 
-        GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
+            GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
 
-        assertThat(response.seats().get(0)).isTrue();
-        assertThat(response.seats().get(1)).isFalse(); // 2번
-        assertThat(response.seats().get(2)).isTrue();
-        assertThat(response.seats().get(3)).isFalse(); // 4번
-        assertThat(response.seats().get(4)).isTrue();
+            assertThat(response.seats().get(0)).isTrue();
+            assertThat(response.seats().get(1)).isFalse(); // 2번
+            assertThat(response.seats().get(2)).isTrue();
+            assertThat(response.seats().get(3)).isFalse(); // 4번
+            assertThat(response.seats().get(4)).isTrue();
+        }
     }
 
     @Test
     void 차단된_좌석은_false() {
-        given(userUtil.currentUserRole()).willReturn(Role.USER);
-        given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of());
-        given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of(1, 3));
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection(SECTION)).willReturn(Set.of());
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(SECTION, Role.USER)).willReturn(Set.of(1, 3));
 
-        GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
+            GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
 
-        assertThat(response.seats().get(0)).isFalse(); // 1번
-        assertThat(response.seats().get(1)).isTrue();
-        assertThat(response.seats().get(2)).isFalse(); // 3번
+            assertThat(response.seats().get(0)).isFalse(); // 1번
+            assertThat(response.seats().get(1)).isTrue();
+            assertThat(response.seats().get(2)).isFalse(); // 3번
+        }
     }
 
     @Test
     void 잘못된_구역_예외() {
-        given(userUtil.currentUserRole()).willReturn(Role.USER);
-        given(seatReservationCustomRepository.findSeatNumbersBySeatSection("Z")).willReturn(Set.of());
-        given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole("Z", Role.USER)).willReturn(Set.of());
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection("Z")).willReturn(Set.of());
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole("Z", Role.USER)).willReturn(Set.of());
 
-        assertThatThrownBy(() -> getSeatsBySectionService.execute("Z"))
-                .isInstanceOf(InvalidSeatSectionException.class);
+            assertThatThrownBy(() -> getSeatsBySectionService.execute("Z"))
+                    .isInstanceOf(InvalidSeatSectionException.class);
+        }
     }
 }

@@ -36,7 +36,7 @@ Read `${CLAUDE_SKILL_DIR}/references/labels.md` and select 1–2 appropriate lab
 ## Step 3 — Generate PR Content
 
 **Title** — Generate 3 options:
-- Format: `type :: description` (no brackets — follow git commit convention: add/update/fix/delete/docs/test)
+- Format: description only — do NOT add a type prefix (no `fix ::`, `update ::`, etc.)
 - Description: Korean, concise, **derived from the related issue title/content**, no period, max 50 characters total
 - Mark the best option with `← 추천`
 
@@ -78,7 +78,7 @@ Ask the user to confirm which title to use. If no answer, proceed with the recom
 ## Step 5 — Create PR
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/create-pr.sh" "<confirmed-title>" "PR_BODY.md" "<label1>,<label2>"
+bash "${CLAUDE_SKILL_DIR}/scripts/create-pr.sh" "<confirmed-title>" "PR_BODY.md" "<label1>,<label2>" "School-of-Company/Gwangju-talent-festival-Server" "@me"
 ```
 
 After creation, display the PR URL.

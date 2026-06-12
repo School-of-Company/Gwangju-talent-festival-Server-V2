@@ -96,4 +96,5 @@ public class TeamController {
         updateTeamOrderService.execute(request.orderItems());
         return ResponseEntity.noContent().build();
     }
+
 }
