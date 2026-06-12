@@ -2,6 +2,8 @@ package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -75,6 +77,21 @@ class ApplyServiceImplTest {
                 .isInstanceOf(InvalidVideoFileException.class);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "uploads/evil.mp4",        // videos/ 경로가 아님
+            "videos/../secret.mp4",    // 경로 이탈 시도
+            "videos/sub/path.mp4",     // 하위 경로 추가
+            "videos/evil.exe",         // 허용되지 않은 확장자
+            "videos/.mp4"              // 파일명 비어있음
+    })
+    void videos_경로_규격을_벗어난_key이면_InvalidVideoFileException이_발생한다(String key) {
+        ApplyRequest request = new ApplyRequest(key, "공연영상.mp4");
+
+        assertThatThrownBy(() -> applyService.execute(request))
+                .isInstanceOf(InvalidVideoFileException.class);
+    }
+
     @Test
     void 업로드된_파일이_MP4_시그니처가_아니면_InvalidVideoFileException이_발생한다() {
         ApplyRequest request = new ApplyRequest("videos/fake-key.mp4", "fake.mp4");
@@ -109,5 +126,19 @@ class ApplyServiceImplTest {
 
         verify(applyRepository).save(argThat(apply ->
                 apply.getOriginalFilename().equals("video.mp4")));
+    }
+
+    @Test
+    void 파일명이_255자를_초과하면_잘라서_저장한다() {
+        String longName = "가".repeat(300) + ".mp4";
+        ApplyRequest request = new ApplyRequest("videos/test-key.mp4", longName);
+        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
+        given(applyRepository.save(any(ApplyEntity.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        applyService.execute(request);
+
+        verify(applyRepository).save(argThat(apply ->
+                apply.getOriginalFilename().length() == 255));
     }
 }
