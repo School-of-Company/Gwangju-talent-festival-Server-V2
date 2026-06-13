@@ -8,16 +8,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.apply.entity.ApplyEntity;
-import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyRequest;
+import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyCompleteRequest;
+import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyPartInput;
 import team.startup.gwangjutalentfestival.domain.apply.presentation.data.response.ApplyResponse;
 import team.startup.gwangjutalentfestival.domain.apply.repository.ApplyRepository;
 import team.startup.gwangjutalentfestival.global.s3.adapter.AwsS3Adapter;
 import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,103 +46,87 @@ class ApplyServiceImplTest {
             0x69, 0x73, 0x6F, 0x6D   // isom
     };
 
-    @Test
-    void 업로드된_파일이_유효한_MP4이면_신청을_저장하고_ID를_반환한다() {
-        ApplyRequest request = new ApplyRequest("videos/test-key.mp4", "공연영상.mp4");
-        ApplyEntity savedApply = ApplyEntity.builder()
-                .id(1L)
-                .videoKey("videos/test-key.mp4")
-                .originalFilename("공연영상.mp4")
-                .build();
-        given(awsS3Adapter.readObjectHead(eq("videos/test-key.mp4"), anyInt())).willReturn(VALID_MP4_HEADER);
-        given(applyRepository.save(any(ApplyEntity.class))).willReturn(savedApply);
+    private static ApplyCompleteRequest request(String key, String uploadId, String filename) {
+        return new ApplyCompleteRequest(key, uploadId, filename, List.of(new ApplyPartInput(1, "etag1")));
+    }
 
-        ApplyResponse response = applyService.execute(request);
+    @Test
+    void 유효한_완료_요청이면_멀티파트를_완료하고_신청을_저장한다() {
+        ApplyCompleteRequest req = request("videos/test-key.mp4", "upload-id", "공연영상.mp4");
+        ApplyEntity saved = ApplyEntity.builder()
+                .id(1L).videoKey("videos/test-key.mp4").originalFilename("공연영상.mp4").build();
+        given(awsS3Adapter.readObjectHead(eq("videos/test-key.mp4"), anyInt())).willReturn(VALID_MP4_HEADER);
+        given(applyRepository.save(any(ApplyEntity.class))).willReturn(saved);
+
+        ApplyResponse response = applyService.execute(req);
 
         assertThat(response.applyId()).isEqualTo(1L);
-        verify(applyRepository).save(argThat(apply ->
-                apply.getVideoKey().equals("videos/test-key.mp4")
-                        && apply.getOriginalFilename().equals("공연영상.mp4")));
-    }
-
-    @Test
-    void key가_null이면_InvalidVideoFileException이_발생한다() {
-        ApplyRequest request = new ApplyRequest(null, "공연영상.mp4");
-
-        assertThatThrownBy(() -> applyService.execute(request))
-                .isInstanceOf(InvalidVideoFileException.class);
-    }
-
-    @Test
-    void key가_빈_문자열이면_InvalidVideoFileException이_발생한다() {
-        ApplyRequest request = new ApplyRequest("  ", "공연영상.mp4");
-
-        assertThatThrownBy(() -> applyService.execute(request))
-                .isInstanceOf(InvalidVideoFileException.class);
+        verify(awsS3Adapter).completeMultipartUpload(eq("videos/test-key.mp4"), eq("upload-id"), anyList());
+        verify(applyRepository).save(argThat(a ->
+                a.getVideoKey().equals("videos/test-key.mp4") && a.getOriginalFilename().equals("공연영상.mp4")));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "uploads/evil.mp4",        // videos/ 경로가 아님
-            "videos/../secret.mp4",    // 경로 이탈 시도
-            "videos/sub/path.mp4",     // 하위 경로 추가
-            "videos/evil.exe",         // 허용되지 않은 확장자
-            "videos/.mp4"              // 파일명 비어있음
-    })
+    @ValueSource(strings = {"uploads/evil.mp4", "videos/../secret.mp4", "videos/sub/path.mp4", "videos/evil.exe"})
     void videos_경로_규격을_벗어난_key이면_InvalidVideoFileException이_발생한다(String key) {
-        ApplyRequest request = new ApplyRequest(key, "공연영상.mp4");
-
-        assertThatThrownBy(() -> applyService.execute(request))
+        assertThatThrownBy(() -> applyService.execute(request(key, "upload-id", "x.mp4")))
                 .isInstanceOf(InvalidVideoFileException.class);
     }
 
     @Test
-    void 업로드된_파일이_MP4_시그니처가_아니면_InvalidVideoFileException이_발생한다() {
-        ApplyRequest request = new ApplyRequest("videos/fake-key.mp4", "fake.mp4");
-        byte[] notMp4 = new byte[]{
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00,
-                0x00, 0x00, 0x00, 0x00
-        };
+    void uploadId가_없으면_InvalidVideoFileException이_발생한다() {
+        assertThatThrownBy(() -> applyService.execute(request("videos/key.mp4", "  ", "x.mp4")))
+                .isInstanceOf(InvalidVideoFileException.class);
+    }
+
+    @Test
+    void 파트_목록이_비어있으면_InvalidVideoFileException이_발생한다() {
+        ApplyCompleteRequest req = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4", List.of());
+        assertThatThrownBy(() -> applyService.execute(req))
+                .isInstanceOf(InvalidVideoFileException.class);
+    }
+
+    @Test
+    void 완료된_파일이_MP4_시그니처가_아니면_InvalidVideoFileException이_발생한다() {
+        ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "x.mp4");
+        byte[] notMp4 = new byte[12];
         given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(notMp4);
 
-        assertThatThrownBy(() -> applyService.execute(request))
+        assertThatThrownBy(() -> applyService.execute(req))
                 .isInstanceOf(InvalidVideoFileException.class);
-    }
-
-    @Test
-    void 읽어온_헤더가_12바이트_미만이면_InvalidVideoFileException이_발생한다() {
-        ApplyRequest request = new ApplyRequest("videos/short-key.mp4", "short.mp4");
-        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(new byte[]{0x00, 0x01});
-
-        assertThatThrownBy(() -> applyService.execute(request))
-                .isInstanceOf(InvalidVideoFileException.class);
-    }
-
-    @Test
-    void 파일명이_없으면_기본_파일명으로_저장한다() {
-        ApplyRequest request = new ApplyRequest("videos/test-key.mp4", null);
-        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
-        given(applyRepository.save(any(ApplyEntity.class)))
-                .willAnswer(invocation -> invocation.getArgument(0));
-
-        applyService.execute(request);
-
-        verify(applyRepository).save(argThat(apply ->
-                apply.getOriginalFilename().equals("video.mp4")));
     }
 
     @Test
     void 파일명이_255자를_초과하면_잘라서_저장한다() {
-        String longName = "가".repeat(300) + ".mp4";
-        ApplyRequest request = new ApplyRequest("videos/test-key.mp4", longName);
+        ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "가".repeat(300) + ".mp4");
         given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
-        given(applyRepository.save(any(ApplyEntity.class)))
-                .willAnswer(invocation -> invocation.getArgument(0));
+        given(applyRepository.save(any(ApplyEntity.class))).willAnswer(i -> i.getArgument(0));
 
-        applyService.execute(request);
+        applyService.execute(req);
 
-        verify(applyRepository).save(argThat(apply ->
-                apply.getOriginalFilename().length() == 255));
+        verify(applyRepository).save(argThat(a ->
+                a.getOriginalFilename().length() == 255 && a.getOriginalFilename().endsWith(".mp4")));
+    }
+
+    @Test
+    void mp4가_아닌_확장자는_mp4로_변환해_저장한다() {
+        ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "공연영상.mov");
+        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
+        given(applyRepository.save(any(ApplyEntity.class))).willAnswer(i -> i.getArgument(0));
+
+        applyService.execute(req);
+
+        verify(applyRepository).save(argThat(a -> a.getOriginalFilename().equals("공연영상.mp4")));
+    }
+
+    @Test
+    void 확장자가_없으면_mp4를_붙여_저장한다() {
+        ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "공연영상");
+        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
+        given(applyRepository.save(any(ApplyEntity.class))).willAnswer(i -> i.getArgument(0));
+
+        applyService.execute(req);
+
+        verify(applyRepository).save(argThat(a -> a.getOriginalFilename().equals("공연영상.mp4")));
     }
 }

@@ -3,32 +3,42 @@ package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
 import team.startup.gwangjutalentfestival.domain.apply.entity.ApplyEntity;
-import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyRequest;
+import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyCompleteRequest;
+import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyPartInput;
 import team.startup.gwangjutalentfestival.domain.apply.presentation.data.response.ApplyResponse;
 import team.startup.gwangjutalentfestival.domain.apply.repository.ApplyRepository;
 import team.startup.gwangjutalentfestival.domain.apply.service.ApplyService;
+import team.startup.gwangjutalentfestival.domain.apply.util.ApplyVideoKey;
 import team.startup.gwangjutalentfestival.global.s3.adapter.AwsS3Adapter;
 import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ApplyServiceImpl implements ApplyService {
 
     private static final int MP4_HEADER_LENGTH = 12;
+    private static final String MP4_EXTENSION = ".mp4";
     private static final String DEFAULT_FILENAME = "video.mp4";
     private static final int MAX_FILENAME_LENGTH = 255;
-    private static final String VIDEO_KEY_PATTERN = "^videos/[a-zA-Z0-9_-]+\\.mp4$";
 
     private final AwsS3Adapter awsS3Adapter;
     private final ApplyRepository applyRepository;
 
     @Override
     @Transactional
-    public ApplyResponse execute(ApplyRequest request) {
-        if (request == null || request.key() == null || !request.key().matches(VIDEO_KEY_PATTERN)) {
+    public ApplyResponse execute(ApplyCompleteRequest request) {
+        if (request == null || ApplyVideoKey.isInvalid(request.key())
+                || request.uploadId() == null || request.uploadId().isBlank()
+                || request.parts() == null || request.parts().isEmpty()) {
             throw new InvalidVideoFileException();
         }
+
+        awsS3Adapter.completeMultipartUpload(request.key(), request.uploadId(), toCompletedParts(request.parts()));
         validateUploadedMp4(request.key());
 
         ApplyEntity apply = applyRepository.save(
@@ -40,13 +50,24 @@ public class ApplyServiceImpl implements ApplyService {
         return new ApplyResponse(apply.getId());
     }
 
+    private List<CompletedPart> toCompletedParts(List<ApplyPartInput> parts) {
+        return parts.stream()
+                .sorted(Comparator.comparingInt(ApplyPartInput::partNumber))
+                .map(p -> CompletedPart.builder().partNumber(p.partNumber()).eTag(p.etag()).build())
+                .toList();
+    }
+
     private String resolveFilename(String filename) {
         if (filename == null || filename.isBlank()) {
             return DEFAULT_FILENAME;
         }
-        return filename.length() > MAX_FILENAME_LENGTH
-                ? filename.substring(0, MAX_FILENAME_LENGTH)
-                : filename;
+        int dotIndex = filename.lastIndexOf('.');
+        String base = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+        int maxBaseLength = MAX_FILENAME_LENGTH - MP4_EXTENSION.length();
+        if (base.length() > maxBaseLength) {
+            base = base.substring(0, maxBaseLength);
+        }
+        return base + MP4_EXTENSION;
     }
 
     private void validateUploadedMp4(String key) {

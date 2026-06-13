@@ -69,6 +69,7 @@ public enum ErrorCode {
 
     // S3
     INVALID_VIDEO_FILE(400, "유효하지 않은 영상 파일입니다."),
+    MULTIPART_UPLOAD_FAILED(500, "영상 업로드 처리에 실패했습니다."),
 
     // Apply
     APPLY_NOT_FOUND(404, "신청 내역을 찾을 수 없습니다."),
