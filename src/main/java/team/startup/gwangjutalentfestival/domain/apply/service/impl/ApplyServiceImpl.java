@@ -32,14 +32,16 @@ public class ApplyServiceImpl implements ApplyService {
     @Override
     @Transactional
     public ApplyResponse execute(ApplyCompleteRequest request) {
-        if (request == null || ApplyVideoKey.isInvalid(request.key())
-                || request.uploadId() == null || request.uploadId().isBlank()
-                || request.parts() == null || request.parts().isEmpty()) {
-            throw new InvalidVideoFileException();
-        }
+        validateRequest(request);
 
         awsS3Adapter.completeMultipartUpload(request.key(), request.uploadId(), toCompletedParts(request.parts()));
-        validateUploadedMp4(request.key());
+        try {
+            validateUploadedMp4(request.key());
+        } catch (InvalidVideoFileException e) {
+            // 검증 실패 시 병합 완료된 S3 객체를 정리해 불필요한 스토리지 비용을 막는다.
+            awsS3Adapter.deleteObject(request.key());
+            throw e;
+        }
 
         ApplyEntity apply = applyRepository.save(
                 ApplyEntity.builder()
@@ -48,6 +50,23 @@ public class ApplyServiceImpl implements ApplyService {
                         .build()
         );
         return new ApplyResponse(apply.getId());
+    }
+
+    private void validateRequest(ApplyCompleteRequest request) {
+        if (request == null || ApplyVideoKey.isInvalid(request.key())
+                || request.uploadId() == null || request.uploadId().isBlank()
+                || request.parts() == null || request.parts().isEmpty()
+                || hasInvalidPart(request.parts())) {
+            throw new InvalidVideoFileException();
+        }
+    }
+
+    private boolean hasInvalidPart(List<ApplyPartInput> parts) {
+        if (parts.stream().anyMatch(p -> p == null || p.etag() == null || p.etag().isBlank())) {
+            return true;
+        }
+        long distinctPartNumbers = parts.stream().map(ApplyPartInput::partNumber).distinct().count();
+        return distinctPartNumbers != parts.size();
     }
 
     private List<CompletedPart> toCompletedParts(List<ApplyPartInput> parts) {

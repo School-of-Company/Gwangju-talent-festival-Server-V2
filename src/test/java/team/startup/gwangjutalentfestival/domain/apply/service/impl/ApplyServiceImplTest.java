@@ -87,10 +87,40 @@ class ApplyServiceImplTest {
     }
 
     @Test
-    void 완료된_파일이_MP4_시그니처가_아니면_InvalidVideoFileException이_발생한다() {
+    void 완료된_파일이_MP4_시그니처가_아니면_S3객체를_삭제하고_InvalidVideoFileException이_발생한다() {
         ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "x.mp4");
         byte[] notMp4 = new byte[12];
         given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(notMp4);
+
+        assertThatThrownBy(() -> applyService.execute(req))
+                .isInstanceOf(InvalidVideoFileException.class);
+        verify(awsS3Adapter).deleteObject("videos/key.mp4");
+    }
+
+    @Test
+    void parts에_null_요소가_있으면_InvalidVideoFileException이_발생한다() {
+        List<ApplyPartInput> parts = new java.util.ArrayList<>();
+        parts.add(new ApplyPartInput(1, "etag1"));
+        parts.add(null);
+        ApplyCompleteRequest req = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4", parts);
+
+        assertThatThrownBy(() -> applyService.execute(req))
+                .isInstanceOf(InvalidVideoFileException.class);
+    }
+
+    @Test
+    void parts의_etag가_비어있으면_InvalidVideoFileException이_발생한다() {
+        ApplyCompleteRequest req = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4",
+                List.of(new ApplyPartInput(1, "  ")));
+
+        assertThatThrownBy(() -> applyService.execute(req))
+                .isInstanceOf(InvalidVideoFileException.class);
+    }
+
+    @Test
+    void parts에_중복된_partNumber가_있으면_InvalidVideoFileException이_발생한다() {
+        ApplyCompleteRequest req = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4",
+                List.of(new ApplyPartInput(1, "etag1"), new ApplyPartInput(1, "etag2")));
 
         assertThatThrownBy(() -> applyService.execute(req))
                 .isInstanceOf(InvalidVideoFileException.class);

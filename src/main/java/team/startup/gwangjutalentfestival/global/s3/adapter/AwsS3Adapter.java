@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.global.s3.adapter;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
 import software.amazon.awssdk.core.ResponseBytes;
@@ -12,8 +13,10 @@ import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
@@ -25,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AwsS3Adapter {
@@ -95,6 +99,12 @@ public class AwsS3Adapter {
                             .uploadId(uploadId)
                             .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
                             .build());
+        } catch (S3Exception e) {
+            // 잘못된 uploadId·ETag 등 클라이언트 요청 오류(4xx)는 400으로 처리한다.
+            if (e.statusCode() >= 400 && e.statusCode() < 500) {
+                throw new InvalidVideoFileException();
+            }
+            throw new S3MultipartException();
         } catch (SdkException e) {
             throw new S3MultipartException();
         }
@@ -117,6 +127,24 @@ public class AwsS3Adapter {
                             .build());
         } catch (SdkException e) {
             throw new S3MultipartException();
+        }
+    }
+
+    /**
+     * S3 객체를 삭제한다.
+     * 업로드 후 검증 실패 등으로 보관할 필요가 없어진 객체를 정리하는 데 사용한다.
+     * 삭제 자체 실패는 본 흐름을 막지 않도록 로그만 남긴다.
+     *
+     * @param key 삭제할 S3 객체 key
+     */
+    public void deleteObject(String key) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(awsS3Properties.getBucket())
+                    .key(key)
+                    .build());
+        } catch (SdkException e) {
+            log.warn("S3 객체 삭제 실패 - key: {}", key, e);
         }
     }
 
