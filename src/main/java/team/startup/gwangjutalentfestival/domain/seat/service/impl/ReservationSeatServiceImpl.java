@@ -6,7 +6,6 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
@@ -31,7 +30,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
     private final OperationMetricRecorder metricRecorder;
 
     @Override
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     @Caching(evict = {
             @CacheEvict(value = CacheConfig.SEATS_ALL, allEntries = true),
             @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
@@ -46,8 +45,8 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
                     Integer seatNumber = request.seatNumber();
 
                     seatReservationValidator.validateSeatRange(seatNumber, seatUtil.getMaxSeats(seatSection));
-                    seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
                     seatReservationValidator.validateReservationLimit();
+                    seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
 
                     SeatEntity seat = SeatEntity.builder()
                             .seatNumber(seatNumber)
