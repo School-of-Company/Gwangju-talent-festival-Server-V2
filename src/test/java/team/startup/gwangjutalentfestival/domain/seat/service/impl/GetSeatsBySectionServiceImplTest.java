@@ -48,7 +48,7 @@ class GetSeatsBySectionServiceImplTest {
 
             GetSeatsBySectionResponse response = getSeatsBySectionService.execute(SECTION);
 
-            assertThat(response.seats()).hasSize(77);
+            assertThat(response.seats()).hasSize(101);
             assertThat(response.seats()).containsOnly(true);
         }
     }
