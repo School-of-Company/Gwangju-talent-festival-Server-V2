@@ -25,6 +25,8 @@ public class ApplyServiceImpl implements ApplyService {
     private static final String MP4_EXTENSION = ".mp4";
     private static final String DEFAULT_FILENAME = "video.mp4";
     private static final int MAX_FILENAME_LENGTH = 255;
+    private static final int MIN_PART_NUMBER = 1;
+    private static final int MAX_PART_NUMBER = 10000; // S3 멀티파트 최대 파트 번호
 
     private final AwsS3Adapter awsS3Adapter;
     private final ApplyRepository applyRepository;
@@ -62,7 +64,8 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private boolean hasInvalidPart(List<ApplyPartInput> parts) {
-        if (parts.stream().anyMatch(p -> p == null || p.etag() == null || p.etag().isBlank())) {
+        if (parts.stream().anyMatch(p -> p == null || p.etag() == null || p.etag().isBlank()
+                || p.partNumber() < MIN_PART_NUMBER || p.partNumber() > MAX_PART_NUMBER)) {
             return true;
         }
         long distinctPartNumbers = parts.stream().map(ApplyPartInput::partNumber).distinct().count();
@@ -80,8 +83,13 @@ public class ApplyServiceImpl implements ApplyService {
         if (filename == null || filename.isBlank()) {
             return DEFAULT_FILENAME;
         }
-        int dotIndex = filename.lastIndexOf('.');
-        String base = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+        // 경로 구분자(/, \) 이후의 순수 파일명만 추출해 경로 이탈을 방지한다.
+        String cleanFilename = filename.substring(Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\')) + 1);
+        if (cleanFilename.isBlank()) {
+            return DEFAULT_FILENAME;
+        }
+        int dotIndex = cleanFilename.lastIndexOf('.');
+        String base = dotIndex > 0 ? cleanFilename.substring(0, dotIndex) : cleanFilename;
         int maxBaseLength = MAX_FILENAME_LENGTH - MP4_EXTENSION.length();
         if (base.length() > maxBaseLength) {
             base = base.substring(0, maxBaseLength);

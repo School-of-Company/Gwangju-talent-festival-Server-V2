@@ -127,6 +127,28 @@ class ApplyServiceImplTest {
     }
 
     @Test
+    void partNumber가_유효_범위를_벗어나면_InvalidVideoFileException이_발생한다() {
+        ApplyCompleteRequest zero = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4",
+                List.of(new ApplyPartInput(0, "etag1")));
+        ApplyCompleteRequest tooLarge = new ApplyCompleteRequest("videos/key.mp4", "upload-id", "x.mp4",
+                List.of(new ApplyPartInput(10001, "etag1")));
+
+        assertThatThrownBy(() -> applyService.execute(zero)).isInstanceOf(InvalidVideoFileException.class);
+        assertThatThrownBy(() -> applyService.execute(tooLarge)).isInstanceOf(InvalidVideoFileException.class);
+    }
+
+    @Test
+    void 파일명에_경로_구분자가_있으면_순수_파일명만_추출해_저장한다() {
+        ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "../../etc/passwd.mov");
+        given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
+        given(applyRepository.save(any(ApplyEntity.class))).willAnswer(i -> i.getArgument(0));
+
+        applyService.execute(req);
+
+        verify(applyRepository).save(argThat(a -> a.getOriginalFilename().equals("passwd.mp4")));
+    }
+
+    @Test
     void 파일명이_255자를_초과하면_잘라서_저장한다() {
         ApplyCompleteRequest req = request("videos/key.mp4", "upload-id", "가".repeat(300) + ".mp4");
         given(awsS3Adapter.readObjectHead(anyString(), anyInt())).willReturn(VALID_MP4_HEADER);
