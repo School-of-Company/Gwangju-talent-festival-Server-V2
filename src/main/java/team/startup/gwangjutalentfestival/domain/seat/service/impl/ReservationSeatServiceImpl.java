@@ -6,6 +6,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
@@ -30,7 +31,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
     private final OperationMetricRecorder metricRecorder;
 
     @Override
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     @Caching(evict = {
             @CacheEvict(value = CacheConfig.SEATS_ALL, allEntries = true),
             @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
