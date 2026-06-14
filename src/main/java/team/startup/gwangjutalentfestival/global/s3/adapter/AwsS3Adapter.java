@@ -1,22 +1,34 @@
 package team.startup.gwangjutalentfestival.global.s3.adapter;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.AbortMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompleteMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
+import software.amazon.awssdk.services.s3.model.CompletedPart;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
+import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedUploadPartRequest;
 import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileException;
+import team.startup.gwangjutalentfestival.global.s3.exception.S3MultipartException;
 import team.startup.gwangjutalentfestival.global.s3.properties.AwsS3Properties;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AwsS3Adapter {
@@ -29,21 +41,111 @@ public class AwsS3Adapter {
     private final AwsS3Properties awsS3Properties;
 
     /**
-     * 객체 key에 대한 업로드용 Presigned URL을 발급한다.
-     * 클라이언트는 이 URL로 S3에 직접 PUT 업로드하므로 서버는 파일 본문을 거치지 않는다.
-     * Content-Type을 {@code video/mp4}로 고정하므로 클라이언트는 동일한 헤더로 업로드해야 한다.
+     * 멀티파트 업로드를 시작하고 uploadId를 반환한다.
+     * 객체 Content-Type을 {@code video/mp4}로 고정한다.
      *
      * @param key S3 객체 key
-     * @return 10분간 유효한 업로드용 Presigned URL
+     * @return 멀티파트 업로드 식별자(uploadId)
+     * @throws S3MultipartException 업로드 시작에 실패한 경우
      */
-    public String generateUploadUrl(String key) {
-        PresignedPutObjectRequest presigned = s3Presigner.presignPutObject(r -> r
+    public String createMultipartUpload(String key) {
+        try {
+            CreateMultipartUploadResponse response = s3Client.createMultipartUpload(
+                    CreateMultipartUploadRequest.builder()
+                            .bucket(awsS3Properties.getBucket())
+                            .key(key)
+                            .contentType(VIDEO_CONTENT_TYPE)
+                            .build());
+            return response.uploadId();
+        } catch (SdkException e) {
+            throw new S3MultipartException();
+        }
+    }
+
+    /**
+     * 특정 파트 번호에 대한 업로드용 Presigned URL을 발급한다.
+     * 클라이언트는 이 URL로 해당 파트를 S3에 직접 PUT 업로드한다.
+     *
+     * @param key        S3 객체 key
+     * @param uploadId   멀티파트 업로드 식별자
+     * @param partNumber 파트 번호(1부터 시작)
+     * @return 10분간 유효한 파트 업로드용 Presigned URL
+     */
+    public String generatePartUploadUrl(String key, String uploadId, int partNumber) {
+        PresignedUploadPartRequest presigned = s3Presigner.presignUploadPart(r -> r
                 .signatureDuration(Duration.ofMinutes(PRESIGNED_URL_DURATION_MINUTES))
-                .putObjectRequest(por -> por
+                .uploadPartRequest(upr -> upr
                         .bucket(awsS3Properties.getBucket())
                         .key(key)
-                        .contentType(VIDEO_CONTENT_TYPE)));
+                        .uploadId(uploadId)
+                        .partNumber(partNumber)));
         return presigned.url().toString();
+    }
+
+    /**
+     * 업로드된 파트들을 합쳐 멀티파트 업로드를 완료한다.
+     *
+     * @param key      S3 객체 key
+     * @param uploadId 멀티파트 업로드 식별자
+     * @param parts    완료된 파트 목록(파트 번호와 ETag)
+     * @throws S3MultipartException 완료 처리에 실패한 경우
+     */
+    public void completeMultipartUpload(String key, String uploadId, List<CompletedPart> parts) {
+        try {
+            s3Client.completeMultipartUpload(
+                    CompleteMultipartUploadRequest.builder()
+                            .bucket(awsS3Properties.getBucket())
+                            .key(key)
+                            .uploadId(uploadId)
+                            .multipartUpload(CompletedMultipartUpload.builder().parts(parts).build())
+                            .build());
+        } catch (S3Exception e) {
+            // 잘못된 uploadId·ETag 등 클라이언트 요청 오류(4xx)는 400으로 처리한다.
+            if (e.statusCode() >= 400 && e.statusCode() < 500) {
+                throw new InvalidVideoFileException();
+            }
+            throw new S3MultipartException();
+        } catch (SdkException e) {
+            throw new S3MultipartException();
+        }
+    }
+
+    /**
+     * 진행 중인 멀티파트 업로드를 취소하고 업로드된 파트를 정리한다.
+     *
+     * @param key      S3 객체 key
+     * @param uploadId 멀티파트 업로드 식별자
+     * @throws S3MultipartException 취소 처리에 실패한 경우
+     */
+    public void abortMultipartUpload(String key, String uploadId) {
+        try {
+            s3Client.abortMultipartUpload(
+                    AbortMultipartUploadRequest.builder()
+                            .bucket(awsS3Properties.getBucket())
+                            .key(key)
+                            .uploadId(uploadId)
+                            .build());
+        } catch (SdkException e) {
+            throw new S3MultipartException();
+        }
+    }
+
+    /**
+     * S3 객체를 삭제한다.
+     * 업로드 후 검증 실패 등으로 보관할 필요가 없어진 객체를 정리하는 데 사용한다.
+     * 삭제 자체 실패는 본 흐름을 막지 않도록 로그만 남긴다.
+     *
+     * @param key 삭제할 S3 객체 key
+     */
+    public void deleteObject(String key) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(awsS3Properties.getBucket())
+                    .key(key)
+                    .build());
+        } catch (SdkException e) {
+            log.warn("S3 객체 삭제 실패 - key: {}", key, e);
+        }
     }
 
     /**
