@@ -22,6 +22,7 @@ import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.auth.CustomUserDetails;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -78,34 +79,41 @@ class ReservationSeatConcurrencyTest {
     void 동일_좌석_동시_예약시_1건만_성공한다() throws InterruptedException {
         int threadCount = 10;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch doneLatch = new CountDownLatch(threadCount);
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failCount = new AtomicInteger(0);
 
-        for (int i = 0; i < threadCount; i++) {
-            final long userId = testUsers.get(i).getId();
-            executor.submit(() -> {
-                try {
-                    startLatch.await();
-                    setAuth(userId, Role.USER);
-                    reservationSeatService.execute(new ReservationSeatRequest("A", 1));
-                    successCount.incrementAndGet();
-                } catch (SeatAlreadyReservedException e) {
-                    failCount.incrementAndGet();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                    SecurityContextHolder.clearContext();
-                }
-            });
+        try {
+            for (int i = 0; i < threadCount; i++) {
+                final long userId = testUsers.get(i).getId();
+                executor.submit(() -> {
+                    try {
+                        startLatch.await();
+                        setAuth(userId, Role.USER);
+                        reservationSeatService.execute(new ReservationSeatRequest("A", 1));
+                        successCount.incrementAndGet();
+                    } catch (SeatAlreadyReservedException e) {
+                        failCount.incrementAndGet();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (Throwable t) {
+                        exceptions.add(t);
+                    } finally {
+                        doneLatch.countDown();
+                        SecurityContextHolder.clearContext();
+                    }
+                });
+            }
+
+            startLatch.countDown();
+            doneLatch.await();
+        } finally {
+            executor.shutdown();
         }
 
-        startLatch.countDown();
-        doneLatch.await();
-        executor.shutdown();
-
+        assertThat(exceptions).isEmpty();
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(failCount.get()).isEqualTo(9);
     }
@@ -114,6 +122,7 @@ class ReservationSeatConcurrencyTest {
     void 동일_USER_동시_예약시_한도_초과는_실패한다() throws InterruptedException {
         int threadCount = 2;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<>());
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch doneLatch = new CountDownLatch(threadCount);
         AtomicInteger successCount = new AtomicInteger(0);
@@ -123,29 +132,35 @@ class ReservationSeatConcurrencyTest {
         String[] sections = {"A", "A"};
         Integer[] seatNumbers = {1, 2};
 
-        for (int i = 0; i < threadCount; i++) {
-            final int idx = i;
-            executor.submit(() -> {
-                try {
-                    startLatch.await();
-                    setAuth(userId, Role.USER);
-                    reservationSeatService.execute(new ReservationSeatRequest(sections[idx], seatNumbers[idx]));
-                    successCount.incrementAndGet();
-                } catch (SeatReservationLimitExceededException e) {
-                    limitExceededCount.incrementAndGet();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                } finally {
-                    doneLatch.countDown();
-                    SecurityContextHolder.clearContext();
-                }
-            });
+        try {
+            for (int i = 0; i < threadCount; i++) {
+                final int idx = i;
+                executor.submit(() -> {
+                    try {
+                        startLatch.await();
+                        setAuth(userId, Role.USER);
+                        reservationSeatService.execute(new ReservationSeatRequest(sections[idx], seatNumbers[idx]));
+                        successCount.incrementAndGet();
+                    } catch (SeatReservationLimitExceededException e) {
+                        limitExceededCount.incrementAndGet();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (Throwable t) {
+                        exceptions.add(t);
+                    } finally {
+                        doneLatch.countDown();
+                        SecurityContextHolder.clearContext();
+                    }
+                });
+            }
+
+            startLatch.countDown();
+            doneLatch.await();
+        } finally {
+            executor.shutdown();
         }
 
-        startLatch.countDown();
-        doneLatch.await();
-        executor.shutdown();
-
+        assertThat(exceptions).isEmpty();
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(limitExceededCount.get()).isEqualTo(1);
     }
