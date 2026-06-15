@@ -86,6 +86,34 @@ class GetSeatsBySectionServiceImplTest {
     }
 
     @Test
+    void W구역_전체_좌석_예약_가능() {
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection("W")).willReturn(Set.of());
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole("W", Role.USER)).willReturn(Set.of());
+
+            GetSeatsBySectionResponse response = getSeatsBySectionService.execute("W");
+
+            assertThat(response.seats()).hasSize(6);
+            assertThat(response.seats()).containsOnly(true);
+        }
+    }
+
+    @Test
+    void B구역_전체_좌석_예약_가능() {
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
+            given(seatReservationCustomRepository.findSeatNumbersBySeatSection("B")).willReturn(Set.of());
+            given(seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole("B", Role.USER)).willReturn(Set.of());
+
+            GetSeatsBySectionResponse response = getSeatsBySectionService.execute("B");
+
+            assertThat(response.seats()).hasSize(132);
+            assertThat(response.seats()).containsOnly(true);
+        }
+    }
+
+    @Test
     void 잘못된_구역_예외() {
         try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
             userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
