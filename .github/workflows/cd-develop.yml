@@ -30,7 +30,7 @@ jobs:
           printf '%s' "$APPLICATION_YML" > src/main/resources/application.yaml
 
       - name: Build with Gradle
-        run: ./gradlew build -x test --no-daemon
+        run: ./gradlew clean build -x test --no-daemon
 
       - name: Build Docker image
         run: docker build -t gwangju-festival:dev .

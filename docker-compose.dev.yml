@@ -9,6 +9,7 @@ services:
     environment:
       REDIS_HOST: redis
       DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
     depends_on:
       mysql:
         condition: service_healthy
