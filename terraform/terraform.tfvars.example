@@ -1,0 +1,15 @@
+# 실제 값을 채워 terraform.tfvars 로 복사해 사용 (terraform.tfvars 는 .gitignore 처리됨).
+
+cloudflare_api_token = "<CLOUDFLARE_ACCOUNT_R2_ADMIN_TOKEN>"
+account_id           = "<CLOUDFLARE_ACCOUNT_ID>"
+bucket_name          = "gwangjutalentfestival-video"
+location             = "APAC"
+
+allowed_origins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002",
+  "http://localhost:3003",
+  "http://localhost:3004",
+  # 운영 프론트엔드 도메인 추가
+]

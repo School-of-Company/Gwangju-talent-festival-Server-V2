@@ -38,3 +38,10 @@ out/
 
 ### ENVIRONMENT ###
 .env
+
+### TERRAFORM ###
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
