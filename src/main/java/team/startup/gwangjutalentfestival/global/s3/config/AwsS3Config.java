@@ -10,6 +10,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import team.startup.gwangjutalentfestival.global.s3.properties.AwsS3Properties;
 
@@ -34,7 +35,11 @@ public class AwsS3Config {
                 .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(awsCredentialsProvider);
         if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()));
+            // R2 기본 엔드포인트는 path-style만 지원(가상 호스트 스타일은 와일드카드 인증서 미커버로 SSL 실패)
+            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build());
         }
         return builder.build();
     }
@@ -45,7 +50,11 @@ public class AwsS3Config {
                 .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(awsCredentialsProvider);
         if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()));
+            // presigned URL도 path-style로 생성되도록 강제(R2 가상 호스트 스타일 미지원)
+            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build());
         }
         return builder.build();
     }

@@ -66,7 +66,10 @@ public S3Client s3Client(AwsCredentialsProvider provider) {
             .region(Region.of(awsS3Properties.getRegion()))
             .credentialsProvider(provider);
     if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-        builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()));
+        builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build());
     }
     return builder.build();
 }
@@ -77,13 +80,16 @@ public S3Presigner s3Presigner(AwsCredentialsProvider provider) {
             .region(Region.of(awsS3Properties.getRegion()))
             .credentialsProvider(provider);
     if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-        builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()));
+        builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build());
     }
     return builder.build();
 }
 ```
 
-> **path-style fallback**: R2는 가상호스팅(`https://<bucket>.<account>.r2.cloudflarestorage.com`)을 기본 지원하므로 별도 설정 불필요. 만약 호스트 해석 문제 발생 시 양쪽 builder에 `.serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())` 추가.
+> **path-style 필수**: R2의 기본 엔드포인트(`<account>.r2.cloudflarestorage.com`)는 **path-style만 지원**한다. AWS SDK 기본값인 가상 호스트 스타일은 `<bucket>.<account>.r2.cloudflarestorage.com`(2단계 서브도메인)로 요청하는데, 와일드카드 인증서(`*.r2.cloudflarestorage.com`)가 이를 커버하지 못해 SSL 핸드셰이크가 실패한다. 따라서 endpoint가 설정될 때 `S3Client`/`S3Presigner` 양쪽에 `pathStyleAccessEnabled(true)`를 **반드시** 적용한다. (가상 호스트 스타일은 R2에 커스텀 도메인을 연결한 경우에만 가능)
 
 ### 2.3 `application.yaml`
 `src/main/resources/application.yaml` (`aws.s3` 블록)
@@ -93,7 +99,7 @@ aws:
   s3:
     access-key: ${AWS_ACCESS_KEY}      # R2 Access Key ID로 교체
     secret-key: ${AWS_SECRET_KEY}      # R2 Secret Access Key로 교체
-    region: ${AWS_REGION:auto}         # R2는 'auto' (기본값 변경)
+    region: ${AWS_REGION:ap-northeast-2}   # 기본값은 S3 롤백 안전을 위해 유지, R2는 AWS_REGION=auto 주입
     bucket: ${AWS_S3_BUCKET}
     endpoint: ${AWS_S3_ENDPOINT:}      # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 ```
