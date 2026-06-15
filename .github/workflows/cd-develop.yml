@@ -1,13 +1,12 @@
-name: CD
+name: CD (develop)
 
 on:
   push:
-    branches: [ "main"]
-
+    branches: ["develop"]
 
 jobs:
   build:
-    runs-on: [self-hosted, prod]
+    runs-on: [self-hosted, dev]
 
     steps:
       - name: Checkout repository
@@ -23,37 +22,37 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create application.yml
+      - name: Create application.yaml
         run: |
           mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_YML }}" > src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yaml
 
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon
 
       - name: Build Docker image
-        run: docker build -t gwangju-festival:latest .
+        run: docker build -t gwangju-festival:dev .
 
       - name: Create .env file
         env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
+          ENV_FILE: ${{ secrets.ENV_FILE_DEV }}
         run: printf '%s\n' "$ENV_FILE" > .env
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose --env-file .env down --remove-orphans
-          docker compose --env-file .env up -d
+          docker compose -f docker-compose.dev.yml --env-file .env down --remove-orphans
+          docker compose -f docker-compose.dev.yml --env-file .env up -d
 
       - name: Notify Discord on success
         if: success()
         run: |
           curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"✅ 배포 성공\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               -d "{\"content\": \"✅ [DEV] 배포 성공\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
 
       - name: Notify Discord on failure
         if: failure()
         run: |
           curl -H "Content-Type: application/json" \
-               -d "{\"content\": \"❌ 배포 실패\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               -d "{\"content\": \"❌ [DEV] 배포 실패\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
