@@ -1,0 +1,92 @@
+spring:
+  application:
+    name: gwangjutalentfestival
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  docker:
+    compose:
+      enabled: false
+
+jwt:
+  secret: test-secret-key-for-junit-testing-only-32bytes!!
+  access-token-expiration: 180000000
+  refresh-token-expiration: 1209600
+
+cors:
+  allowed-origins: http://localhost:3000
+
+feign:
+  log-level: NONE
+
+solapi:
+  api-key: test-key
+  api-secret: test-secret
+  sms-phonenumber: "01000000000"
+  url: https://api.solapi.com
+
+sms:
+  verify:
+    max-send-count: 5
+    verify-code-ttl: 180
+    verify-count-ttl: 600
+    verify-count-key-prefix: "verify:count:"
+
+google:
+  sheets:
+    account-credential: test
+    sheet-id: test
+    enrolled-sheet-page: test
+    out-of-school-sheet-page: test
+  excel:
+    template-sheet-id: test
+    summary-page: test
+
+slogan:
+  submission:
+    start-at: "2026-04-18T00:00:00"
+    end-at: "2026-05-28T18:00:00"
+
+aws:
+  s3:
+    access-key: test-access-key
+    secret-key: test-secret-key
+    region: ap-northeast-2
+    bucket: test-bucket
+
+monitoring:
+  anomaly:
+    enabled: false
+    prometheus-base-url: http://localhost:9090
+    discord-webhook-url: ""
+  ml:
+    enabled: false
+    base-url: ""
+    timeout-ms: 3000
+  dataset:
+    export-path: ./exports
+
+management:
+  security:
+    enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health
