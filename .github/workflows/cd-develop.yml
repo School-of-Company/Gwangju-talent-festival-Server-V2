@@ -23,9 +23,11 @@ jobs:
         run: chmod +x gradlew
 
       - name: Create application.yaml
+        env:
+          APPLICATION_YML: ${{ secrets.APPLICATION_YML_DEV }}
         run: |
           mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yaml
+          printf '%s' "$APPLICATION_YML" > src/main/resources/application.yaml
 
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon
