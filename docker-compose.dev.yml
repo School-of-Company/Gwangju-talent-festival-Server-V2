@@ -9,6 +9,7 @@ services:
     environment:
       REDIS_HOST: redis
       DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
     depends_on:
       mysql:
         condition: service_healthy
@@ -27,10 +28,11 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 40s
     restart: always
 
   redis:
