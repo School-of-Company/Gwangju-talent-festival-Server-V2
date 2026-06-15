@@ -15,9 +15,14 @@ variable "bucket_name" {
 }
 
 variable "location" {
-  description = "R2 버킷 location 힌트."
+  description = "R2 버킷 location 힌트. provider v5는 소문자만 허용."
   type        = string
-  default     = "APAC"
+  default     = "apac"
+
+  validation {
+    condition     = contains(["apac", "eeur", "enam", "weur", "wnam", "oc"], var.location)
+    error_message = "location은 apac, eeur, enam, weur, wnam, oc 중 하나여야 합니다."
+  }
 }
 
 variable "allowed_origins" {

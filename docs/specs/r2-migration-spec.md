@@ -127,11 +127,11 @@ terraform/
 - **Terraform용**: Cloudflare 대시보드에서 **계정 레벨 R2 관리 권한** API 토큰 발급 → `var.cloudflare_api_token`.
 - **앱 런타임용**: R2 → "Manage R2 API Tokens"에서 **버킷 범위(Object Read & Write)** 토큰 발급 → Access Key ID / Secret을 앱 `AWS_ACCESS_KEY`/`AWS_SECRET_KEY`로 사용. (Terraform 토큰과 별개)
 
-### 3.2 `main.tf` 골자
+### 3.2 `main.tf` 골자 (cloudflare provider v5)
 ```hcl
 terraform {
   required_providers {
-    cloudflare = { source = "cloudflare/cloudflare", version = "~> 4" }
+    cloudflare = { source = "cloudflare/cloudflare", version = "~> 5" }
   }
 }
 
@@ -140,23 +140,29 @@ provider "cloudflare" {
 }
 
 resource "cloudflare_r2_bucket" "video" {
-  account_id = var.account_id
-  name       = var.bucket_name
-  location   = "APAC"
+  account_id    = var.account_id
+  name          = var.bucket_name
+  location      = var.location   # v5는 소문자: apac/eeur/enam/weur/wnam/oc
+  storage_class = "Standard"
 }
 
 # 브라우저 직접 PUT 업로드를 위한 CORS (프론트 출처와 동기화)
-resource "cloudflare_r2_bucket_cors_configuration" "video" {
+# v5 리소스명은 cloudflare_r2_bucket_cors, rules는 블록이 아닌 객체 리스트
+resource "cloudflare_r2_bucket_cors" "video" {
   account_id  = var.account_id
   bucket_name = cloudflare_r2_bucket.video.name
-  rules {
-    allowed { methods = ["GET", "PUT"], origins = var.allowed_origins, headers = ["*"] }
+
+  rules = [{
+    allowed = {
+      methods = ["GET", "PUT"]
+      origins = var.allowed_origins
+      headers = ["*"]
+    }
     expose_headers  = ["ETag"]   # completeMultipartUpload는 파트 ETag가 필요
     max_age_seconds = 3600
-  }
+  }]
 }
 ```
-> CORS 리소스명/스키마는 사용 중인 cloudflare provider 4.x 실제 버전에 맞춰 확정한다(provider 메이저에 따라 R2 CORS 지원 여부·형식이 다를 수 있어, 미지원 시 R2 대시보드 수동 설정으로 대체하고 그 사실을 문서화).
 > `allowed_origins`는 application.yaml의 `cors.allowed-origins`(현재 localhost 및 운영 프론트 도메인)와 일치시킨다. **ETag expose 필수** — 미설정 시 브라우저가 파트 ETag를 못 읽어 `completeMultipartUpload`가 실패.
 
 ### 3.3 `backend.tf` — R2를 원격 state backend로

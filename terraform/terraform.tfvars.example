@@ -3,7 +3,7 @@
 cloudflare_api_token = "<CLOUDFLARE_ACCOUNT_R2_ADMIN_TOKEN>"
 account_id           = "<CLOUDFLARE_ACCOUNT_ID>"
 bucket_name          = "gwangjutalentfestival-video"
-location             = "APAC"
+location             = "apac"
 
 allowed_origins = [
   "http://localhost:3000",
