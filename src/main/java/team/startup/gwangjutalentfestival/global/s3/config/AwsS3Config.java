@@ -20,6 +20,11 @@ import java.net.URI;
 @RequiredArgsConstructor
 public class AwsS3Config {
 
+    // R2 기본 엔드포인트는 path-style만 지원(가상 호스트 스타일은 와일드카드 인증서 미커버로 SSL 실패)
+    private static final S3Configuration PATH_STYLE = S3Configuration.builder()
+            .pathStyleAccessEnabled(true)
+            .build();
+
     private final AwsS3Properties awsS3Properties;
 
     @Bean
@@ -34,12 +39,9 @@ public class AwsS3Config {
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(awsCredentialsProvider);
-        if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-            // R2 기본 엔드포인트는 path-style만 지원(가상 호스트 스타일은 와일드카드 인증서 미커버로 SSL 실패)
-            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
-                    .serviceConfiguration(S3Configuration.builder()
-                            .pathStyleAccessEnabled(true)
-                            .build());
+        if (hasCustomEndpoint()) {
+            builder.endpointOverride(customEndpoint())
+                    .serviceConfiguration(PATH_STYLE);
         }
         return builder.build();
     }
@@ -49,13 +51,18 @@ public class AwsS3Config {
         S3Presigner.Builder builder = S3Presigner.builder()
                 .region(Region.of(awsS3Properties.getRegion()))
                 .credentialsProvider(awsCredentialsProvider);
-        if (StringUtils.hasText(awsS3Properties.getEndpoint())) {
-            // presigned URL도 path-style로 생성되도록 강제(R2 가상 호스트 스타일 미지원)
-            builder.endpointOverride(URI.create(awsS3Properties.getEndpoint()))
-                    .serviceConfiguration(S3Configuration.builder()
-                            .pathStyleAccessEnabled(true)
-                            .build());
+        if (hasCustomEndpoint()) {
+            builder.endpointOverride(customEndpoint())
+                    .serviceConfiguration(PATH_STYLE);
         }
         return builder.build();
+    }
+
+    private boolean hasCustomEndpoint() {
+        return StringUtils.hasText(awsS3Properties.getEndpoint());
+    }
+
+    private URI customEndpoint() {
+        return URI.create(awsS3Properties.getEndpoint());
     }
 }
