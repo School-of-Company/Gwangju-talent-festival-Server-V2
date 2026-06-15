@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -108,7 +109,8 @@ class ReservationSeatConcurrencyTest {
             }
 
             startLatch.countDown();
-            doneLatch.await();
+            boolean completed = doneLatch.await(10, TimeUnit.SECONDS);
+            assertThat(completed).withFailMessage("스레드 완료 대기 중 시간 초과가 발생했습니다.").isTrue();
         } finally {
             executor.shutdown();
         }
@@ -155,7 +157,8 @@ class ReservationSeatConcurrencyTest {
             }
 
             startLatch.countDown();
-            doneLatch.await();
+            boolean completed = doneLatch.await(10, TimeUnit.SECONDS);
+            assertThat(completed).withFailMessage("스레드 완료 대기 중 시간 초과가 발생했습니다.").isTrue();
         } finally {
             executor.shutdown();
         }
