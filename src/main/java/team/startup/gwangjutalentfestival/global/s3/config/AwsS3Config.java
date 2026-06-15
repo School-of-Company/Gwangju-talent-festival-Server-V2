@@ -63,6 +63,12 @@ public class AwsS3Config {
     }
 
     private URI customEndpoint() {
-        return URI.create(awsS3Properties.getEndpoint());
+        URI uri = URI.create(awsS3Properties.getEndpoint());
+        String scheme = uri.getScheme();
+        if (!"http".equals(scheme) && !"https".equals(scheme)) {
+            throw new IllegalStateException(
+                    "aws.s3.endpoint는 http:// 또는 https:// 스키마로 시작해야 합니다: " + awsS3Properties.getEndpoint());
+        }
+        return uri;
     }
 }
