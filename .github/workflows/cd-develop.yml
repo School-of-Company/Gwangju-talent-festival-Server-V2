@@ -22,10 +22,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Create application.yml
+      - name: Create application.yaml
         run: |
           mkdir -p src/main/resources
-          echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yaml
 
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon

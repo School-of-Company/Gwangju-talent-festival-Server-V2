@@ -102,10 +102,10 @@
         - name: Grant execute permission for gradlew
           run: chmod +x gradlew
 
-        - name: Create application.yml
+        - name: Create application.yaml
           run: |
             mkdir -p src/main/resources
-            echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yml
+            echo "${{ secrets.APPLICATION_YML_DEV }}" > src/main/resources/application.yaml
 
         - name: Build with Gradle
           run: ./gradlew build -x test --no-daemon
@@ -310,13 +310,14 @@
   docker ps
   ```
 
-  기대 출력 (4개 컨테이너 모두 `Up` 상태):
+  기대 출력 (5개 컨테이너 모두 `Up` 상태):
   ```
   CONTAINER ID   IMAGE                     STATUS
   xxxxxxxxxxxx   gwangju-festival:dev      Up N seconds
-  xxxxxxxxxxxx   redis:7.0                 Up N seconds
-  xxxxxxxxxxxx   prom/prometheus:v2.51.2   Up N seconds
-  xxxxxxxxxxxx   grafana/grafana:10.4.2    Up N seconds
+  xxxxxxxxxxxx   mysql:8.0                 Up N seconds
+  xxxxxxxxxxxx   redis:7.4                 Up N seconds
+  xxxxxxxxxxxx   prom/prometheus:v3.1.0    Up N seconds
+  xxxxxxxxxxxx   grafana/grafana:11.5.1    Up N seconds
   ```
 
 - [ ] **Step 4: 서브도메인으로 API 응답 확인**
