@@ -113,6 +113,7 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     region: ${AWS_REGION:ap-northeast-2}
     bucket: ${AWS_S3_BUCKET}
+    endpoint: ${AWS_S3_ENDPOINT:}
 
 monitoring:
   anomaly:
