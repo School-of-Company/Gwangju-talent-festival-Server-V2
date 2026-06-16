@@ -24,6 +24,7 @@ import java.util.List;
 public class ApplyServiceImpl implements ApplyService {
 
     private static final int MP4_HEADER_LENGTH = 12;
+    private static final int MP4_VALIDATION_HEADER_LENGTH = 1024;
     private static final String MP4_EXTENSION = ".mp4";
     private static final String DEFAULT_FILENAME = "video.mp4";
     private static final int MAX_FILENAME_LENGTH = 255;
@@ -114,7 +115,7 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private void validateUploadedMp4(String key) {
-        byte[] header = awsS3Adapter.readObjectHead(key, MP4_HEADER_LENGTH);
+        byte[] header = awsS3Adapter.readObjectHead(key, MP4_VALIDATION_HEADER_LENGTH);
         log.info("[apply] MP4 헤더 읽기 완료: key={}, headerLength={}", key, header.length);
         if (header.length < MP4_HEADER_LENGTH) {
             log.warn("[apply] validateUploadedMp4 실패: 헤더 길이 부족 (읽은 길이={}, 필요={}) key={}", header.length, MP4_HEADER_LENGTH, key);
