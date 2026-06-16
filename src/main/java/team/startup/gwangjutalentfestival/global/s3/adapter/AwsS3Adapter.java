@@ -102,6 +102,7 @@ public class AwsS3Adapter {
         } catch (S3Exception e) {
             // 잘못된 uploadId·ETag 등 클라이언트 요청 오류(4xx)는 400으로 처리한다.
             if (e.statusCode() >= 400 && e.statusCode() < 500) {
+                log.warn("[s3] completeMultipartUpload 4xx 오류: key={}, status={}, message={}", key, e.statusCode(), e.getMessage());
                 throw new InvalidVideoFileException();
             }
             throw new S3MultipartException();

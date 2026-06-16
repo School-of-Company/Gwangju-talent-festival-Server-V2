@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
@@ -17,11 +18,13 @@ import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileEx
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApplyServiceImpl implements ApplyService {
 
     private static final int MP4_HEADER_LENGTH = 12;
+    private static final int MP4_VALIDATION_HEADER_LENGTH = 1024;
     private static final String MP4_EXTENSION = ".mp4";
     private static final String DEFAULT_FILENAME = "video.mp4";
     private static final int MAX_FILENAME_LENGTH = 255;
@@ -55,10 +58,24 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private void validateRequest(ApplyCompleteRequest request) {
-        if (request == null || ApplyVideoKey.isInvalid(request.key())
-                || request.uploadId() == null || request.uploadId().isBlank()
-                || request.parts() == null || request.parts().isEmpty()
-                || hasInvalidPart(request.parts())) {
+        if (request == null) {
+            log.warn("[apply] validateRequest 실패: request가 null");
+            throw new InvalidVideoFileException();
+        }
+        if (ApplyVideoKey.isInvalid(request.key())) {
+            log.warn("[apply] validateRequest 실패: 잘못된 key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (request.uploadId() == null || request.uploadId().isBlank()) {
+            log.warn("[apply] validateRequest 실패: uploadId가 null 또는 빈 값, key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (request.parts() == null || request.parts().isEmpty()) {
+            log.warn("[apply] validateRequest 실패: parts가 null 또는 비어있음, key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (hasInvalidPart(request.parts())) {
+            log.warn("[apply] validateRequest 실패: 유효하지 않은 part 존재, key={}, parts={}", request.key(), request.parts());
             throw new InvalidVideoFileException();
         }
     }
@@ -98,14 +115,31 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private void validateUploadedMp4(String key) {
-        byte[] header = awsS3Adapter.readObjectHead(key, MP4_HEADER_LENGTH);
-        if (header.length < MP4_HEADER_LENGTH || !isMp4Header(header)) {
+        byte[] header = awsS3Adapter.readObjectHead(key, MP4_VALIDATION_HEADER_LENGTH);
+        log.info("[apply] MP4 헤더 읽기 완료: key={}, headerLength={}", key, header.length);
+        if (header.length < MP4_HEADER_LENGTH) {
+            log.warn("[apply] validateUploadedMp4 실패: 헤더 길이 부족 (읽은 길이={}, 필요={}) key={}", header.length, MP4_HEADER_LENGTH, key);
             throw new InvalidVideoFileException();
         }
+        if (!isMp4Header(header)) {
+            log.warn("[apply] validateUploadedMp4 실패: ftyp box 불일치, key={}, offset4-7=[{}, {}, {}, {}]",
+                    key,
+                    String.format("0x%02X", header[4]),
+                    String.format("0x%02X", header[5]),
+                    String.format("0x%02X", header[6]),
+                    String.format("0x%02X", header[7]));
+            throw new InvalidVideoFileException();
+        }
+        log.info("[apply] MP4 헤더 검증 성공: key={}", key);
     }
 
     private boolean isMp4Header(byte[] header) {
-        // ftyp box: offset 4~7 == 0x66 0x74 0x79 0x70
-        return header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70;
+        // ftyp box가 항상 offset 4에 있지 않을 수 있으므로 범위 내에서 탐색한다.
+        for (int i = 4; i <= header.length - 4; i++) {
+            if (header[i] == 0x66 && header[i + 1] == 0x74 && header[i + 2] == 0x79 && header[i + 3] == 0x70) {
+                return true;
+            }
+        }
+        return false;
     }
 }
