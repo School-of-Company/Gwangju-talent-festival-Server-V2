@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
@@ -17,6 +18,7 @@ import team.startup.gwangjutalentfestival.global.s3.exception.InvalidVideoFileEx
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApplyServiceImpl implements ApplyService {
@@ -55,10 +57,24 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private void validateRequest(ApplyCompleteRequest request) {
-        if (request == null || ApplyVideoKey.isInvalid(request.key())
-                || request.uploadId() == null || request.uploadId().isBlank()
-                || request.parts() == null || request.parts().isEmpty()
-                || hasInvalidPart(request.parts())) {
+        if (request == null) {
+            log.warn("[apply] validateRequest 실패: request가 null");
+            throw new InvalidVideoFileException();
+        }
+        if (ApplyVideoKey.isInvalid(request.key())) {
+            log.warn("[apply] validateRequest 실패: 잘못된 key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (request.uploadId() == null || request.uploadId().isBlank()) {
+            log.warn("[apply] validateRequest 실패: uploadId가 null 또는 빈 값, key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (request.parts() == null || request.parts().isEmpty()) {
+            log.warn("[apply] validateRequest 실패: parts가 null 또는 비어있음, key={}", request.key());
+            throw new InvalidVideoFileException();
+        }
+        if (hasInvalidPart(request.parts())) {
+            log.warn("[apply] validateRequest 실패: 유효하지 않은 part 존재, key={}, parts={}", request.key(), request.parts());
             throw new InvalidVideoFileException();
         }
     }
@@ -99,9 +115,21 @@ public class ApplyServiceImpl implements ApplyService {
 
     private void validateUploadedMp4(String key) {
         byte[] header = awsS3Adapter.readObjectHead(key, MP4_HEADER_LENGTH);
-        if (header.length < MP4_HEADER_LENGTH || !isMp4Header(header)) {
+        log.info("[apply] MP4 헤더 읽기 완료: key={}, headerLength={}", key, header.length);
+        if (header.length < MP4_HEADER_LENGTH) {
+            log.warn("[apply] validateUploadedMp4 실패: 헤더 길이 부족 (읽은 길이={}, 필요={}) key={}", header.length, MP4_HEADER_LENGTH, key);
             throw new InvalidVideoFileException();
         }
+        if (!isMp4Header(header)) {
+            log.warn("[apply] validateUploadedMp4 실패: ftyp box 불일치, key={}, offset4-7=[{}, {}, {}, {}]",
+                    key,
+                    String.format("0x%02X", header[4]),
+                    String.format("0x%02X", header[5]),
+                    String.format("0x%02X", header[6]),
+                    String.format("0x%02X", header[7]));
+            throw new InvalidVideoFileException();
+        }
+        log.info("[apply] MP4 헤더 검증 성공: key={}", key);
     }
 
     private boolean isMp4Header(byte[] header) {
