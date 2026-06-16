@@ -133,7 +133,12 @@ public class ApplyServiceImpl implements ApplyService {
     }
 
     private boolean isMp4Header(byte[] header) {
-        // ftyp box: offset 4~7 == 0x66 0x74 0x79 0x70
-        return header[4] == 0x66 && header[5] == 0x74 && header[6] == 0x79 && header[7] == 0x70;
+        // ftyp box가 항상 offset 4에 있지 않을 수 있으므로 범위 내에서 탐색한다.
+        for (int i = 4; i <= header.length - 4; i++) {
+            if (header[i] == 0x66 && header[i + 1] == 0x74 && header[i + 2] == 0x79 && header[i + 3] == 0x70) {
+                return true;
+            }
+        }
+        return false;
     }
 }
