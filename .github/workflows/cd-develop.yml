@@ -42,8 +42,19 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: |
-          docker compose -f docker-compose.dev.yml --env-file .env down --remove-orphans
+          docker rm -f spring-app-dev mysql-dev redis-dev prometheus-dev grafana-dev || true
           docker compose -f docker-compose.dev.yml --env-file .env up -d
+          docker rm -f spring-app-dev || true
+          docker run -d \
+            --name spring-app-dev \
+            --restart always \
+            --network gwangjutalentfestival_default \
+            --env-file .env \
+            -e DB_URL="jdbc:mysql://mysql:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8" \
+            -e REDIS_HOST=redis \
+            -e SPRING_DOCKER_COMPOSE_ENABLED=false \
+            -p 8080:8080 \
+            gwangju-festival:dev
 
       - name: Notify Discord on success
         if: success()
