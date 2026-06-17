@@ -1,28 +1,12 @@
-services:
-  app:
-    image: gwangju-festival:dev
-    container_name: spring-app-dev
-    ports:
-      - "8080:8080"
-    env_file:
-      - ./.env
-    environment:
-      REDIS_HOST: redis
-      DB_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-      SPRING_DOCKER_COMPOSE_ENABLED: "false"
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    restart: always
+name: gwangjutalentfestival
 
+services:
   mysql:
     image: mysql:8.0
-    container_name: mysql-dev
+    container_name: mysql
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
     ports:
       - "3306:3306"
     volumes:
@@ -37,7 +21,7 @@ services:
 
   redis:
     image: redis:7.4
-    container_name: redis-dev
+    container_name: redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -49,7 +33,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.1.0
-    container_name: prometheus-dev
+    container_name: prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -59,7 +43,7 @@ services:
 
   grafana:
     image: grafana/grafana:11.5.1
-    container_name: grafana-dev
+    container_name: grafana
     ports:
       - "3000:3000"
     volumes:
