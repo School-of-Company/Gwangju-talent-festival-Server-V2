@@ -120,4 +120,11 @@ tasks.named('jacocoTestReport') {
         html.required = true
         csv.required = false
     }
+
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: [
+            "**/Q*",
+            "**/*Application*"
+        ])
+    }))
 }
