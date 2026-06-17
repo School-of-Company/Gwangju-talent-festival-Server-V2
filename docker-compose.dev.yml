@@ -6,7 +6,7 @@ services:
     container_name: mysql
     environment:
       MYSQL_DATABASE: gwangjutalentfestival
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
     ports:
       - "3306:3306"
     volumes:
