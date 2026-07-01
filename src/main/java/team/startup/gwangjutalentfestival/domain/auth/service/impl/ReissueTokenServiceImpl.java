@@ -3,8 +3,6 @@ package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
@@ -21,7 +19,6 @@ import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
  * {@link ReissueTokenService} 구현체.
  * <p>RefreshToken의 유효성을 검증하고 새로운 AccessToken과 RefreshToken을 재발급합니다.</p>
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReissueTokenServiceImpl implements ReissueTokenService {
@@ -54,30 +51,25 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
         Long userId = jwtProvider.getUserId(claims);
         Role role = Role.valueOf(jwtProvider.getRole(claims));
 
-        try {
-            RefreshToken stored = refreshTokenRepository.findById(String.valueOf(userId))
-                    .orElseThrow(RefreshTokenNotFoundException::new);
+        RefreshToken stored = refreshTokenRepository.findById(String.valueOf(userId))
+                .orElseThrow(RefreshTokenNotFoundException::new);
 
-            if (!stored.getToken().equals(refreshToken)) {
-                throw new InvalidRefreshTokenException();
-            }
-
-            refreshTokenRepository.deleteById(String.valueOf(userId));
-
-            TokenResponse tokenResponse = jwtProvider.receiveToken(userId, role);
-
-            RefreshToken newToken = RefreshToken.builder()
-                    .userId(String.valueOf(userId))
-                    .token(tokenResponse.refreshToken())
-                    .expiresIn(jwtProperties.getRefreshTokenExpiration())
-                    .build();
-
-            refreshTokenRepository.save(newToken);
-
-            return tokenResponse;
-        } catch (DataAccessException e) {
-            log.error("Redis RefreshToken 처리 실패 (userId: {})", userId, e);
-            throw e;
+        if (!stored.getToken().equals(refreshToken)) {
+            throw new InvalidRefreshTokenException();
         }
+
+        refreshTokenRepository.deleteById(String.valueOf(userId));
+
+        TokenResponse tokenResponse = jwtProvider.receiveToken(userId, role);
+
+        RefreshToken newToken = RefreshToken.builder()
+                .userId(String.valueOf(userId))
+                .token(tokenResponse.refreshToken())
+                .expiresIn(jwtProperties.getRefreshTokenExpiration())
+                .build();
+
+        refreshTokenRepository.save(newToken);
+
+        return tokenResponse;
     }
 }
