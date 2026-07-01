@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -92,7 +93,7 @@ public class TeamController {
             @ApiResponse(responseCode = "404", description = "존재하지 않는 팀")
     })
     @PatchMapping("/order")
-    public ResponseEntity<Void> updateTeamOrder(@RequestBody UpdateTeamOrderRequest request) {
+    public ResponseEntity<Void> updateTeamOrder(@Valid @RequestBody UpdateTeamOrderRequest request) {
         updateTeamOrderService.execute(request.orderItems());
         return ResponseEntity.noContent().build();
     }

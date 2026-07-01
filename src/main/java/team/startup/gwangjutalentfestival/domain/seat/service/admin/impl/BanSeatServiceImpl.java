@@ -2,6 +2,7 @@ package team.startup.gwangjutalentfestival.domain.seat.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
@@ -42,7 +43,11 @@ public class BanSeatServiceImpl implements BanSeatService {
                 .role(request.role())
                 .build();
 
-        seatBanRepository.save(seatBan);
+        try {
+            seatBanRepository.saveAndFlush(seatBan);
+        } catch (DataIntegrityViolationException e) {
+            throw new SeatAlreadyBannedException();
+        }
 
         applicationEventPublisher.publishEvent(new SeatChangeEvent(
                 request.seatSection(),
