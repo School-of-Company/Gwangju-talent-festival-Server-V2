@@ -2,6 +2,7 @@ package team.startup.gwangjutalentfestival.domain.auth.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -25,12 +26,17 @@ public class TokenBlacklistRepository {
      * @param remainingExpiration 토큰의 남은 만료 시간 (밀리초)
      */
     public void save(String jti, long remainingExpiration) {
-        redisTemplate.opsForValue().set(
-                BLACKLIST_PREFIX + jti,
-                "logout",
-                remainingExpiration,
-                TimeUnit.MILLISECONDS
-        );
+        try {
+            redisTemplate.opsForValue().set(
+                    BLACKLIST_PREFIX + jti,
+                    "logout",
+                    remainingExpiration,
+                    TimeUnit.MILLISECONDS
+            );
+        } catch (DataAccessException e) {
+            log.error("Redis 블랙리스트 등록 실패 (jti: {})", jti, e);
+            throw e;
+        }
     }
 
     /**
