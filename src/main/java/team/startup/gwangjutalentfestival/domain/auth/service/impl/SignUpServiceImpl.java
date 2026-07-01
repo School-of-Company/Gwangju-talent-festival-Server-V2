@@ -1,6 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +58,10 @@ public class SignUpServiceImpl implements SignUpService {
 
         verifyCodeRepository.delete(code);
 
-        userRepository.save(user);
+        try {
+            userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicatePhoneNumberException();
+        }
     }
 }
