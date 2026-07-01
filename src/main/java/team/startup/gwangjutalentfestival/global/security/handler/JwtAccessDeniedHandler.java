@@ -5,10 +5,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
+import team.startup.gwangjutalentfestival.global.exception.ErrorCode;
 import team.startup.gwangjutalentfestival.global.exception.ErrorResponse;
 
 import java.io.IOException;
@@ -27,10 +27,11 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        response.setStatus(HttpStatus.FORBIDDEN.value());
+        ErrorCode errorCode = ErrorCode.FORBIDDEN;
+        response.setStatus(errorCode.getStatus());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         objectMapper.writeValue(response.getWriter(),
-                new ErrorResponse(403,"접근 권한이 없습니다."));
+                new ErrorResponse(errorCode.getStatus(), errorCode.getMessage()));
     }
 }
