@@ -54,6 +54,7 @@ public enum ErrorCode {
 
     // Judge
     JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
+    JUDGE_COMMENT_TOO_LARGE(400, "필기 데이터가 너무 큽니다."),
 
     // Monitoring
     ANOMALY_EVENT_NOT_FOUND(404, "이상 탐지 이벤트를 찾을 수 없습니다."),

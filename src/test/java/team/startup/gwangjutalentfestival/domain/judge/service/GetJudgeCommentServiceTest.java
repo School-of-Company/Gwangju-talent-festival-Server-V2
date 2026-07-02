@@ -70,10 +70,10 @@ class GetJudgeCommentServiceTest {
     }
 
     @Test
-    void 코멘트가_있으면_저장된_strokes가_반환된다() {
+    void 코멘트가_있으면_저장된_strokes가_반환된다() throws Exception {
         JudgeCommentEntity comment = JudgeCommentEntity.builder()
                 .id(10L)
-                .strokes("[{\"x\":1,\"y\":2}]")
+                .strokes(objectMapper.readTree("[{\"x\":1,\"y\":2}]"))
                 .team(team)
                 .user(user)
                 .build();
