@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.impl.SaveJudgeCommentServiceImpl;
@@ -96,5 +97,21 @@ class SaveJudgeCommentServiceTest {
 
         assertThatThrownBy(() -> saveJudgeCommentService.execute(request, NOT_FOUND_TEAM_ID))
                 .isInstanceOf(TeamNotFoundException.class);
+    }
+
+    @Test
+    void strokes가_크기_제한을_초과하면_JudgeCommentTooLargeException이_발생한다() {
+        ArrayNode largeStrokes = objectMapper.createArrayNode();
+        String padding = "a".repeat(1000);
+        for (int i = 0; i < 600; i++) {
+            largeStrokes.addObject().put("data", padding);
+        }
+        SaveJudgeCommentRequest largeRequest = new SaveJudgeCommentRequest(largeStrokes);
+
+        given(userUtil.getCurrentUserRef()).willReturn(user);
+        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+
+        assertThatThrownBy(() -> saveJudgeCommentService.execute(largeRequest, TEAM_ID))
+                .isInstanceOf(JudgeCommentTooLargeException.class);
     }
 }

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
@@ -13,6 +14,8 @@ import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundExce
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * {@link SaveJudgeCommentService} 구현체.
@@ -24,6 +27,8 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 @Service
 @RequiredArgsConstructor
 public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
+    private static final int MAX_STROKES_BYTES = 500_000;
+
     private final UserUtil userUtil;
     private final TeamRepository teamRepository;
     private final JudgeCommentRepository judgeCommentRepository;
@@ -37,6 +42,7 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
                 .orElseThrow(TeamNotFoundException::new);
 
         String strokes = writeValueAsString(request.strokes());
+        validateSize(strokes);
 
         judgeCommentRepository.upsert(team.getId(), user.getId(), strokes);
     }
@@ -46,6 +52,12 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
             return objectMapper.writeValueAsString(strokes);
         } catch (JsonProcessingException e) {
             throw new IllegalStateException("strokes 데이터를 직렬화할 수 없습니다.", e);
+        }
+    }
+
+    private void validateSize(String strokes) {
+        if (strokes.getBytes(StandardCharsets.UTF_8).length > MAX_STROKES_BYTES) {
+            throw new JudgeCommentTooLargeException();
         }
     }
 }

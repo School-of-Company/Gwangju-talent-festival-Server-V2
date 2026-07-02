@@ -1,11 +1,11 @@
 package team.startup.gwangjutalentfestival.domain.judge.service.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeCommentEntity;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
@@ -36,17 +36,10 @@ public class GetJudgeCommentServiceImpl implements GetJudgeCommentService {
                 .orElseThrow(TeamNotFoundException::new);
 
         JsonNode strokes = judgeCommentRepository.findByTeamAndUser(team, user)
-                .map(comment -> readTree(comment.getStrokes()))
+                .map(JudgeCommentEntity::getStrokes)
+                .filter(node -> node != null && !node.isNull())
                 .orElseGet(objectMapper::createArrayNode);
 
         return new GetJudgeCommentResponse(teamId, strokes);
-    }
-
-    private JsonNode readTree(String strokes) {
-        try {
-            return objectMapper.readTree(strokes);
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("저장된 strokes 데이터가 올바른 JSON 형식이 아닙니다.", e);
-        }
     }
 }
