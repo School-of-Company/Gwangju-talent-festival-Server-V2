@@ -31,7 +31,7 @@ public class GetJudgeCommentServiceImpl implements GetJudgeCommentService {
     @Override
     @Transactional(readOnly = true)
     public GetJudgeCommentResponse execute(Long teamId) {
-        UserEntity user = userUtil.getCurrentUser();
+        UserEntity user = userUtil.getCurrentUserRef();
         TeamEntity team = teamRepository.findById(teamId)
                 .orElseThrow(TeamNotFoundException::new);
 

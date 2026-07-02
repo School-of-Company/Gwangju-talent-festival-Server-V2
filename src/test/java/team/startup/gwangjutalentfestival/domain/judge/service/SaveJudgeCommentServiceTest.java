@@ -79,7 +79,7 @@ class SaveJudgeCommentServiceTest {
 
     @Test
     void 팀과_심사위원_ID로_원자적_upsert가_호출된다() {
-        given(userUtil.getCurrentUser()).willReturn(user);
+        given(userUtil.getCurrentUserRef()).willReturn(user);
         given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
 
         saveJudgeCommentService.execute(request, TEAM_ID);
@@ -91,7 +91,7 @@ class SaveJudgeCommentServiceTest {
 
     @Test
     void 존재하지_않는_팀이면_TeamNotFoundException이_발생한다() {
-        given(userUtil.getCurrentUser()).willReturn(user);
+        given(userUtil.getCurrentUserRef()).willReturn(user);
         given(teamRepository.findById(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> saveJudgeCommentService.execute(request, NOT_FOUND_TEAM_ID))

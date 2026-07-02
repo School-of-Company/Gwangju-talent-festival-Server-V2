@@ -78,7 +78,7 @@ class GetJudgeCommentServiceTest {
                 .user(user)
                 .build();
 
-        given(userUtil.getCurrentUser()).willReturn(user);
+        given(userUtil.getCurrentUserRef()).willReturn(user);
         given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
         given(judgeCommentRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(comment));
 
@@ -90,7 +90,7 @@ class GetJudgeCommentServiceTest {
 
     @Test
     void 코멘트가_없으면_빈_배열이_반환된다() {
-        given(userUtil.getCurrentUser()).willReturn(user);
+        given(userUtil.getCurrentUserRef()).willReturn(user);
         given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
         given(judgeCommentRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
 
@@ -103,7 +103,7 @@ class GetJudgeCommentServiceTest {
 
     @Test
     void 존재하지_않는_팀이면_TeamNotFoundException이_발생한다() {
-        given(userUtil.getCurrentUser()).willReturn(user);
+        given(userUtil.getCurrentUserRef()).willReturn(user);
         given(teamRepository.findById(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> getJudgeCommentService.execute(NOT_FOUND_TEAM_ID))

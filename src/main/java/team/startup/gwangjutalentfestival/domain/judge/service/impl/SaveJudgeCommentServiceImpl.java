@@ -32,7 +32,7 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
     @Override
     @Transactional
     public void execute(SaveJudgeCommentRequest request, Long teamId) {
-        UserEntity user = userUtil.getCurrentUser();
+        UserEntity user = userUtil.getCurrentUserRef();
         TeamEntity team = teamRepository.findById(teamId)
                 .orElseThrow(TeamNotFoundException::new);
 

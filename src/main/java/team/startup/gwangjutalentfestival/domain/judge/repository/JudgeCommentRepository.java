@@ -21,7 +21,7 @@ public interface JudgeCommentRepository extends JpaRepository<JudgeCommentEntity
     @Query(value = """
             INSERT INTO judge_comment (team_id, user_id, strokes)
             VALUES (:teamId, :userId, :strokes)
-            ON DUPLICATE KEY UPDATE strokes = VALUES(strokes)
+            ON DUPLICATE KEY UPDATE strokes = :strokes
             """, nativeQuery = true)
     void upsert(@Param("teamId") Long teamId, @Param("userId") Long userId, @Param("strokes") String strokes);
 }
