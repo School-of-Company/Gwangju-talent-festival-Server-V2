@@ -37,6 +37,7 @@ public class GetJudgeCommentServiceImpl implements GetJudgeCommentService {
 
         JsonNode strokes = judgeCommentRepository.findByTeamAndUser(team, user)
                 .map(JudgeCommentEntity::getStrokes)
+                .filter(node -> node != null && !node.isNull())
                 .orElseGet(objectMapper::createArrayNode);
 
         return new GetJudgeCommentResponse(teamId, strokes);

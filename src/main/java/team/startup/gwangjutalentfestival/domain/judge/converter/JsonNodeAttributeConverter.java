@@ -16,6 +16,9 @@ public class JsonNodeAttributeConverter implements AttributeConverter<JsonNode, 
 
     @Override
     public String convertToDatabaseColumn(JsonNode attribute) {
+        if (attribute == null) {
+            return null;
+        }
         try {
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
@@ -25,6 +28,9 @@ public class JsonNodeAttributeConverter implements AttributeConverter<JsonNode, 
 
     @Override
     public JsonNode convertToEntityAttribute(String dbData) {
+        if (dbData == null || dbData.isBlank()) {
+            return null;
+        }
         try {
             return objectMapper.readTree(dbData);
         } catch (JsonProcessingException e) {

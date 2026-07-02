@@ -109,4 +109,23 @@ class GetJudgeCommentServiceTest {
         assertThatThrownBy(() -> getJudgeCommentService.execute(NOT_FOUND_TEAM_ID))
                 .isInstanceOf(TeamNotFoundException.class);
     }
+
+    @Test
+    void 저장된_strokes가_NullNode이면_빈_배열이_반환된다() {
+        JudgeCommentEntity comment = JudgeCommentEntity.builder()
+                .id(11L)
+                .strokes(objectMapper.nullNode())
+                .team(team)
+                .user(user)
+                .build();
+
+        given(userUtil.getCurrentUserRef()).willReturn(user);
+        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgeCommentRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(comment));
+
+        GetJudgeCommentResponse response = getJudgeCommentService.execute(TEAM_ID);
+
+        assertThat(response.strokes().isArray()).isTrue();
+        assertThat(response.strokes()).isEmpty();
+    }
 }
