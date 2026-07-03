@@ -7,26 +7,43 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - ./.env
+    environment:
+      REDIS_HOST: redis
     depends_on:
-      db:
+      redis:
         condition: service_healthy
     restart: always
 
-  db:
-    image: mysql:8.0
-    container_name: mysql-db
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_DATABASE=gwangjutalentfestival
-    volumes:
-      - mysql-data:/var/lib/mysql
+  redis:
+    image: redis:7.0
+    container_name: redis
     restart: always
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD}"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    restart: always
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: always
+
 volumes:
-  mysql-data:
+  prometheus-data:
+  grafana-data:

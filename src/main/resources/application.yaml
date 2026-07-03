@@ -2,11 +2,23 @@ spring:
   application:
     name: gwangjutalentfestival
 
+  threads:
+    virtual:
+      enabled: true
+
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:500MB}
+      max-request-size: ${MAX_REQUEST_SIZE:500MB}
+
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1234}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
 
   data:
     redis:
@@ -20,6 +32,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  docker:
+    compose:
+      enabled: true
+      file: docker-compose.dev.yml
+
 jwt:
   secret: ${JWT_SECRET}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:180000000}
@@ -52,22 +70,58 @@ google:
   sheets:
     account-credential: ${GOOGLE_ACCOUNT_CREDENTIAL}
     sheet-id: ${GOOGLE_SHEET_ID}
-    sheet-page: ${GOOGLE_SHEET_PAGE}
+    enrolled-sheet-page: ${GOOGLE_ENROLLED_SHEET_PAGE}
+    out-of-school-sheet-page: ${GOOGLE_OUT_OF_SCHOOL_SHEET_PAGE}
+  excel:
+    template-sheet-id: ${GOOGLE_EXCEL_TEMPLATE_SHEET_ID}
+    summary-page: ${GOOGLE_EXCEL_SUMMARY_PAGE}
 
 slogan:
   submission:
-    start-at: ${START_AT:2026-05-18T00:00:00}
-    end-at: ${END_AT:2026-05-28T23:59:59}
+    start-at: ${START_AT:2026-04-18T00:00:00}
+    end-at: ${END_AT:2026-05-28T18:00:00}
 
 management:
+  security:
+    enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        seat.reservation.duration: true
+        judge.submit.duration: true
   endpoints:
     web:
       exposure:
-        include: health
-      base-path: /
-      path-mapping:
-        health: health
-
+        include: health, prometheus
+      base-path: /actuator
   endpoint:
     health:
       show-details: never
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+aws:
+  s3:
+    access-key: ${AWS_ACCESS_KEY}
+    secret-key: ${AWS_SECRET_KEY}
+    region: ${AWS_REGION:ap-northeast-2}
+    bucket: ${AWS_S3_BUCKET}
+
+monitoring:
+  anomaly:
+    enabled: ${ANOMALY_DETECTOR_ENABLED:false}
+    prometheus-base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
+    discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+  ml:
+    enabled: ${ML_ANOMALY_SCORE_ENABLED:false}
+    base-url: ${ML_SERVER_BASE_URL:}
+    timeout-ms: ${ML_SERVER_TIMEOUT_MS:3000}
+  dataset:
+    export-path: ${MONITORING_DATASET_EXPORT_PATH:./exports}

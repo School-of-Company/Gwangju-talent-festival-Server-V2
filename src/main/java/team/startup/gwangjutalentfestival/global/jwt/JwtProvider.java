@@ -16,7 +16,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.UUID;
 
+/**
+ * JWT 토큰 생성, 검증, 파싱을 담당하는 컴포넌트.
+ * <p>액세스 토큰과 리프레시 토큰 발급, 클레임 추출, 블랙리스트 확인 전 토큰 유효성 검사를 수행한다.</p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -37,6 +42,13 @@ public class JwtProvider {
         this.secretKey = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 액세스 토큰과 리프레시 토큰을 함께 발급한다.
+     *
+     * @param userId 사용자 ID
+     * @param role   사용자 역할
+     * @return 발급된 토큰 정보 응답
+     */
     public TokenResponse receiveToken(Long userId, Role role) {
         Date accessExpiryDate = calculateExpiryDate(jwtProperties.getAccessTokenExpiration());
         Date refreshExpiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
@@ -53,11 +65,25 @@ public class JwtProvider {
         );
     }
 
+    /**
+     * 액세스 토큰을 단독으로 발급한다.
+     *
+     * @param userId 사용자 ID
+     * @param role   사용자 역할
+     * @return 액세스 토큰 문자열
+     */
     public String generateAccessToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getAccessTokenExpiration());
         return createToken(userId, role, ACCESS_TOKEN, expiryDate);
     }
 
+    /**
+     * 리프레시 토큰을 단독으로 발급한다.
+     *
+     * @param userId 사용자 ID
+     * @param role   사용자 역할
+     * @return 리프레시 토큰 문자열
+     */
     public String generateRefreshToken(Long userId, Role role) {
         Date expiryDate = calculateExpiryDate(jwtProperties.getRefreshTokenExpiration());
         return createToken(userId, role, REFRESH_TOKEN, expiryDate);
@@ -68,12 +94,19 @@ public class JwtProvider {
                 .setSubject(String.valueOf(userId))
                 .claim(ROLE, role.name())
                 .claim(TOKEN_TYPE, type)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date())
                 .setExpiration(expiryDate)
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
+    /**
+     * JWT 토큰의 서명과 만료 여부를 검증한다.
+     *
+     * @param token 검증할 JWT 문자열
+     * @return 유효하면 {@code true}, 그렇지 않으면 {@code false}
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parser()
@@ -93,6 +126,12 @@ public class JwtProvider {
         return false;
     }
 
+    /**
+     * JWT 토큰에서 클레임을 추출한다.
+     *
+     * @param token JWT 문자열
+     * @return 파싱된 {@link Claims}
+     */
     public Claims getClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -101,28 +140,100 @@ public class JwtProvider {
                 .getPayload();
     }
 
+    /**
+     * 클레임의 토큰 타입이 액세스 토큰인지 확인한다.
+     *
+     * @param claims JWT 클레임
+     * @return 액세스 토큰이면 {@code true}
+     */
     public boolean isAccessToken(Claims claims) {
         return ACCESS_TOKEN.equals(claims.get(TOKEN_TYPE, String.class));
     }
 
+    /**
+     * 클레임의 토큰 타입이 리프레시 토큰인지 확인한다.
+     *
+     * @param claims JWT 클레임
+     * @return 리프레시 토큰이면 {@code true}
+     */
     public boolean isRefreshToken(Claims claims) {
         return REFRESH_TOKEN.equals(claims.get(TOKEN_TYPE, String.class));
     }
 
+    /**
+     * 클레임에서 사용자 ID를 추출한다.
+     *
+     * @param claims JWT 클레임
+     * @return 사용자 ID
+     */
     public Long getUserId(Claims claims) {
         return Long.parseLong(claims.getSubject());
     }
 
+    /**
+     * 클레임에서 사용자 역할 문자열을 추출한다.
+     *
+     * @param claims JWT 클레임
+     * @return 역할 문자열 (예: "ADMIN", "USER")
+     */
     public String getRole(Claims claims) {
         return claims.get("role", String.class);
     }
 
+    /**
+     * Authorization 헤더 문자열에서 Bearer 토큰을 추출한다.
+     *
+     * @param authorizationHeader Authorization 헤더 값
+     * @return 토큰 문자열, 형식이 맞지 않으면 {@code null}
+     */
+    public String extractBearerToken(String authorizationHeader) {
+        return extractTokenFromHeader(authorizationHeader);
+    }
+
+    /**
+     * HTTP 요청의 Authorization 헤더에서 Bearer 토큰을 추출한다.
+     *
+     * @param request HTTP 서블릿 요청
+     * @return 토큰 문자열, 헤더가 없거나 형식이 맞지 않으면 {@code null}
+     */
     public String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+        return extractTokenFromHeader(request.getHeader(AUTHORIZATION_HEADER));
+    }
+
+    private String extractTokenFromHeader(String bearerToken) {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
             return bearerToken.substring(BEARER_PREFIX.length());
         }
         return null;
+    }
+
+    /**
+     * 토큰의 남은 만료 시간을 밀리초로 반환한다.
+     *
+     * @param claims JWT 클레임
+     * @return 남은 만료 시간 (밀리초)
+     */
+    public long getRemainingExpireTime(Claims claims) {
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
+
+    /**
+     * 만료된 토큰에서도 클레임을 추출한다.
+     * <p>리프레시 토큰 재발급 등 만료 이후에도 클레임이 필요한 경우에 사용한다.</p>
+     *
+     * @param token JWT 문자열 (만료 여부 무관)
+     * @return 파싱된 {@link Claims}
+     */
+    public Claims getClaimsAllowExpired(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
+        }
     }
 
     private LocalDateTime toLocalDateTime(Date date) {

@@ -15,6 +15,10 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
 
+/**
+ * {@link ReissueTokenService} 구현체.
+ * <p>RefreshToken의 유효성을 검증하고 새로운 AccessToken과 RefreshToken을 재발급합니다.</p>
+ */
 @Service
 @RequiredArgsConstructor
 public class ReissueTokenServiceImpl implements ReissueTokenService {
@@ -23,6 +27,14 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
 
+    /**
+     * RefreshToken을 검증하고 기존 토큰을 교체한 뒤 새로운 JWT 토큰을 반환합니다.
+     *
+     * @param refreshToken 재발급에 사용할 RefreshToken 문자열
+     * @return 새로 발급된 AccessToken 및 RefreshToken 정보
+     * @throws InvalidRefreshTokenException RefreshToken이 유효하지 않거나 저장된 값과 다른 경우
+     * @throws RefreshTokenNotFoundException Redis에서 RefreshToken을 찾을 수 없는 경우
+     */
     @Override
     @Transactional
     public TokenResponse execute(String refreshToken) {

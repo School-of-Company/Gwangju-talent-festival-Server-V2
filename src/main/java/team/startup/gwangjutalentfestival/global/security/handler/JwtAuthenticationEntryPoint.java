@@ -13,6 +13,10 @@ import team.startup.gwangjutalentfestival.global.exception.ErrorResponse;
 
 import java.io.IOException;
 
+/**
+ * 인증 실패(401 Unauthorized) 처리 핸들러.
+ * <p>미인증 사용자가 보호된 리소스에 접근할 때 JSON 형태의 에러 응답을 반환한다.</p>
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
