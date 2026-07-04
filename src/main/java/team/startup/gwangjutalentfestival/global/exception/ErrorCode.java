@@ -78,6 +78,9 @@ public enum ErrorCode {
     GOOGLE_SHEETS_IO_ERROR(503, "Google Sheets 서버와 연결할 수 없습니다."),
     GOOGLE_SHEETS_INIT_ERROR(500, "Google Sheets 초기화 중 오류가 발생했습니다."),
 
+    // RateLimit
+    TOO_MANY_REQUESTS(429, "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요."),
+
     INTERNAL_SERVER_ERROR(500, "서버 오류가 발생했습니다.");
 
     private final int status;

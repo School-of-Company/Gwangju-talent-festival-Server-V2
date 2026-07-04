@@ -46,6 +46,9 @@ jwt:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004}
 
+rate-limit:
+  cooldown-seconds: ${RATE_LIMIT_COOLDOWN_SECONDS:1}
+
 feign:
   log-level: ${FEIGN_LOG_LEVEL:BASIC}
 
