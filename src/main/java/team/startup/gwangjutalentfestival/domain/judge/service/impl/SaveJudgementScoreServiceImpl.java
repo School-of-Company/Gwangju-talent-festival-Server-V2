@@ -78,7 +78,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private void updateTotalScore(TeamEntity team) {
         Integer total = judgementRepository.sumTotalScoreByTeam(team);
         int newTotal = total != null ? total : 0;
-        if (newTotal > 100) {
+        if (newTotal > 180) {
             throw new JudgementTotalScoreExceededException();
         }
         team.updateTotalScore(newTotal);
