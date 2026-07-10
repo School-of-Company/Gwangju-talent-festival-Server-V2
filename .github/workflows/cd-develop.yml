@@ -43,10 +43,15 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           docker rm -f spring-app-dev || true
+          docker compose -f docker-compose.dev.yml --env-file .env up -d
           docker run -d \
             --name spring-app-dev \
             --restart always \
+            --network gwangjutalentfestival_default \
             --env-file .env \
+            -e DB_URL="jdbc:mysql://mysql:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8" \
+            -e DB_USERNAME=root \
+            -e REDIS_HOST=redis \
             -e SPRING_DOCKER_COMPOSE_ENABLED=false \
             -p 8080:8080 \
             gwangju-festival:dev
