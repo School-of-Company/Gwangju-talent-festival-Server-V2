@@ -48,6 +48,11 @@ jobs:
             --restart always \
             --env-file .env \
             -e SPRING_DOCKER_COMPOSE_ENABLED=false \
+            -e DB_URL="jdbc:mysql://10.0.11.10:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8" \
+            -e DB_USERNAME="s25026@gsm.hs.kr" \
+            -e DB_PASSWORD="kou@197810a" \
+            -e REDIS_HOST="10.0.11.20" \
+            -e REDIS_PORT="6379" \
             -p 8080:8080 \
             gwangju-festival:dev
 
