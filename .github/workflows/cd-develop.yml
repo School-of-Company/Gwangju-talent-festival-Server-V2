@@ -43,9 +43,11 @@ jobs:
       - name: Deploy with Docker Compose
         run: |
           docker rm -f spring-app-dev || true
+          docker compose -f docker-compose.dev.yml --env-file .env up -d
           docker run -d \
             --name spring-app-dev \
             --restart always \
+            --network gwangju-talent-festival-server-v2_default \
             --env-file .env \
             -e SPRING_DOCKER_COMPOSE_ENABLED=false \
             -p 8080:8080 \
