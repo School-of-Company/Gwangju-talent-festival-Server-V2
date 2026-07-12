@@ -82,7 +82,7 @@ class SaveJudgementScoreServiceTest {
     @Test
     void 심사_기록이_없으면_새로_저장된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
         given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
 
@@ -105,7 +105,7 @@ class SaveJudgementScoreServiceTest {
                 .build();
 
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(existing));
         given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
 
@@ -122,7 +122,7 @@ class SaveJudgementScoreServiceTest {
     @Test
     void 여러_심사위원_점수_합계가_100을_초과해도_정상_저장된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
         given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(150);
 
@@ -134,7 +134,7 @@ class SaveJudgementScoreServiceTest {
     @Test
     void sumTotalScoreByTeam이_null을_반환하면_totalScore가_0으로_설정된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
         given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(null);
 
@@ -146,7 +146,7 @@ class SaveJudgementScoreServiceTest {
     @Test
     void 존재하지_않는_팀ID이면_TeamNotFoundException이_발생한다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
+        given(teamRepository.findByIdForUpdate(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> saveJudgementScoreService.execute(request, NOT_FOUND_TEAM_ID))
                 .isInstanceOf(TeamNotFoundException.class);

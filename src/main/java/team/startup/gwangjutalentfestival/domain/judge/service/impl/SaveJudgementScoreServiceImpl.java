@@ -48,7 +48,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
                 "judge.submit.failure",
                 () -> {
                     UserEntity user = userUtil.getCurrentUser();
-                    TeamEntity team = teamRepository.findById(teamId)
+                    TeamEntity team = teamRepository.findByIdForUpdate(teamId)
                             .orElseThrow(TeamNotFoundException::new);
 
                     judgementRepository.findByTeamAndUser(team, user)
