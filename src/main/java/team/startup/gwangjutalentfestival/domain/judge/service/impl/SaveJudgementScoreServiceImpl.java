@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
-import team.startup.gwangjutalentfestival.domain.judge.exception.JudgementTotalScoreExceededException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
@@ -34,7 +33,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     /**
      * 현재 로그인한 심사위원의 특정 팀 심사 점수를 저장하거나 수정한다.
      * 기존 심사 데이터가 있으면 점수를 갱신하고, 없으면 새로 생성한다.
-     * 저장 후 팀 총점을 재계산하며, 총점이 100점을 초과하면 예외를 발생시킨다.
+     * 저장 후 팀 총점(전체 심사위원 합산 점수)을 재계산한다.
      *
      * @param request 심사 점수 요청 데이터
      * @param teamId  대상 팀 ID
@@ -78,9 +77,6 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private void updateTotalScore(TeamEntity team) {
         Integer total = judgementRepository.sumTotalScoreByTeam(team);
         int newTotal = total != null ? total : 0;
-        if (newTotal > 100) {
-            throw new JudgementTotalScoreExceededException();
-        }
         team.updateTotalScore(newTotal);
     }
 }

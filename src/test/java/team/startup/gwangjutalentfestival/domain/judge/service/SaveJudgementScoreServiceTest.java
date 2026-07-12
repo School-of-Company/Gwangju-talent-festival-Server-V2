@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
-import team.startup.gwangjutalentfestival.domain.judge.exception.JudgementTotalScoreExceededException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.impl.SaveJudgementScoreServiceImpl;
@@ -121,14 +120,15 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
-    void 팀_총점이_100_초과하면_JudgementTotalScoreExceededException이_발생한다() {
+    void 여러_심사위원_점수_합계가_100을_초과해도_정상_저장된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(101);
+        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(150);
 
-        assertThatThrownBy(() -> saveJudgementScoreService.execute(request, TEAM_ID))
-                .isInstanceOf(JudgementTotalScoreExceededException.class);
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(150);
     }
 
     @Test
