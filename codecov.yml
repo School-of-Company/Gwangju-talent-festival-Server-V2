@@ -11,4 +11,3 @@ comment:
   layout: "header, reach, diff, flags, files, footer"
   behavior: default
   require_changes: false
-  hide_comment_details: false
