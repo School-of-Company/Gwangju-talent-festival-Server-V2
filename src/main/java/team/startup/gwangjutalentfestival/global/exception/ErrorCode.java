@@ -53,7 +53,6 @@ public enum ErrorCode {
     SEAT_BAN_NOT_FOUND(404, "금지되지 않은 상태의 자리입니다."),
 
     // Judge
-    JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
     JUDGE_COMMENT_TOO_LARGE(400, "필기 데이터가 너무 큽니다."),
 
     // Monitoring
