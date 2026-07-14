@@ -55,11 +55,9 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
     private Map<Long, Map<Long, Integer>> buildScoreMap(List<JudgementEntity> judgements) {
         Map<Long, Map<Long, Integer>> scoreMap = new HashMap<>();
         for (JudgementEntity j : judgements) {
-            int score = nz(j.getExpressionCommunicationScore())
-                    + nz(j.getTechnicalCompletenessScore())
+            int score = nz(j.getCompletenessExpressionScore())
                     + nz(j.getCreativityCompositionScore())
-                    + nz(j.getStagePresencePerformanceScore())
-                    + nz(j.getTeamworkStageHarmonyScore());
+                    + nz(j.getStagePerformanceTeamworkScore());
             scoreMap.computeIfAbsent(j.getTeam().getId(), k -> new HashMap<>())
                     .put(j.getUser().getId(), score);
         }

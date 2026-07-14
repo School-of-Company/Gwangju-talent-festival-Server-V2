@@ -55,13 +55,11 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         return UserEntity.builder().id(id).role(Role.ADMIN).build();
     }
 
-    private JudgementEntity judgement(TeamEntity team, UserEntity user, int s1, int s2, int s3, int s4, int s5) {
+    private JudgementEntity judgement(TeamEntity team, UserEntity user, int s1, int s2, int s3) {
         return JudgementEntity.builder()
-                .expressionCommunicationScore(s1)
-                .technicalCompletenessScore(s2)
-                .creativityCompositionScore(s3)
-                .stagePresencePerformanceScore(s4)
-                .teamworkStageHarmonyScore(s5)
+                .completenessExpressionScore(s1)
+                .creativityCompositionScore(s2)
+                .stagePerformanceTeamworkScore(s3)
                 .team(team)
                 .user(user)
                 .build();
@@ -107,11 +105,11 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         TeamEntity teamA = team(1L, 1, "팀A");
         UserEntity judge1 = user(1L);
         UserEntity judge2 = user(2L);
-        // judge1: 10*5=50, judge2: 5*5=25 → total=75 (trimming 없음)
+        // judge1: 10*3=30, judge2: 5*3=15 → total=45 (trimming 없음)
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA));
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
-                judgement(teamA, judge1, 10, 10, 10, 10, 10),
-                judgement(teamA, judge2, 5, 5, 5, 5, 5)
+                judgement(teamA, judge1, 10, 10, 10),
+                judgement(teamA, judge2, 5, 5, 5)
         ));
 
         service.execute();
@@ -120,7 +118,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<Object> row = ((List<List<Object>>) captor.getValue()).get(0);
 
-        assertThat(row.get(8)).isEqualTo(75);
+        assertThat(row.get(8)).isEqualTo(45);
     }
 
     @Test
@@ -130,12 +128,12 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         UserEntity judge1 = user(1L);
         UserEntity judge2 = user(2L);
         UserEntity judge3 = user(3L);
-        // judge1=50, judge2=25, judge3=10 → 정렬: [10, 25, 50] → skip min/max → sum=25
+        // judge1=30, judge2=15, judge3=6 → 정렬: [6, 15, 30] → skip min/max → sum=15
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA));
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
-                judgement(teamA, judge1, 10, 10, 10, 10, 10),
-                judgement(teamA, judge2, 5, 5, 5, 5, 5),
-                judgement(teamA, judge3, 2, 2, 2, 2, 2)
+                judgement(teamA, judge1, 10, 10, 10),
+                judgement(teamA, judge2, 5, 5, 5),
+                judgement(teamA, judge3, 2, 2, 2)
         ));
 
         service.execute();
@@ -144,7 +142,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<Object> row = ((List<List<Object>>) captor.getValue()).get(0);
 
-        assertThat(row.get(8)).isEqualTo(25);
+        assertThat(row.get(8)).isEqualTo(15);
     }
 
     @Test
@@ -154,12 +152,12 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         TeamEntity teamB = team(2L, 2, "팀B");
         TeamEntity teamC = team(3L, 3, "팀C");
         UserEntity judge1 = user(1L);
-        // teamA=100, teamB=100, teamC=50 → A:1위, B:1위, C:2위
+        // teamA=60, teamB=60, teamC=30 → A:1위, B:1위, C:2위
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB, teamC));
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
-                judgement(teamA, judge1, 20, 20, 20, 20, 20),
-                judgement(teamB, judge1, 20, 20, 20, 20, 20),
-                judgement(teamC, judge1, 10, 10, 10, 10, 10)
+                judgement(teamA, judge1, 20, 20, 20),
+                judgement(teamB, judge1, 20, 20, 20),
+                judgement(teamC, judge1, 10, 10, 10)
         ));
 
         service.execute();
@@ -179,7 +177,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         TeamEntity teamA = team(1L, 1, "팀A");
         // judge ID 1~7 → limit(6) 적용 시 ID 1~6만 집계
         List<JudgementEntity> judgements = java.util.stream.LongStream.rangeClosed(1, 7)
-                .mapToObj(id -> judgement(teamA, user(id), 10, 10, 10, 10, 10))
+                .mapToObj(id -> judgement(teamA, user(id), 10, 10, 10))
                 .toList();
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA));
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(judgements);
@@ -189,7 +187,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = (List<List<Object>>) captor.getValue();
-        // 심사위원 6명 모두 50점 → trimming 후: [50,50,50,50] → 합=200
-        assertThat(rows.get(0).get(8)).isEqualTo(200);
+        // 심사위원 6명 모두 30점 → trimming 후: [30,30,30,30] → 합=120
+        assertThat(rows.get(0).get(8)).isEqualTo(120);
     }
 }

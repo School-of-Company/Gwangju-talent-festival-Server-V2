@@ -79,11 +79,9 @@ class GetJudgementServiceTest {
     void 심사_기록이_있으면_실제_점수가_반환된다() {
         JudgementEntity judgement = JudgementEntity.builder()
                 .id(10L)
-                .expressionCommunicationScore(20)
-                .technicalCompletenessScore(15)
+                .completenessExpressionScore(20)
                 .creativityCompositionScore(10)
-                .stagePresencePerformanceScore(5)
-                .teamworkStageHarmonyScore(8)
+                .stagePerformanceTeamworkScore(5)
                 .team(pendingTeam)
                 .user(user)
                 .build();
@@ -97,11 +95,9 @@ class GetJudgementServiceTest {
         assertThat(response.judgementId()).isEqualTo(10L);
         assertThat(response.teamId()).isEqualTo(TEAM_ID);
         assertThat(response.teamName()).isEqualTo("팀A");
-        assertThat(response.expressionCommunicationScore()).isEqualTo(20);
-        assertThat(response.technicalCompletenessScore()).isEqualTo(15);
+        assertThat(response.completenessExpressionScore()).isEqualTo(20);
         assertThat(response.creativityCompositionScore()).isEqualTo(10);
-        assertThat(response.stagePresencePerformanceScore()).isEqualTo(5);
-        assertThat(response.teamworkStageHarmonyScore()).isEqualTo(8);
+        assertThat(response.stagePerformanceTeamworkScore()).isEqualTo(5);
         assertThat(response.isJudged()).isTrue();
     }
 
@@ -114,11 +110,9 @@ class GetJudgementServiceTest {
         GetJudgementResponse response = getJudgementService.execute(TEAM_ID);
 
         assertThat(response.judgementId()).isNull();
-        assertThat(response.expressionCommunicationScore()).isEqualTo(40);
-        assertThat(response.technicalCompletenessScore()).isEqualTo(30);
+        assertThat(response.completenessExpressionScore()).isEqualTo(40);
         assertThat(response.creativityCompositionScore()).isEqualTo(30);
-        assertThat(response.stagePresencePerformanceScore()).isEqualTo(30);
-        assertThat(response.teamworkStageHarmonyScore()).isEqualTo(30);
+        assertThat(response.stagePerformanceTeamworkScore()).isEqualTo(30);
         assertThat(response.isJudged()).isFalse();
     }
 

@@ -59,18 +59,14 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
                     judgementRepository.findByTeamAndUser(team, user)
                             .ifPresentOrElse(
                                     judgement -> judgement.updateScore(
-                                            request.expressionCommunicationScore(),
-                                            request.technicalCompletenessScore(),
+                                            request.completenessExpressionScore(),
                                             request.creativityCompositionScore(),
-                                            request.stagePresencePerformanceScore(),
-                                            request.teamworkStageHarmonyScore()
+                                            request.stagePerformanceTeamworkScore()
                                     ),
                                     () -> judgementRepository.save(JudgementEntity.builder()
-                                            .expressionCommunicationScore(request.expressionCommunicationScore())
-                                            .technicalCompletenessScore(request.technicalCompletenessScore())
+                                            .completenessExpressionScore(request.completenessExpressionScore())
                                             .creativityCompositionScore(request.creativityCompositionScore())
-                                            .stagePresencePerformanceScore(request.stagePresencePerformanceScore())
-                                            .teamworkStageHarmonyScore(request.teamworkStageHarmonyScore())
+                                            .stagePerformanceTeamworkScore(request.stagePerformanceTeamworkScore())
                                             .team(team)
                                             .user(user)
                                             .build()));

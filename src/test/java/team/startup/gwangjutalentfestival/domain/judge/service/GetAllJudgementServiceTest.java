@@ -74,11 +74,9 @@ class GetAllJudgementServiceTest {
     void 심사_기록이_있는_팀은_실제_점수가_반환된다() {
         JudgementEntity judgement = JudgementEntity.builder()
                 .id(10L)
-                .expressionCommunicationScore(30)
-                .technicalCompletenessScore(20)
+                .completenessExpressionScore(30)
                 .creativityCompositionScore(15)
-                .stagePresencePerformanceScore(10)
-                .teamworkStageHarmonyScore(5)
+                .stagePerformanceTeamworkScore(10)
                 .team(team1)
                 .user(user)
                 .build();
@@ -94,8 +92,8 @@ class GetAllJudgementServiceTest {
                 .findFirst().orElseThrow();
 
         assertThat(team1Response.judgementId()).isEqualTo(10L);
-        assertThat(team1Response.expressionCommunicationScore()).isEqualTo(30);
-        assertThat(team1Response.technicalCompletenessScore()).isEqualTo(20);
+        assertThat(team1Response.completenessExpressionScore()).isEqualTo(30);
+        assertThat(team1Response.creativityCompositionScore()).isEqualTo(15);
         assertThat(team1Response.isJudged()).isTrue();
     }
 
@@ -109,11 +107,9 @@ class GetAllJudgementServiceTest {
 
         GetJudgementResponse team2Response = result.get(0);
         assertThat(team2Response.judgementId()).isNull();
-        assertThat(team2Response.expressionCommunicationScore()).isEqualTo(40);
-        assertThat(team2Response.technicalCompletenessScore()).isEqualTo(30);
+        assertThat(team2Response.completenessExpressionScore()).isEqualTo(40);
         assertThat(team2Response.creativityCompositionScore()).isEqualTo(30);
-        assertThat(team2Response.stagePresencePerformanceScore()).isEqualTo(30);
-        assertThat(team2Response.teamworkStageHarmonyScore()).isEqualTo(30);
+        assertThat(team2Response.stagePerformanceTeamworkScore()).isEqualTo(30);
         assertThat(team2Response.isJudged()).isFalse();
     }
 
