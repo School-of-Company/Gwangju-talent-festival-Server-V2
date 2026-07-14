@@ -174,8 +174,14 @@ public class GoogleExcelAdapter {
                 .orElseThrow(GoogleSheetsException::new);
     }
 
-    // ponytail: 26컬럼(Z) 이내로 가정, 그 이상 컬럼이 필요하면 멀티레터 로직 필요
     static String columnLetter(int columnCount) {
-        return String.valueOf((char) ('A' + Math.max(columnCount, 1) - 1));
+        StringBuilder columnName = new StringBuilder();
+        int remaining = Math.max(columnCount, 1);
+        while (remaining > 0) {
+            int rem = (remaining - 1) % 26;
+            columnName.insert(0, (char) ('A' + rem));
+            remaining = (remaining - 1) / 26;
+        }
+        return columnName.toString();
     }
 }

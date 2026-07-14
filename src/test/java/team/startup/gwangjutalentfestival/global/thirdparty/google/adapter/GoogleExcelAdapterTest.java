@@ -114,4 +114,19 @@ class GoogleExcelAdapterTest {
     void 컬럼_0개는_A로_변환된다() {
         assertThat(GoogleExcelAdapter.columnLetter(0)).isEqualTo("A");
     }
+
+    @Test
+    void 컬럼_26개는_Z로_변환된다() {
+        assertThat(GoogleExcelAdapter.columnLetter(26)).isEqualTo("Z");
+    }
+
+    @Test
+    void 컬럼_27개는_AA로_변환된다() {
+        assertThat(GoogleExcelAdapter.columnLetter(27)).isEqualTo("AA");
+    }
+
+    @Test
+    void 컬럼_52개는_AZ로_변환된다() {
+        assertThat(GoogleExcelAdapter.columnLetter(52)).isEqualTo("AZ");
+    }
 }
