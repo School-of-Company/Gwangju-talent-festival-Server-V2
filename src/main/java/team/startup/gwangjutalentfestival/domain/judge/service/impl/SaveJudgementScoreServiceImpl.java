@@ -28,8 +28,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService {
 
-    private static final int TOTAL_JUDGE_COUNT = 5;
-
     private final JudgementRepository judgementRepository;
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
@@ -77,8 +75,8 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
 
     /**
      * 팀 총점을 재계산한다.
-     * 심사위원 5명이 모두 채점을 완료하면 최고점과 최저점을 제외한 나머지 점수의 평균(반올림)으로 계산하고,
-     * 그 전에는 제출된 심사위원 점수를 단순 합산한다.
+     * 심사위원 수와 무관하게 최고점과 최저점을 제외한 나머지 점수의 평균(반올림)으로 계산한다.
+     * 예선/본선 등 라운드마다 채점 인원이 달라도 동일한 기준이 적용된다.
      *
      * @param team 총점을 갱신할 팀 엔티티
      */
@@ -92,8 +90,9 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
             return 0;
         }
         int sum = scores.stream().mapToInt(Integer::intValue).sum();
-        if (scores.size() < TOTAL_JUDGE_COUNT) {
-            return sum;
+        // ponytail: 최고/최저를 제외하면 최소 1명은 남아야 트리밍이 의미 있으므로 3명 미만은 단순 평균
+        if (scores.size() < 3) {
+            return Math.round(sum / (float) scores.size());
         }
         int max = Collections.max(scores);
         int min = Collections.min(scores);

@@ -117,7 +117,7 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
-    void 심사위원이_5명_미만이면_단순_합산으로_계산된다() {
+    void 심사위원이_3명_미만이면_단순_평균으로_계산된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
@@ -125,7 +125,19 @@ class SaveJudgementScoreServiceTest {
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
-        assertThat(team.getTotalScore()).isEqualTo(150);
+        assertThat(team.getTotalScore()).isEqualTo(75);
+    }
+
+    @Test
+    void 심사위원이_3명이면_최고점과_최저점을_제외한_평균으로_계산된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(90, 60, 30));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(60);
     }
 
     @Test
@@ -141,7 +153,7 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
-    void 심사위원이_5명이면_최고점과_최저점을_제외한_평균으로_계산된다() {
+    void 심사위원이_5명이어도_최고점과_최저점을_제외한_평균으로_계산된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
