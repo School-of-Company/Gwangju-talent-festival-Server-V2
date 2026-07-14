@@ -16,6 +16,9 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * {@link SaveJudgementScoreService} 구현체.
  * 심사 점수를 저장 또는 수정하고, 팀 총점을 갱신한다.
@@ -24,6 +27,8 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 @Service
 @RequiredArgsConstructor
 public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService {
+
+    private static final int TOTAL_JUDGE_COUNT = 5;
 
     private final JudgementRepository judgementRepository;
     private final TeamRepository teamRepository;
@@ -74,9 +79,29 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
         );
     }
 
+    /**
+     * 팀 총점을 재계산한다.
+     * 심사위원 5명이 모두 채점을 완료하면 최고점과 최저점을 제외한 나머지 점수의 평균(반올림)으로 계산하고,
+     * 그 전에는 제출된 심사위원 점수를 단순 합산한다.
+     *
+     * @param team 총점을 갱신할 팀 엔티티
+     */
     private void updateTotalScore(TeamEntity team) {
-        Integer total = judgementRepository.sumTotalScoreByTeam(team);
-        int newTotal = total != null ? total : 0;
-        team.updateTotalScore(newTotal);
+        List<Integer> scores = judgementRepository.findAllJudgeTotalScoresByTeam(team);
+        team.updateTotalScore(calculateTotalScore(scores));
+    }
+
+    private int calculateTotalScore(List<Integer> scores) {
+        if (scores.isEmpty()) {
+            return 0;
+        }
+        int sum = scores.stream().mapToInt(Integer::intValue).sum();
+        if (scores.size() < TOTAL_JUDGE_COUNT) {
+            return sum;
+        }
+        int max = Collections.max(scores);
+        int min = Collections.min(scores);
+        int remainingCount = scores.size() - 2;
+        return Math.round((sum - max - min) / (float) remainingCount);
     }
 }

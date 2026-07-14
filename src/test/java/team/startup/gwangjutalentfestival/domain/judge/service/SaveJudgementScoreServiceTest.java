@@ -20,6 +20,7 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,7 +85,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -107,7 +108,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(existing));
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -120,11 +121,11 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
-    void 여러_심사위원_점수_합계가_100을_초과해도_정상_저장된다() {
+    void 심사위원이_5명_미만이면_단순_합산으로_계산된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(150);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(80, 70));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -132,15 +133,41 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
-    void sumTotalScoreByTeam이_null을_반환하면_totalScore가_0으로_설정된다() {
+    void 심사_기록이_없으면_totalScore가_0으로_설정된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(null);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of());
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
         assertThat(team.getTotalScore()).isEqualTo(0);
+    }
+
+    @Test
+    void 심사위원이_5명이면_최고점과_최저점을_제외한_평균으로_계산된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+                .willReturn(List.of(100, 90, 80, 70, 60));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(80);
+    }
+
+    @Test
+    void 나머지가_남으면_반올림하여_저장된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+                .willReturn(List.of(100, 90, 85, 70, 60));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(82);
     }
 
     @Test
