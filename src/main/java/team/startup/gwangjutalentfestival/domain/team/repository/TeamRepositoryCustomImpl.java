@@ -25,7 +25,7 @@ public class TeamRepositoryCustomImpl implements TeamRepositoryCustom {
 
     /**
      * 총점 내림차순, 세부 심사 점수 평균 순으로 팀 랭킹을 조회한다.
-     * 동점일 경우 표현/소통 점수, 창의성/구성 점수, 무대 매너/퍼포먼스 점수, ID 오름차순으로 순위를 결정한다.
+     * 동점일 경우 완성도/표현력 점수, 창의력/구성 점수, 무대매너/퍼포먼스 점수, ID 오름차순으로 순위를 결정한다.
      *
      * @return 순위가 부여된 팀 랭킹 목록
      */
@@ -38,9 +38,9 @@ public class TeamRepositoryCustomImpl implements TeamRepositoryCustom {
                 .groupBy(team.id, team.teamName)
                 .orderBy(
                         team.totalScore.desc(),
-                        judgement.expressionCommunicationScore.avg().desc(),
+                        judgement.completenessExpressionScore.avg().desc(),
                         judgement.creativityCompositionScore.avg().desc(),
-                        judgement.stagePresencePerformanceScore.avg().desc(),
+                        judgement.stagePerformanceTeamworkScore.avg().desc(),
                         team.id.asc()
                 )
                 .fetch();

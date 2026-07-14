@@ -77,7 +77,7 @@ class SaveJudgementScoreServiceTest {
                 .totalScore(0)
                 .build();
 
-        request = new SaveJudgementScoreRequest(10, 10, 10, 10, 10);
+        request = new SaveJudgementScoreRequest(10, 10, 10);
     }
 
     @Test
@@ -96,11 +96,9 @@ class SaveJudgementScoreServiceTest {
     void 심사_기록이_있으면_점수가_수정된다() {
         JudgementEntity existing = JudgementEntity.builder()
                 .id(1L)
-                .expressionCommunicationScore(5)
-                .technicalCompletenessScore(5)
+                .completenessExpressionScore(5)
                 .creativityCompositionScore(5)
-                .stagePresencePerformanceScore(5)
-                .teamworkStageHarmonyScore(5)
+                .stagePerformanceTeamworkScore(5)
                 .team(team)
                 .user(user)
                 .build();
@@ -112,11 +110,9 @@ class SaveJudgementScoreServiceTest {
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
-        assertThat(existing.getExpressionCommunicationScore()).isEqualTo(10);
-        assertThat(existing.getTechnicalCompletenessScore()).isEqualTo(10);
+        assertThat(existing.getCompletenessExpressionScore()).isEqualTo(10);
         assertThat(existing.getCreativityCompositionScore()).isEqualTo(10);
-        assertThat(existing.getStagePresencePerformanceScore()).isEqualTo(10);
-        assertThat(existing.getTeamworkStageHarmonyScore()).isEqualTo(10);
+        assertThat(existing.getStagePerformanceTeamworkScore()).isEqualTo(10);
         verify(judgementRepository, never()).save(any());
     }
 

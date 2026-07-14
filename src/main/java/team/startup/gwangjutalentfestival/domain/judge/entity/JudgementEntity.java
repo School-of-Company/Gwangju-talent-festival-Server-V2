@@ -12,7 +12,7 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
 /**
  * 심사 점수를 저장하는 엔티티.
- * 한 심사위원이 한 팀에 대해 입력한 5개 항목의 점수를 관리하며,
+ * 한 심사위원이 한 팀에 대해 입력한 3개 항목(완성도및표현력 40 / 창의력과구성 30 / 무대매너및퍼포먼스 30)의 점수를 관리하며,
  * (team_id, user_id) 조합에 유니크 제약이 적용된다.
  */
 @Entity
@@ -34,20 +34,14 @@ public class JudgementEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "expression_communication_score", nullable = false)
-    private Integer expressionCommunicationScore;
-
-    @Column(name = "technical_completeness_score", nullable = false)
-    private Integer technicalCompletenessScore;
+    @Column(name = "completeness_expression_score", nullable = false)
+    private Integer completenessExpressionScore;
 
     @Column(name = "creativity_composition_score", nullable = false)
     private Integer creativityCompositionScore;
 
-    @Column(name = "stage_presence_performance_score", nullable = false)
-    private Integer stagePresencePerformanceScore;
-
-    @Column(name = "teamwork_stage_harmony_score", nullable = false)
-    private Integer teamworkStageHarmonyScore;
+    @Column(name = "stage_performance_teamwork_score", nullable = false)
+    private Integer stagePerformanceTeamworkScore;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -62,23 +56,17 @@ public class JudgementEntity {
     /**
      * 심사 점수를 새로운 값으로 갱신한다.
      *
-     * @param expressionCommunicationScore  표현·소통 점수
-     * @param technicalCompletenessScore    기술·완성도 점수
-     * @param creativityCompositionScore    창의·구성 점수
-     * @param stagePresencePerformanceScore 무대 장악력·퍼포먼스 점수
-     * @param teamworkStageHarmonyScore     팀워크·무대 조화 점수
+     * @param completenessExpressionScore   완성도 및 표현력 점수
+     * @param creativityCompositionScore    창의력과 구성 점수
+     * @param stagePerformanceTeamworkScore 무대매너 및 퍼포먼스/팀워크·무대 조화 점수
      */
     public void updateScore(
-            Integer expressionCommunicationScore,
-            Integer technicalCompletenessScore,
+            Integer completenessExpressionScore,
             Integer creativityCompositionScore,
-            Integer stagePresencePerformanceScore,
-            Integer teamworkStageHarmonyScore
+            Integer stagePerformanceTeamworkScore
     ){
-        this.expressionCommunicationScore = expressionCommunicationScore;
-        this.technicalCompletenessScore = technicalCompletenessScore;
+        this.completenessExpressionScore = completenessExpressionScore;
         this.creativityCompositionScore = creativityCompositionScore;
-        this.stagePresencePerformanceScore = stagePresencePerformanceScore;
-        this.teamworkStageHarmonyScore = teamworkStageHarmonyScore;
+        this.stagePerformanceTeamworkScore = stagePerformanceTeamworkScore;
     }
 }

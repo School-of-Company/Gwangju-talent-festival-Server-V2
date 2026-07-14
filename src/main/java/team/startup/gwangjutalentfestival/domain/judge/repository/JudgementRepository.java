@@ -26,13 +26,13 @@ public interface JudgementRepository extends JpaRepository<JudgementEntity, Long
     Optional<JudgementEntity> findByTeamAndUser(TeamEntity team, UserEntity user);
 
     /**
-     * 특정 팀에 대한 심사위원별 총점(5개 항목 합계) 목록을 조회한다.
+     * 특정 팀에 대한 심사위원별 총점(3개 항목 합계) 목록을 조회한다.
      *
      * @param team 집계 대상 팀 엔티티
      * @return 심사위원별 총점 목록 (심사 데이터가 없으면 빈 목록)
      */
     @Query("""
-            SELECT (j.expressionCommunicationScore + j.technicalCompletenessScore + j.creativityCompositionScore + j.stagePresencePerformanceScore + j.teamworkStageHarmonyScore)
+            SELECT (j.completenessExpressionScore + j.creativityCompositionScore + j.stagePerformanceTeamworkScore)
             FROM JudgementEntity j
             WHERE j.team = :team""")
     List<Integer> findAllJudgeTotalScoresByTeam(@Param("team") TeamEntity team);
