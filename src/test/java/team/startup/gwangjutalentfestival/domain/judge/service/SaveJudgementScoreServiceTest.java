@@ -7,7 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
-import team.startup.gwangjutalentfestival.domain.judge.exception.JudgementTotalScoreExceededException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.impl.SaveJudgementScoreServiceImpl;
@@ -21,6 +20,7 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,15 +77,15 @@ class SaveJudgementScoreServiceTest {
                 .totalScore(0)
                 .build();
 
-        request = new SaveJudgementScoreRequest(10, 10, 10, 10, 10);
+        request = new SaveJudgementScoreRequest(10, 10, 10);
     }
 
     @Test
     void 심사_기록이_없으면_새로_저장된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -96,47 +96,56 @@ class SaveJudgementScoreServiceTest {
     void 심사_기록이_있으면_점수가_수정된다() {
         JudgementEntity existing = JudgementEntity.builder()
                 .id(1L)
-                .expressionCommunicationScore(5)
-                .technicalCompletenessScore(5)
+                .completenessExpressionScore(5)
                 .creativityCompositionScore(5)
-                .stagePresencePerformanceScore(5)
-                .teamworkStageHarmonyScore(5)
+                .stagePerformanceTeamworkScore(5)
                 .team(team)
                 .user(user)
                 .build();
 
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(existing));
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(50);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
-        assertThat(existing.getExpressionCommunicationScore()).isEqualTo(10);
-        assertThat(existing.getTechnicalCompletenessScore()).isEqualTo(10);
+        assertThat(existing.getCompletenessExpressionScore()).isEqualTo(10);
         assertThat(existing.getCreativityCompositionScore()).isEqualTo(10);
-        assertThat(existing.getStagePresencePerformanceScore()).isEqualTo(10);
-        assertThat(existing.getTeamworkStageHarmonyScore()).isEqualTo(10);
+        assertThat(existing.getStagePerformanceTeamworkScore()).isEqualTo(10);
         verify(judgementRepository, never()).save(any());
     }
 
     @Test
-    void 팀_총점이_100_초과하면_JudgementTotalScoreExceededException이_발생한다() {
+    void 심사위원이_3명_미만이면_단순_평균으로_계산된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(101);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(80, 70));
 
-        assertThatThrownBy(() -> saveJudgementScoreService.execute(request, TEAM_ID))
-                .isInstanceOf(JudgementTotalScoreExceededException.class);
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(75);
     }
 
     @Test
-    void sumTotalScoreByTeam이_null을_반환하면_totalScore가_0으로_설정된다() {
+    void 심사위원이_3명이면_최고점과_최저점을_제외한_평균으로_계산된다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.sumTotalScoreByTeam(team)).willReturn(null);
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(90, 60, 30));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(60);
+    }
+
+    @Test
+    void 심사_기록이_없으면_totalScore가_0으로_설정된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of());
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -144,9 +153,35 @@ class SaveJudgementScoreServiceTest {
     }
 
     @Test
+    void 심사위원이_5명이어도_최고점과_최저점을_제외한_평균으로_계산된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+                .willReturn(List.of(100, 90, 80, 70, 60));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(80);
+    }
+
+    @Test
+    void 나머지가_남으면_반올림하여_저장된다() {
+        given(userUtil.getCurrentUser()).willReturn(user);
+        given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
+        given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+                .willReturn(List.of(100, 90, 85, 70, 60));
+
+        saveJudgementScoreService.execute(request, TEAM_ID);
+
+        assertThat(team.getTotalScore()).isEqualTo(82);
+    }
+
+    @Test
     void 존재하지_않는_팀ID이면_TeamNotFoundException이_발생한다() {
         given(userUtil.getCurrentUser()).willReturn(user);
-        given(teamRepository.findById(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
+        given(teamRepository.findByIdForUpdate(NOT_FOUND_TEAM_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> saveJudgementScoreService.execute(request, NOT_FOUND_TEAM_ID))
                 .isInstanceOf(TeamNotFoundException.class);

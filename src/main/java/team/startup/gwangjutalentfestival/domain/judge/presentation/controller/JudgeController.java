@@ -11,11 +11,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEventService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
+import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
+import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
 
 import java.util.List;
@@ -34,6 +38,8 @@ public class JudgeController {
     private final GetAllJudgementService getAllJudgementService;
     private final GetJudgementService getJudgementService;
     private final ConnectSseJudgeEventService connectSseJudgeEventService;
+    private final GetJudgeCommentService getJudgeCommentService;
+    private final SaveJudgeCommentService saveJudgeCommentService;
 
     @Operation(summary = "SSE 연결", description = "심사 이벤트 수신을 위한 SSE 연결을 맺습니다.")
     @ApiResponses({
@@ -103,5 +109,45 @@ public class JudgeController {
     public ResponseEntity<GetJudgementResponse> getJudgement(
             @Parameter(description = "팀 ID", required = true) @PathVariable Long teamId) {
         return ResponseEntity.ok(getJudgementService.execute(teamId));
+    }
+
+    @Operation(summary = "필기 코멘트 조회", description = "특정 팀에 대한 현재 심사위원의 필기 코멘트를 조회합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음")
+    })
+    /**
+     * 현재 로그인한 심사위원의 특정 팀 필기 코멘트를 조회한다.
+     *
+     * @param teamId 조회할 팀 ID
+     * @return 필기 코멘트 응답
+     */
+    @SecurityRequirement(name = "Authorization")
+    @GetMapping("/{teamId}/comment")
+    public ResponseEntity<GetJudgeCommentResponse> getJudgeComment(
+            @Parameter(description = "팀 ID", required = true) @PathVariable Long teamId) {
+        return ResponseEntity.ok(getJudgeCommentService.execute(teamId));
+    }
+
+    @Operation(summary = "필기 코멘트 저장", description = "특정 팀에 대한 필기 코멘트를 저장하거나 덮어씁니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "저장 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "404", description = "팀을 찾을 수 없음")
+    })
+    /**
+     * 특정 팀에 대한 필기 코멘트를 저장하거나 덮어쓴다.
+     *
+     * @param teamId  대상 팀 ID
+     * @param request 필기 코멘트 요청 데이터
+     * @return 204 No Content
+     */
+    @SecurityRequirement(name = "Authorization")
+    @PutMapping("/{teamId}/comment")
+    public ResponseEntity<Void> saveJudgeComment(
+            @PathVariable Long teamId,
+            @RequestBody @Valid SaveJudgeCommentRequest request) {
+        saveJudgeCommentService.execute(request, teamId);
+        return ResponseEntity.noContent().build();
     }
 }

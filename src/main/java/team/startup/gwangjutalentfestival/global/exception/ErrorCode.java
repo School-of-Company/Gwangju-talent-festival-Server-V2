@@ -24,11 +24,9 @@ public enum ErrorCode {
     INVALID_PASSWORD(401, "비밀번호가 올바르지 않습니다."),
     INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
     INVALID_ACCESS_TOKEN(401, "유효하지 않은 Access Token입니다."),
-    EXPIRED_TOKEN(401, "만료된 토큰입니다."),
     UNAUTHORIZED(401, "인증이 필요합니다."),
     REFRESH_TOKEN_NOT_FOUND(404, "Refresh Token을 찾을 수 없습니다."),
     INVALID_REFRESH_TOKEN(401, "유효하지 않은 Refresh Token입니다."),
-    TOKEN_MISMATCH(401, "저장된 토큰과 일치하지 않습니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
 
     // Verify
@@ -55,8 +53,7 @@ public enum ErrorCode {
     SEAT_BAN_NOT_FOUND(404, "금지되지 않은 상태의 자리입니다."),
 
     // Judge
-    INVALID_JUDGEMENT_SCORE(400, "입력한 점수가 유효한 범위를 벗어났습니다."),
-    JUDGEMENT_TOTAL_SCORE_EXCEEDED(400, "총점은 100점을 초과할 수 없습니다."),
+    JUDGE_COMMENT_TOO_LARGE(400, "필기 데이터가 너무 큽니다."),
 
     // Monitoring
     ANOMALY_EVENT_NOT_FOUND(404, "이상 탐지 이벤트를 찾을 수 없습니다."),
@@ -69,6 +66,7 @@ public enum ErrorCode {
 
     // S3
     INVALID_VIDEO_FILE(400, "유효하지 않은 영상 파일입니다."),
+    MULTIPART_UPLOAD_FAILED(500, "영상 업로드 처리에 실패했습니다."),
 
     // Apply
     APPLY_NOT_FOUND(404, "신청 내역을 찾을 수 없습니다."),

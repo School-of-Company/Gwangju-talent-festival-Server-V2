@@ -15,9 +15,11 @@ import java.util.stream.IntStream;
  */
 @Component
 public class SeatUtil {
+    public static final int MAX_SEAT_NUMBER = 132;
+
     private static final Map<String, Integer> SEAT_MAP = Map.of(
-            "A", 77, "B", 130, "C", 154, "D", 130, "E", 77,
-            "F", 54, "G", 100, "H", 119, "I", 100, "J", 54
+            "A", 101, "B", 132, "C", 101, "D", 89, "E", 96,
+            "F", 89, "W", 6
     );
 
     /**
