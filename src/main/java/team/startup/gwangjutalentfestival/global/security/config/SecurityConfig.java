@@ -65,7 +65,7 @@ public class SecurityConfig {
                         .requestMatchers(PublicEndpointMatcher.matchers()).permitAll()
 
                         // team
-                        .requestMatchers("/team/**").hasRole("ADMIN")
+                        .requestMatchers("/team/**").hasAnyAuthority(Role.ADMIN.name())
 
                         // seat
                         .requestMatchers(HttpMethod.POST, "/seat").authenticated()
