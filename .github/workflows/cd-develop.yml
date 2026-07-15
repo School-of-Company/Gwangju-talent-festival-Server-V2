@@ -50,7 +50,7 @@ jobs:
             --network gwangju-talent-festival-server-v2_default \
             --env-file .env \
             -e SPRING_DOCKER_COMPOSE_ENABLED=false \
-            -p 8080:8080 \
+            -p 8081:8080 \
             gwangju-festival:dev
 
       - name: Notify Discord on success
