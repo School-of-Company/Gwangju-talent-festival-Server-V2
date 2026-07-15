@@ -44,7 +44,7 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
 
         Map<Long, Map<Long, Integer>> scoreMap = buildScoreMap(judgements);
         Map<Long, Integer> teamTotalMap = teams.stream()
-                .collect(Collectors.toMap(TeamEntity::getId, TeamEntity::getTotalScore));
+                .collect(Collectors.toMap(TeamEntity::getId, t -> nz(t.getTotalScore())));
         Map<Long, Integer> rankMap = denseRank(teamTotalMap);
 
         List<List<Object>> rows = new ArrayList<>();
@@ -84,11 +84,11 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
             Map<Long, Integer> teamTotalMap,
             Map<Long, Integer> rankMap) {
         List<Object> row = new ArrayList<>();
-        row.add(team.getPerformOrder());
+        row.add(nz(team.getPerformOrder()));
         judgeIds.forEach(judgeId ->
-                row.add(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).get(judgeId)));
-        row.add(teamTotalMap.get(team.getId()));
-        row.add(rankMap.get(team.getId()));
+                row.add(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).getOrDefault(judgeId, 0)));
+        row.add(nz(teamTotalMap.get(team.getId())));
+        row.add(nz(rankMap.get(team.getId())));
         return row;
     }
 
