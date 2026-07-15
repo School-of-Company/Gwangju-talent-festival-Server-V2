@@ -85,8 +85,8 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
             Map<Long, Integer> rankMap) {
         List<Object> row = new ArrayList<>();
         row.add(nz(team.getPerformOrder()));
-        judgeIds.forEach(judgeId ->
-                row.add(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).getOrDefault(judgeId, 0)));
+        Map<Long, Integer> teamScores = scoreMap.getOrDefault(team.getId(), Collections.emptyMap());
+        judgeIds.forEach(judgeId -> row.add(teamScores.getOrDefault(judgeId, 0)));
         row.add(nz(teamTotalMap.get(team.getId())));
         row.add(nz(rankMap.get(team.getId())));
         return row;
