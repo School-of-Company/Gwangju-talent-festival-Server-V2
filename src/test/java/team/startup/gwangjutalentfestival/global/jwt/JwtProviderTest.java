@@ -40,9 +40,6 @@ class JwtProviderTest {
 
     private String tamperSignature(String token) {
         String[] parts = token.split("\\.");
-        char lastChar = parts[2].charAt(parts[2].length() - 1);
-        char replacement = lastChar == 'A' ? 'B' : 'A';
-        String tamperedSignature = parts[2].substring(0, parts[2].length() - 1) + replacement;
-        return parts[0] + "." + parts[1] + "." + tamperedSignature;
+        return parts[0] + "." + parts[1] + "." + "invalidSignature";
     }
 }
