@@ -1,5 +1,7 @@
 package team.startup.gwangjutalentfestival.domain.team.presentation.data.request;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import team.startup.gwangjutalentfestival.domain.team.presentation.data.TeamOrderItem;
 
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
  * @param orderItems 변경할 팀 순서 항목 목록
  */
 public record UpdateTeamOrderRequest(
+    @NotEmpty(message = "변경할 팀 순서 목록을 입력해주세요.")
+    @Valid
     List<TeamOrderItem> orderItems
 ) {
 }

@@ -39,7 +39,7 @@ spring:
       file: docker-compose.dev.yml
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:4c5c48f97318aa1f2b44414c5782e85bda64d7cdd3a906138e7370af188e3360}
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:180000000}
   refresh-token-expiration: ${JWT_REFRESH_TOKEN_EXPIRATION:1209600}
 
@@ -113,6 +113,7 @@ aws:
     secret-key: ${AWS_SECRET_KEY}
     region: ${AWS_REGION:ap-northeast-2}
     bucket: ${AWS_S3_BUCKET}
+    endpoint: ${AWS_S3_ENDPOINT:}
 
 monitoring:
   anomaly:

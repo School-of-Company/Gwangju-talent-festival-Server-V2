@@ -1,0 +1,68 @@
+name: CD (develop)
+
+on:
+  push:
+    branches: ["develop"]
+
+jobs:
+  build:
+    runs-on: [self-hosted, dev]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Create application.yaml
+        env:
+          APPLICATION_YML: ${{ secrets.APPLICATION_YML_DEV }}
+        run: |
+          mkdir -p src/main/resources
+          printf '%s' "$APPLICATION_YML" > src/main/resources/application.yaml
+
+      - name: Build with Gradle
+        run: ./gradlew clean build -x test --no-daemon
+
+      - name: Build Docker image
+        run: docker build -t gwangju-festival:dev .
+
+      - name: Create .env file
+        env:
+          ENV_FILE: ${{ secrets.ENV_FILE_DEV }}
+        run: printf '%s\n' "$ENV_FILE" > .env
+
+      - name: Deploy with Docker Compose
+        run: |
+          docker rm -f spring-app-dev || true
+          docker compose -f docker-compose.dev.yml --env-file .env up -d
+          docker run -d \
+            --name spring-app-dev \
+            --restart always \
+            --network gwangju-talent-festival-server-v2_default \
+            --env-file .env \
+            -e SPRING_DOCKER_COMPOSE_ENABLED=false \
+            -p 8080:8080 \
+            gwangju-festival:dev
+
+      - name: Notify Discord on success
+        if: success()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"✅ [DEV] 배포 성공\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+      - name: Notify Discord on failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"❌ [DEV] 배포 실패\\n브랜치: ${{ github.ref_name }}\\n커밋: ${{ github.sha }}\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
