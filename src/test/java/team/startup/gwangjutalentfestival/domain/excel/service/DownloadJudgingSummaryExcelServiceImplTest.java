@@ -181,4 +181,53 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         // 헤더: 심사번호 + 심사위원 20명 + 산출점수 + 순위 = 23컬럼
         assertThat(rows.get(0)).hasSize(23);
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 팀을_채점하지_않은_심사위원의_점수는_0으로_채워지고_뒤_컬럼이_밀리지_않는다() {
+        TeamEntity teamA = team(1L, 1, "팀A", 99);
+        TeamEntity teamB = team(2L, 2, "팀B", 10);
+        UserEntity judge1 = user(1L);
+        UserEntity judge2 = user(2L);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB));
+        // judge2는 teamB만 채점하고 teamA는 채점하지 않음
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                judgement(teamA, judge1, 10, 5, 5),
+                judgement(teamB, judge1, 5, 5, 0),
+                judgement(teamB, judge2, 5, 5, 0)
+        ));
+
+        service.execute();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(googleExcelAdapter).exportSummary(captor.capture());
+        List<Object> teamARow = ((List<List<Object>>) captor.getValue()).get(1);
+
+        // 심사번호, 심사위원(A)=20, 심사위원(B)=0(null 아님, 밀리지 않음), 산출점수=99, 순위=1
+        assertThat(teamARow).containsExactly(1, 20, 0, 99, 1);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void performOrder가_null인_팀은_심사번호가_0으로_채워지고_뒤_컬럼이_밀리지_않는다() {
+        TeamEntity teamA = TeamEntity.builder()
+                .id(1L)
+                .teamName("팀A")
+                .school("광주고")
+                .teamStatus(TeamStatus.PENDING)
+                .teamGenre(TeamGenre.SING)
+                .performOrder(null)
+                .totalScore(50)
+                .build();
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA));
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of());
+
+        service.execute();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(googleExcelAdapter).exportSummary(captor.capture());
+        List<Object> dataRow = ((List<List<Object>>) captor.getValue()).get(1);
+
+        assertThat(dataRow).containsExactly(0, 50, 1);
+    }
 }
