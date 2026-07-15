@@ -230,4 +230,37 @@ class DownloadJudgingSummaryExcelServiceImplTest {
 
         assertThat(dataRow).containsExactly(0, 50, 1);
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 심사위원이_전체_팀_중_한_팀만_평가해도_나머지_팀은_0으로_채워지고_밀리지_않는다() {
+        TeamEntity teamA = team(1L, 1, "팀A", 0);
+        TeamEntity teamB = team(2L, 2, "팀B", 0);
+        TeamEntity teamC = team(3L, 3, "팀C", 0);
+        TeamEntity teamD = team(4L, 4, "팀D", 0);
+        UserEntity judge1 = user(1L);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB, teamC, teamD));
+        // judge1이 teamB 한 팀만 평가하고 나머지는 아무 동작도 하지 않음(저장 자체가 없음)
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                judgement(teamB, judge1, 10, 10, 10)
+        ));
+
+        service.execute();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(googleExcelAdapter).exportSummary(captor.capture());
+        List<List<Object>> rows = (List<List<Object>>) captor.getValue();
+
+        assertThat(rows.get(0)).containsExactly("심사번호", "심사위원 (A)", "산출점수", "순위");
+        int expectedColumnCount = rows.get(0).size();
+        rows.forEach(row -> {
+            assertThat(row).hasSize(expectedColumnCount);
+            assertThat(row).doesNotContainNull();
+        });
+
+        assertThat(rows.get(1)).containsExactly(1, 0, 0, 1); // teamA: 평가 안 받음 → 0
+        assertThat(rows.get(2)).containsExactly(2, 30, 0, 1); // teamB: judge1이 평가한 팀 → 실제 점수
+        assertThat(rows.get(3)).containsExactly(3, 0, 0, 1); // teamC: 평가 안 받음 → 0
+        assertThat(rows.get(4)).containsExactly(4, 0, 0, 1); // teamD: 평가 안 받음 → 0
+    }
 }

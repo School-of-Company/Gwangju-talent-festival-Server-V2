@@ -1,11 +1,13 @@
 package team.startup.gwangjutalentfestival.global.thirdparty.google.adapter;
 
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchUpdateSpreadsheetRequest;
 import com.google.api.services.sheets.v4.model.Sheet;
 import com.google.api.services.sheets.v4.model.SheetProperties;
 import com.google.api.services.sheets.v4.model.Spreadsheet;
+import com.google.api.services.sheets.v4.model.ValueRange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsException;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleExcelProperties;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -98,6 +101,18 @@ class GoogleExcelAdapterTest {
 
         assertThatThrownBy(() -> adapter.exportSummary(rows))
                 .isInstanceOf(GoogleSheetsException.class);
+    }
+
+    @Test
+    void row에_null이_있으면_GsonFactory_직렬화_시_해당_칸이_통째로_사라진다() throws Exception {
+        // exportSummary 호출자가 row에 절대 null을 넣으면 안 되는 이유를 실제 직렬화 결과로 증명한다.
+        // null은 "빈 문자열"처럼 그 칸만 비는 게 아니라, 배열 자체에서 빠져 뒤 값들이 앞으로 당겨진다.
+        List<List<Object>> rows = List.of(List.of(1, 2, 3), Arrays.asList(1, null, 3, null, 5));
+        ValueRange valueRange = new ValueRange().setValues(rows);
+
+        String json = GsonFactory.getDefaultInstance().toString(valueRange);
+
+        assertThat(json).isEqualTo("{\"values\":[[1,2,3],[1,3,5]]}");
     }
 
     @Test
