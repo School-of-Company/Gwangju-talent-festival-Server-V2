@@ -2,12 +2,11 @@ name: CD
 
 on:
   push:
-    branches: [ "main"]
-
+    branches: ["main"]
 
 jobs:
   build:
-    runs-on: [self-hosted, prod]
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -33,18 +32,28 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build -x test --no-daemon
 
-      - name: Build Docker image
-        run: docker build -t gwangju-festival:latest .
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
 
-      - name: Create .env file
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
-        run: printf '%s\n' "$ENV_FILE" > .env
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Deploy with Docker Compose
+      - name: Build and push Docker image to ECR
         run: |
-          docker compose --env-file .env down --remove-orphans
-          docker compose --env-file .env up -d
+          docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest .
+          docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster gwangtalpae-prod-cluster \
+            --service gwangtalpae-prod-service \
+            --force-new-deployment \
+            --region ap-northeast-2
 
       - name: Notify Discord on success
         if: success()
