@@ -47,7 +47,7 @@ jobs:
           docker run -d \
             --name spring-app-dev \
             --restart always \
-            --network gwangju-talent-festival-server-v2_default \
+            --network gwangjutalentfestival_default \
             --env-file .env \
             -e SPRING_DOCKER_COMPOSE_ENABLED=false \
             -p 8081:8080 \
