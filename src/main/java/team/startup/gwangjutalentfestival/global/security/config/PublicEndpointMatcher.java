@@ -11,9 +11,8 @@ public final class PublicEndpointMatcher {
 
     private static final List<RequestMatcher> PUBLIC_ENDPOINTS = List.of(
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/auth(?:/.*)?")),
-            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/health(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/excel(?:/.*)?")),
-            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/prometheus(?:/.*)?")),
+            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/actuator/health(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/actuator/prometheus(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/vote/[^/]+")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/error")),
