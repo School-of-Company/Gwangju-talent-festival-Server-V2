@@ -120,6 +120,9 @@ monitoring:
     enabled: ${ANOMALY_DETECTOR_ENABLED:false}
     prometheus-base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
     discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+  request-alert:
+    enabled: ${REQUEST_ALERT_ENABLED:false}
+    slow-threshold-millis: ${REQUEST_ALERT_SLOW_THRESHOLD_MILLIS:3000}
   ml:
     enabled: ${ML_ANOMALY_SCORE_ENABLED:false}
     base-url: ${ML_SERVER_BASE_URL:}
