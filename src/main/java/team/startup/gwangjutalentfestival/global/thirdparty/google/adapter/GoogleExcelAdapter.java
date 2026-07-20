@@ -103,6 +103,23 @@ public class GoogleExcelAdapter {
         }
     }
 
+    public byte[] exportJudgeTemplate() {
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            drive.files().export(properties.judgeTemplateSheetId(), XLSX_MIME_TYPE)
+                    .executeMediaAndDownloadTo(outputStream);
+            return outputStream.toByteArray();
+        } catch (GoogleJsonResponseException e) {
+            log.error("개별 심사표 템플릿 export API 오류 - statusCode: {}, message: {}", e.getStatusCode(), e.getMessage());
+            throw new GoogleSheetsApiException();
+        } catch (IOException e) {
+            log.error("개별 심사표 템플릿 export IO 오류 - message: {}", e.getMessage());
+            throw new GoogleSheetsIoException();
+        } catch (Exception e) {
+            log.error("개별 심사표 템플릿 export 예기치 못한 오류 - message: {}", e.getMessage());
+            throw new GoogleSheetsException();
+        }
+    }
+
     private void formatTable(String spreadsheetId, String page, int columnCount, int lastDataRow) throws IOException {
         if (columnCount == 0) {
             return;

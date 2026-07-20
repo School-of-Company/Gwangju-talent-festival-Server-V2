@@ -77,8 +77,11 @@ dependencies {
     implementation 'com.google.api-client:google-api-client:2.5.0'
     implementation 'com.google.auth:google-auth-library-oauth2-http:1.24.0'
 
+    // Excel
+    implementation 'org.apache.poi:poi-ooxml:5.3.0'
+
     // Database
-    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 
     // QueryDSL
     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
