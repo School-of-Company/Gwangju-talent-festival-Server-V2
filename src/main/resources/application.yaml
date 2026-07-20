@@ -12,10 +12,9 @@ spring:
       max-request-size: ${MAX_REQUEST_SIZE:500MB}
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    url: ${DB_URL:jdbc:mariadb://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -75,6 +74,8 @@ google:
   excel:
     template-sheet-id: ${GOOGLE_EXCEL_TEMPLATE_SHEET_ID}
     summary-page: ${GOOGLE_EXCEL_SUMMARY_PAGE}
+    judge-template-sheet-id: ${GOOGLE_EXCEL_JUDGE_TEMPLATE_SHEET_ID}
+    judge-template-page: ${GOOGLE_EXCEL_JUDGE_TEMPLATE_PAGE}
 
 slogan:
   submission:

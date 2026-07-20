@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgingSummaryExcelService;
+import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgeSheetsService;
 
 import java.nio.charset.StandardCharsets;
 
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 public class ExcelController {
 
     private final DownloadJudgingSummaryExcelService downloadJudgingSummaryExcelService;
+    private final DownloadJudgeSheetsService downloadJudgeSheetsService;
 
     @Operation(summary = "심사 집계표 다운로드", description = "전체 팀의 심사 집계 결과를 xlsx 파일로 다운로드합니다.")
     @ApiResponses({
@@ -37,6 +39,27 @@ public class ExcelController {
         headers.setContentDisposition(
                 ContentDisposition.attachment()
                         .filename("심사집계표.xlsx", StandardCharsets.UTF_8)
+                        .build()
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(file);
+    }
+
+    @Operation(summary = "심사위원별 심사표 다운로드", description = "집계표와 심사위원별 개별 심사표가 담긴 ZIP 파일을 다운로드합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "다운로드 성공")
+    })
+    @GetMapping("/judge-sheets")
+    public ResponseEntity<byte[]> downloadJudgeSheets() {
+        byte[] file = downloadJudgeSheetsService.execute();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/zip"));
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename("심사결과.zip", StandardCharsets.UTF_8)
                         .build()
         );
 

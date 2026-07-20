@@ -3,10 +3,9 @@ spring:
     name: gwangjutalentfestival
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${SPRING_DATASOURCE_USERNAME:root}
     password: ${SPRING_DATASOURCE_PASSWORD:1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
@@ -58,6 +57,8 @@ google:
   excel:
     template-sheet-id: test
     summary-page: test
+    judge-template-sheet-id: test
+    judge-template-page: test
 
 slogan:
   submission:

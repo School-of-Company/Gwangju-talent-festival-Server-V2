@@ -9,6 +9,7 @@ import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface JudgeCommentRepository extends JpaRepository<JudgeCommentEntity, Long> {
     Optional<JudgeCommentEntity> findByTeamAndUser(TeamEntity team, UserEntity user);
@@ -24,4 +25,7 @@ public interface JudgeCommentRepository extends JpaRepository<JudgeCommentEntity
             ON DUPLICATE KEY UPDATE strokes = :strokes
             """, nativeQuery = true)
     void upsert(@Param("teamId") Long teamId, @Param("userId") Long userId, @Param("strokes") String strokes);
+
+    @Query("SELECT c FROM JudgeCommentEntity c JOIN FETCH c.user JOIN FETCH c.team")
+    List<JudgeCommentEntity> findAllWithUserAndTeam();
 }
