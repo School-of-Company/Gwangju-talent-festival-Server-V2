@@ -61,7 +61,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         Map<JudgeTeamKey, JudgeCommentEntity> comments = commentMap(judgeCommentRepository.findAllWithUserAndTeam());
         byte[] judgeTemplate = googleExcelAdapter.exportJudgeTemplate();
 
-        try (ByteArrayOutputStream output = new ByteArrayOutputStream(); ZipOutputStream zip = new ZipOutputStream(output)) {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        try (ZipOutputStream zip = new ZipOutputStream(output)) {
             writeZipEntry(zip, "심사집계표.xlsx", downloadJudgingSummaryExcelService.execute());
 
             List<Long> judgeIds = judgements.stream()
@@ -74,11 +75,10 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 writeZipEntry(zip, "심사위원_" + judgeLabel(index) + "_개별심사표.xlsx",
                         createJudgeSheet(judgeTemplate, teams, judgements, comments, judgeId, judgeLabel(index)));
             }
-            zip.finish();
-            return output.toByteArray();
         } catch (IOException e) {
             throw new IllegalStateException("심사표 ZIP을 생성할 수 없습니다.", e);
         }
+        return output.toByteArray();
     }
 
     private byte[] createJudgeSheet(
@@ -103,7 +103,10 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             cell(headerRow, 1).setCellValue("심사위원 " + judgeLabel);
             cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트");
 
-            Drawing<?> drawing = sheet.createDrawingPatriarch();
+            Drawing<?> drawing = sheet.getDrawingPatriarch();
+            if (drawing == null) {
+                drawing = sheet.createDrawingPatriarch();
+            }
             for (int index = 0; index < teams.size(); index++) {
                 TeamEntity team = teams.get(index);
                 JudgementEntity judgement = scoreMap.get(team.getId());
@@ -116,7 +119,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 cell(row, 1).setCellValue(completeness + creativity + stage);
 
                 JudgeCommentEntity comment = comments.get(new JudgeTeamKey(judgeId, team.getId()));
-                if (comment != null && comment.getStrokes().isArray() && !comment.getStrokes().isEmpty()) {
+                if (comment != null && comment.getStrokes() != null && comment.getStrokes().isArray() && !comment.getStrokes().isEmpty()) {
                     addCommentImage(workbook, drawing, rowIndex, renderComment(comment.getStrokes()));
                 }
             }
