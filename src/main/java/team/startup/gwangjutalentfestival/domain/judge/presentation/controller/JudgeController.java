@@ -58,6 +58,11 @@ public class JudgeController {
         return connectSseJudgeEventService.execute();
     }
 
+    @Operation(summary = "심사 모니터링 SSE 연결", description = "관리자가 팀별 심사 점수, 산출점수, 순위, 필기 코멘트의 전체 스냅샷을 실시간으로 수신합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SSE 연결 성공"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 필요")
+    })
     @SecurityRequirement(name = "Authorization")
     @GetMapping(value = "/monitor/changes", produces = "text/event-stream")
     public SseEmitter connectMonitoring() {
