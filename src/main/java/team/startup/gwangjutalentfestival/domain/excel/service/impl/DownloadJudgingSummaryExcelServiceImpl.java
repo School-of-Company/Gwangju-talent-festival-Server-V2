@@ -77,7 +77,7 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
 
     private List<Object> buildHeaderRow(int judgeCount) {
         List<Object> header = new ArrayList<>();
-        header.add("심사번호");
+        header.add("심사순서");
         header.add("팀명");
         for (int i = 0; i < judgeCount; i++) {
             header.add("심사위원 (" + (char) ('A' + i) + ")");

@@ -56,7 +56,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = captor.getValue();
-        assertThat(rows.get(0)).containsExactly("심사번호", "팀명", "심사위원 (A)", "심사위원 (B)", "산출점수", "순위");
+        assertThat(rows.get(0)).containsExactly("심사순서", "팀명", "심사위원 (A)", "심사위원 (B)", "산출점수", "순위");
         assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 0, 60, 1);
     }
 

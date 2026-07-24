@@ -48,7 +48,9 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private static final int HEADER_ROW = 2;
     private static final int FIRST_DATA_ROW = 3;
     private static final int PRESERVED_ROW = 11;
-    private static final int COMMENT_COLUMN = 2;
+    private static final int TEAM_NAME_COLUMN = 1;
+    private static final int SCORE_COLUMN = 2;
+    private static final int COMMENT_COLUMN = 3;
 
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
@@ -102,7 +104,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             }
             Row headerRow = row(sheet, HEADER_ROW);
             cell(headerRow, 0).setCellValue("심사순서");
-            cell(headerRow, 1).setCellValue("심사위원 " + judgeLabel);
+            cell(headerRow, TEAM_NAME_COLUMN).setCellValue("팀명");
+            cell(headerRow, SCORE_COLUMN).setCellValue("심사위원 " + judgeLabel);
             cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트");
 
             Drawing<?> drawing = sheet.getDrawingPatriarch();
@@ -115,10 +118,11 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 int rowIndex = dataRow(index);
                 Row row = row(sheet, rowIndex);
                 cell(row, 0).setCellValue(orZero(team.getPerformOrder()));
+                cell(row, TEAM_NAME_COLUMN).setCellValue(team.getTeamName());
                 int completeness = judgement == null ? 0 : orZero(judgement.getCompletenessExpressionScore());
                 int creativity = judgement == null ? 0 : orZero(judgement.getCreativityCompositionScore());
                 int stage = judgement == null ? 0 : orZero(judgement.getStagePerformanceTeamworkScore());
-                cell(row, 1).setCellValue(completeness + creativity + stage);
+                cell(row, SCORE_COLUMN).setCellValue(completeness + creativity + stage);
 
                 JudgeCommentEntity comment = comments.get(new JudgeTeamKey(judgeId, team.getId()));
                 if (comment != null && comment.getStrokes() != null && comment.getStrokes().isArray() && !comment.getStrokes().isEmpty()) {
