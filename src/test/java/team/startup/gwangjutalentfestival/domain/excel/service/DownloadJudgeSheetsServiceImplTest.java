@@ -20,6 +20,7 @@ import team.startup.gwangjutalentfestival.domain.team.enums.TeamStatus;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleExcelProperties;
 
@@ -43,6 +44,7 @@ class DownloadJudgeSheetsServiceImplTest {
     @Mock private TeamRepository teamRepository;
     @Mock private JudgementRepository judgementRepository;
     @Mock private JudgeCommentRepository judgeCommentRepository;
+    @Mock private UserRepository userRepository;
     @Mock private DownloadJudgingSummaryExcelService summaryExcelService;
     @Mock private GoogleExcelAdapter googleExcelAdapter;
     @Mock private GoogleExcelProperties googleExcelProperties;
@@ -53,7 +55,7 @@ class DownloadJudgeSheetsServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new DownloadJudgeSheetsServiceImpl(
-                teamRepository, judgementRepository, judgeCommentRepository, summaryExcelService,
+                teamRepository, judgementRepository, judgeCommentRepository, userRepository, summaryExcelService,
                 googleExcelAdapter, googleExcelProperties);
         given(summaryExcelService.execute()).willReturn(new byte[]{1, 2, 3});
         given(googleExcelAdapter.exportJudgeTemplate()).willReturn(template());
@@ -75,6 +77,7 @@ class DownloadJudgeSheetsServiceImplTest {
                 comment(teamA, judgeA, strokes()),
                 comment(teamB, judgeA, objectMapper.createArrayNode())
         ));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judgeA, judgeB));
         Map<String, byte[]> files = zipEntries(service.execute());
 
         assertThat(files).containsOnlyKeys("심사집계표.xlsx", "심사위원_A_개별심사표.xlsx", "심사위원_B_개별심사표.xlsx");
@@ -104,6 +107,7 @@ class DownloadJudgeSheetsServiceImplTest {
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(teams);
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(judgement(teams.getFirst(), judge, 20, 15, 25)));
         given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of());
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judge));
 
         Map<String, byte[]> files = zipEntries(service.execute());
 
@@ -171,7 +175,7 @@ class DownloadJudgeSheetsServiceImplTest {
     }
 
     private UserEntity user(long id) {
-        return UserEntity.builder().id(id).role(Role.ADMIN).build();
+        return UserEntity.builder().id(id).role(Role.JUDGE).build();
     }
 
     private JudgementEntity judgement(TeamEntity team, UserEntity user, int first, int second, int third) {

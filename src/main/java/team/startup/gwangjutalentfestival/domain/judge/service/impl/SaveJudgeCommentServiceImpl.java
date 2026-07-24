@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import team.startup.gwangjutalentfestival.domain.judge.event.JudgeMonitoringChangedEvent;
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
@@ -33,6 +35,7 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
     private final TeamRepository teamRepository;
     private final JudgeCommentRepository judgeCommentRepository;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Transactional
@@ -45,6 +48,7 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
         validateSize(strokes);
 
         judgeCommentRepository.upsert(team.getId(), user.getId(), strokes);
+        applicationEventPublisher.publishEvent(new JudgeMonitoringChangedEvent());
     }
 
     private String writeValueAsString(Object strokes) {

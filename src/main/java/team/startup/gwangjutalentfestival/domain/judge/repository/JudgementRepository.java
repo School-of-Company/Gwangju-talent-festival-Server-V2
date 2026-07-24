@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,8 +35,8 @@ public interface JudgementRepository extends JpaRepository<JudgementEntity, Long
     @Query("""
             SELECT (j.completenessExpressionScore + j.creativityCompositionScore + j.stagePerformanceTeamworkScore)
             FROM JudgementEntity j
-            WHERE j.team = :team""")
-    List<Integer> findAllJudgeTotalScoresByTeam(@Param("team") TeamEntity team);
+            WHERE j.team = :team AND j.user.role = :role""")
+    List<Integer> findAllJudgeTotalScoresByTeam(@Param("team") TeamEntity team, @Param("role") Role role);
 
     /**
      * 특정 심사위원이 입력한 모든 심사 목록을 조회한다.
