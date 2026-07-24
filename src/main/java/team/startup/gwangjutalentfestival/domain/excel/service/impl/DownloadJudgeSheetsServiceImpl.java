@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgeSheetsService;
@@ -43,8 +44,11 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsService {
 
-    private static final int COMMENT_WIDTH = 360;
-    private static final int COMMENT_HEIGHT = 160;
+    private static final int COMMENT_WIDTH = 1000;
+    private static final int COMMENT_HEIGHT = 500;
+    private static final int COMMENT_PADDING = 10;
+    private static final int COMMENT_CELL_WIDTH = 100;
+    private static final int COMMENT_CELL_HEIGHT = 50;
     private static final int HEADER_ROW = 2;
     private static final int FIRST_DATA_ROW = 3;
     private static final int PRESERVED_ROW = 11;
@@ -107,6 +111,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             cell(headerRow, TEAM_NAME_COLUMN).setCellValue("팀명");
             cell(headerRow, SCORE_COLUMN).setCellValue("심사위원 " + judgeLabel);
             cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트");
+            sheet.setColumnWidth(COMMENT_COLUMN,
+                    Math.round(COMMENT_CELL_WIDTH / Units.DEFAULT_CHARACTER_WIDTH * 256));
 
             Drawing<?> drawing = sheet.getDrawingPatriarch();
             if (drawing == null) {
@@ -117,6 +123,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 JudgementEntity judgement = scoreMap.get(team.getId());
                 int rowIndex = dataRow(index);
                 Row row = row(sheet, rowIndex);
+                row.setHeightInPoints((float) Units.pixelToPoints(COMMENT_CELL_HEIGHT));
                 cell(row, 0).setCellValue(orZero(team.getPerformOrder()));
                 cell(row, TEAM_NAME_COLUMN).setCellValue(team.getTeamName());
                 int completeness = judgement == null ? 0 : orZero(judgement.getCompletenessExpressionScore());
@@ -125,8 +132,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 cell(row, SCORE_COLUMN).setCellValue(completeness + creativity + stage);
 
                 JudgeCommentEntity comment = comments.get(new JudgeTeamKey(judgeId, team.getId()));
-                if (comment != null && comment.getStrokes() != null && comment.getStrokes().isArray() && !comment.getStrokes().isEmpty()) {
-                    addCommentImage(workbook, drawing, rowIndex, renderComment(comment.getStrokes()));
+                if (comment != null && hasPoints(comment.getStrokes())) {
+                    addCommentImage(workbook, drawing, sheet, rowIndex, renderComment(comment.getStrokes()));
                 }
             }
             workbook.write(output);
@@ -134,17 +141,25 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         }
     }
 
-    private void addCommentImage(Workbook workbook, Drawing<?> drawing, int rowIndex, byte[] image) {
+    private void addCommentImage(Workbook workbook, Drawing<?> drawing, Sheet sheet, int rowIndex, byte[] image) {
         int pictureIndex = workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
         ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
         anchor.setCol1(COMMENT_COLUMN);
-        anchor.setCol2(COMMENT_COLUMN + 2);
+        anchor.setCol2(COMMENT_COLUMN);
         anchor.setRow1(rowIndex);
-        anchor.setRow2(rowIndex + 1);
+        anchor.setRow2(rowIndex);
+        anchor.setDx2(Units.pixelToEMU(Math.round(sheet.getColumnWidthInPixels(COMMENT_COLUMN))));
+        anchor.setDy2(Units.pixelToEMU(Units.pointsToPixel(sheet.getRow(rowIndex).getHeightInPoints())));
+        anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
         drawing.createPicture(anchor, pictureIndex);
     }
 
     private byte[] renderComment(JsonNode strokes) throws IOException {
+        double scale = Math.min(
+                (COMMENT_WIDTH - COMMENT_PADDING * 2d) / COMMENT_WIDTH,
+                (COMMENT_HEIGHT - COMMENT_PADDING * 2d) / COMMENT_HEIGHT);
+        double offsetX = (COMMENT_WIDTH - COMMENT_WIDTH * scale) / 2;
+        double offsetY = (COMMENT_HEIGHT - COMMENT_HEIGHT * scale) / 2;
         BufferedImage image = new BufferedImage(COMMENT_WIDTH, COMMENT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         try {
@@ -161,15 +176,16 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 Path2D path = new Path2D.Double();
                 boolean started = false;
                 for (JsonNode point : points) {
-                    if (!point.has("x") || !point.has("y")) {
+                    if (!isPoint(point)) {
                         continue;
                     }
-                    double x = Math.clamp(point.path("x").asDouble(), 0, 1) * (COMMENT_WIDTH - 1);
-                    double y = Math.clamp(point.path("y").asDouble(), 0, 1) * (COMMENT_HEIGHT - 1);
+                    double x = offsetX + Math.clamp(point.path("x").asDouble(), 0, 1) * COMMENT_WIDTH * scale;
+                    double y = offsetY + Math.clamp(point.path("y").asDouble(), 0, 1) * COMMENT_HEIGHT * scale;
                     if (started) {
                         path.lineTo(x, y);
                     } else {
                         path.moveTo(x, y);
+                        path.lineTo(x, y);
                         started = true;
                     }
                 }
@@ -184,6 +200,27 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         ImageIO.write(image, "png", output);
         return output.toByteArray();
+    }
+
+    private boolean hasPoints(JsonNode strokes) {
+        if (strokes == null || !strokes.isArray()) {
+            return false;
+        }
+        for (JsonNode stroke : strokes) {
+            for (JsonNode point : stroke.path("points")) {
+                if (isPoint(point)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isPoint(JsonNode point) {
+        return point.path("x").isNumber()
+                && point.path("y").isNumber()
+                && Double.isFinite(point.path("x").asDouble())
+                && Double.isFinite(point.path("y").asDouble());
     }
 
     private Map<JudgeTeamKey, JudgeCommentEntity> commentMap(List<JudgeCommentEntity> comments) {
