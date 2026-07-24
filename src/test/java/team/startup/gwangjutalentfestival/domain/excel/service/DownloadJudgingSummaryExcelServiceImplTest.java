@@ -80,6 +80,50 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         assertThat(((List<List<Object>>) captor.getValue()).get(1)).containsExactly(1, "팀A", 60, 60, 1);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void 산출점수가_같으면_완성도_평균이_높은_팀을_먼저_순위로_매긴다() {
+        TeamEntity teamA = team(2L, 1, "팀A");
+        TeamEntity teamB = team(1L, 2, "팀B");
+        UserEntity judge = user(1L, Role.JUDGE);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judge));
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                judgement(teamA, judge, 30, 20, 20),
+                judgement(teamB, judge, 25, 25, 20)
+        ));
+
+        service.execute();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(googleExcelAdapter).exportSummary(captor.capture());
+        List<List<Object>> rows = captor.getValue();
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 70, 70, 1);
+        assertThat(rows.get(2)).containsExactly(2, "팀B", 70, 70, 2);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void 모든_동점_기준이_같으면_팀_ID_오름차순으로_고유_순위를_매긴다() {
+        TeamEntity teamA = team(2L, 1, "팀A");
+        TeamEntity teamB = team(1L, 2, "팀B");
+        UserEntity judge = user(1L, Role.JUDGE);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judge));
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                judgement(teamA, judge, 30, 20, 20),
+                judgement(teamB, judge, 30, 20, 20)
+        ));
+
+        service.execute();
+
+        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        verify(googleExcelAdapter).exportSummary(captor.capture());
+        List<List<Object>> rows = captor.getValue();
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 70, 70, 2);
+        assertThat(rows.get(2)).containsExactly(2, "팀B", 70, 70, 1);
+    }
+
     private TeamEntity team(long id, int order, String name) {
         return TeamEntity.builder().id(id).teamName(name).school("광주고")
                 .teamStatus(TeamStatus.PENDING).teamGenre(TeamGenre.SING).performOrder(order).totalScore(0).build();

@@ -15,6 +15,7 @@ import team.startup.gwangjutalentfestival.domain.judge.util.JudgeScoreCalculator
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,7 +52,7 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
                 TeamEntity::getId,
                 team -> JudgeScoreCalculator.calculate(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).values())
         ));
-        Map<Long, Integer> rankMap = denseRank(teamTotalMap);
+        Map<Long, Integer> rankMap = ranks(teams, judgements, judgeIds, teamTotalMap);
 
         List<List<Object>> rows = new ArrayList<>();
         rows.add(buildHeaderRow(judgeIds.size()));
@@ -107,16 +108,36 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
         return Optional.ofNullable(v).orElse(0);
     }
 
-    private Map<Long, Integer> denseRank(Map<Long, Integer> teamTotalMap) {
-        List<Integer> sortedScores = teamTotalMap.values().stream()
-                .distinct()
-                .sorted(Comparator.reverseOrder())
-                .toList();
-        Map<Integer, Integer> scoreToRank = new HashMap<>();
-        for (int i = 0; i < sortedScores.size(); i++) {
-            scoreToRank.put(sortedScores.get(i), i + 1);
+    private Map<Long, Integer> ranks(
+            List<TeamEntity> teams,
+            List<JudgementEntity> judgements,
+            List<Long> judgeIds,
+            Map<Long, Integer> teamTotalMap) {
+        List<TeamEntity> sorted = new ArrayList<>(teams);
+        sorted.sort(Comparator
+                .comparing((TeamEntity team) -> teamTotalMap.get(team.getId()), Comparator.reverseOrder())
+                .thenComparing((TeamEntity team) -> average(team, judgements, judgeIds, JudgementEntity::getCompletenessExpressionScore), Comparator.reverseOrder())
+                .thenComparing((TeamEntity team) -> average(team, judgements, judgeIds, JudgementEntity::getCreativityCompositionScore), Comparator.reverseOrder())
+                .thenComparing((TeamEntity team) -> average(team, judgements, judgeIds, JudgementEntity::getStagePerformanceTeamworkScore), Comparator.reverseOrder())
+                .thenComparing(TeamEntity::getId));
+
+        Map<Long, Integer> result = new HashMap<>();
+        for (int index = 0; index < sorted.size(); index++) {
+            result.put(sorted.get(index).getId(), index + 1);
         }
-        return teamTotalMap.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> scoreToRank.get(e.getValue())));
+        return result;
+    }
+
+    private double average(
+            TeamEntity team,
+            List<JudgementEntity> judgements,
+            List<Long> judgeIds,
+            Function<JudgementEntity, Integer> score) {
+        return judgements.stream()
+                .filter(judgement -> judgeIds.contains(judgement.getUser().getId()))
+                .filter(judgement -> judgement.getTeam().getId().equals(team.getId()))
+                .mapToInt(score::apply)
+                .average()
+                .orElse(0);
     }
 }
