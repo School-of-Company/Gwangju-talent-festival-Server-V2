@@ -17,6 +17,9 @@ import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRe
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
+import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleExcelProperties;
 
@@ -50,6 +53,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
     private final JudgeCommentRepository judgeCommentRepository;
+    private final UserRepository userRepository;
     private final DownloadJudgingSummaryExcelService downloadJudgingSummaryExcelService;
     private final GoogleExcelAdapter googleExcelAdapter;
     private final GoogleExcelProperties googleExcelProperties;
@@ -65,10 +69,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         try (ZipOutputStream zip = new ZipOutputStream(output)) {
             writeZipEntry(zip, "심사집계표.xlsx", downloadJudgingSummaryExcelService.execute());
 
-            List<Long> judgeIds = judgements.stream()
-                    .map(judgement -> judgement.getUser().getId())
-                    .distinct()
-                    .sorted()
+            List<Long> judgeIds = userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE).stream()
+                    .map(UserEntity::getId)
                     .toList();
             for (int index = 0; index < judgeIds.size(); index++) {
                 Long judgeId = judgeIds.get(index);

@@ -16,6 +16,7 @@ import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEventService;
+import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
@@ -38,6 +39,7 @@ public class JudgeController {
     private final GetAllJudgementService getAllJudgementService;
     private final GetJudgementService getJudgementService;
     private final ConnectSseJudgeEventService connectSseJudgeEventService;
+    private final ConnectSseJudgeMonitoringService connectSseJudgeMonitoringService;
     private final GetJudgeCommentService getJudgeCommentService;
     private final SaveJudgeCommentService saveJudgeCommentService;
 
@@ -54,6 +56,12 @@ public class JudgeController {
     @GetMapping(value = "/changes", produces = "text/event-stream")
     public SseEmitter connect() {
         return connectSseJudgeEventService.execute();
+    }
+
+    @SecurityRequirement(name = "Authorization")
+    @GetMapping(value = "/monitor/changes", produces = "text/event-stream")
+    public SseEmitter connectMonitoring() {
+        return connectSseJudgeMonitoringService.execute();
     }
 
     @Operation(summary = "심사 점수 저장", description = "팀에 대한 심사 점수를 저장하거나 수정합니다.")
