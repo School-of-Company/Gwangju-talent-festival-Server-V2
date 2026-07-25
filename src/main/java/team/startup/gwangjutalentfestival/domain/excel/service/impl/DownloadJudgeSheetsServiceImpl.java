@@ -124,8 +124,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             cell(headerRow, COMPLETENESS_COLUMN).setCellValue("완성도·표현력");
             cell(headerRow, CREATIVITY_COLUMN).setCellValue("창의력·구성");
             cell(headerRow, STAGE_COLUMN).setCellValue("무대매너·퍼포먼스");
-            cell(headerRow, CALCULATED_SCORE_COLUMN).setCellValue("산출 점수");
-            cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트 이미지");
+            cell(headerRow, CALCULATED_SCORE_COLUMN).setCellValue("총합 점수");
+            cell(headerRow, COMMENT_COLUMN).setCellValue("심사 의견");
             sheet.setColumnWidth(COMMENT_COLUMN,
                     Math.round(COMMENT_CELL_WIDTH / Units.DEFAULT_CHARACTER_WIDTH * 256));
 
@@ -237,7 +237,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             graphics.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             for (JsonNode stroke : strokes) {
-                JsonNode points = stroke.path("points");
+                JsonNode points = strokePoints(stroke);
                 if (!points.isArray() || points.isEmpty()) {
                     continue;
                 }
@@ -276,13 +276,17 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             return false;
         }
         for (JsonNode stroke : strokes) {
-            for (JsonNode point : stroke.path("points")) {
+            for (JsonNode point : strokePoints(stroke)) {
                 if (isPoint(point)) {
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    private JsonNode strokePoints(JsonNode stroke) {
+        return stroke.isArray() ? stroke : stroke.path("points");
     }
 
     private boolean isPoint(JsonNode point) {
