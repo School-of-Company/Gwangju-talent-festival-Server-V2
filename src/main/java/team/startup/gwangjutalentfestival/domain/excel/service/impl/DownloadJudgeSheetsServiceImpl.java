@@ -54,14 +54,16 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private static final int PROFILE_ROW = 2;
     private static final int HEADER_ROW = 3;
     private static final int FIRST_DATA_ROW = 4;
-    private static final int PRESERVED_ROW = 12;
     private static final int AFFILIATION_COLUMN = 1;
     private static final int POSITION_COLUMN = 3;
     private static final int NAME_COLUMN = 5;
     private static final int PROFILE_COLUMN_SPAN = 2;
     private static final int TEAM_NAME_COLUMN = 1;
-    private static final int SCORE_COLUMN = 2;
-    private static final int COMMENT_COLUMN = 3;
+    private static final int COMPLETENESS_COLUMN = 2;
+    private static final int CREATIVITY_COLUMN = 3;
+    private static final int STAGE_COLUMN = 4;
+    private static final int CALCULATED_SCORE_COLUMN = 5;
+    private static final int COMMENT_COLUMN = 6;
 
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
@@ -91,7 +93,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 Long judgeId = judgeIds.get(index);
                 writeZipEntry(zip, "심사위원_" + judgeLabel(index) + "_개별심사표.xlsx",
                         createJudgeSheet(
-                                judgeTemplate, teams, judgements, comments, profiles.get(judgeId), judgeId, judgeLabel(index)));
+                                judgeTemplate, teams, judgements, comments, profiles.get(judgeId), judgeId));
             }
         } catch (IOException e) {
             throw new IllegalStateException("심사표 ZIP을 생성할 수 없습니다.", e);
@@ -105,8 +107,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             List<JudgementEntity> judgements,
             Map<JudgeTeamKey, JudgeCommentEntity> comments,
             JudgeProfileEntity profile,
-            Long judgeId,
-            String judgeLabel) throws IOException {
+            Long judgeId) throws IOException {
         Map<Long, JudgementEntity> scoreMap = new HashMap<>();
         judgements.stream()
                 .filter(judgement -> judgeId.equals(judgement.getUser().getId()))
@@ -120,8 +121,11 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             Row headerRow = row(sheet, HEADER_ROW);
             cell(headerRow, 0).setCellValue("심사순서");
             cell(headerRow, TEAM_NAME_COLUMN).setCellValue("팀명");
-            cell(headerRow, SCORE_COLUMN).setCellValue("심사위원 " + judgeLabel);
-            cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트");
+            cell(headerRow, COMPLETENESS_COLUMN).setCellValue("완성도·표현력");
+            cell(headerRow, CREATIVITY_COLUMN).setCellValue("창의력·구성");
+            cell(headerRow, STAGE_COLUMN).setCellValue("무대매너·퍼포먼스");
+            cell(headerRow, CALCULATED_SCORE_COLUMN).setCellValue("산출 점수");
+            cell(headerRow, COMMENT_COLUMN).setCellValue("코멘트 이미지");
             sheet.setColumnWidth(COMMENT_COLUMN,
                     Math.round(COMMENT_CELL_WIDTH / Units.DEFAULT_CHARACTER_WIDTH * 256));
 
@@ -129,7 +133,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             if (drawing == null) {
                 drawing = sheet.createDrawingPatriarch();
             }
-            addProfileImages(workbook, drawing, sheet, profile);
+            addProfileImages(workbook, drawing, profile);
             for (int index = 0; index < teams.size(); index++) {
                 TeamEntity team = teams.get(index);
                 JudgementEntity judgement = scoreMap.get(team.getId());
@@ -141,13 +145,18 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 int completeness = judgement == null ? 0 : orZero(judgement.getCompletenessExpressionScore());
                 int creativity = judgement == null ? 0 : orZero(judgement.getCreativityCompositionScore());
                 int stage = judgement == null ? 0 : orZero(judgement.getStagePerformanceTeamworkScore());
-                cell(row, SCORE_COLUMN).setCellValue(completeness + creativity + stage);
+                cell(row, COMPLETENESS_COLUMN).setCellValue(completeness);
+                cell(row, CREATIVITY_COLUMN).setCellValue(creativity);
+                cell(row, STAGE_COLUMN).setCellValue(stage);
+                cell(row, CALCULATED_SCORE_COLUMN).setCellValue(completeness + creativity + stage);
 
                 JudgeCommentEntity comment = comments.get(new JudgeTeamKey(judgeId, team.getId()));
                 if (comment != null && hasPoints(comment.getStrokes())) {
                     addImage(
                             workbook,
                             drawing,
+                            COMMENT_COLUMN,
+                            rowIndex,
                             COMMENT_COLUMN,
                             rowIndex,
                             Math.round(sheet.getColumnWidthInPixels(COMMENT_COLUMN)),
@@ -163,49 +172,53 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private void addProfileImages(
             Workbook workbook,
             Drawing<?> drawing,
-            Sheet sheet,
             JudgeProfileEntity profile) throws IOException {
         if (profile == null) {
             return;
         }
-        addProfileImage(workbook, drawing, sheet, AFFILIATION_COLUMN, profile.getAffiliationStrokes());
-        addProfileImage(workbook, drawing, sheet, POSITION_COLUMN, profile.getPositionStrokes());
-        addProfileImage(workbook, drawing, sheet, NAME_COLUMN, profile.getNameStrokes());
+        addProfileImage(workbook, drawing, AFFILIATION_COLUMN, profile.getAffiliationStrokes());
+        addProfileImage(workbook, drawing, POSITION_COLUMN, profile.getPositionStrokes());
+        addProfileImage(workbook, drawing, NAME_COLUMN, profile.getNameStrokes());
     }
 
     private void addProfileImage(
             Workbook workbook,
             Drawing<?> drawing,
-            Sheet sheet,
             int column,
             JsonNode strokes) throws IOException {
         if (!hasPoints(strokes)) {
             return;
         }
-        int width = 0;
-        for (int current = column; current < column + PROFILE_COLUMN_SPAN; current++) {
-            width += Math.round(sheet.getColumnWidthInPixels(current));
-        }
-        int height = Units.pointsToPixel(row(sheet, PROFILE_ROW).getHeightInPoints());
-        addImage(workbook, drawing, column, PROFILE_ROW, width, height, renderStrokes(strokes));
+        addImage(
+                workbook,
+                drawing,
+                column,
+                PROFILE_ROW,
+                column + PROFILE_COLUMN_SPAN,
+                PROFILE_ROW + 1,
+                0,
+                0,
+                renderStrokes(strokes));
     }
 
     private void addImage(
             Workbook workbook,
             Drawing<?> drawing,
-            int column,
-            int row,
-            int width,
-            int height,
+            int startColumn,
+            int startRow,
+            int endColumn,
+            int endRow,
+            int endColumnOffset,
+            int endRowOffset,
             byte[] image) {
         int pictureIndex = workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
         ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
-        anchor.setCol1(column);
-        anchor.setCol2(column);
-        anchor.setRow1(row);
-        anchor.setRow2(row);
-        anchor.setDx2(Units.pixelToEMU(width));
-        anchor.setDy2(Units.pixelToEMU(height));
+        anchor.setCol1(startColumn);
+        anchor.setCol2(endColumn);
+        anchor.setRow1(startRow);
+        anchor.setRow2(endRow);
+        anchor.setDx2(Units.pixelToEMU(endColumnOffset));
+        anchor.setDy2(Units.pixelToEMU(endRowOffset));
         anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
         drawing.createPicture(anchor, pictureIndex);
     }
@@ -320,8 +333,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     }
 
     private int dataRow(int teamIndex) {
-        int row = FIRST_DATA_ROW + teamIndex;
-        return row >= PRESERVED_ROW ? row + 1 : row;
+        return FIRST_DATA_ROW + teamIndex;
     }
 
     private String judgeLabel(int index) {

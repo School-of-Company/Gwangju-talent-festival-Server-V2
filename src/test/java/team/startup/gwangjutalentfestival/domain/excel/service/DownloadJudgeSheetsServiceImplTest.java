@@ -99,14 +99,23 @@ class DownloadJudgeSheetsServiceImplTest {
             assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("소속/직위/이름");
             assertThat(sheet.getRow(3).getCell(0).getStringCellValue()).isEqualTo("심사순서");
             assertThat(sheet.getRow(3).getCell(1).getStringCellValue()).isEqualTo("팀명");
-            assertThat(sheet.getRow(3).getCell(2).getStringCellValue()).isEqualTo("심사위원 A");
-            assertThat(sheet.getRow(3).getCell(3).getStringCellValue()).isEqualTo("코멘트");
+            assertThat(sheet.getRow(3).getCell(2).getStringCellValue()).isEqualTo("완성도·표현력");
+            assertThat(sheet.getRow(3).getCell(3).getStringCellValue()).isEqualTo("창의력·구성");
+            assertThat(sheet.getRow(3).getCell(4).getStringCellValue()).isEqualTo("무대매너·퍼포먼스");
+            assertThat(sheet.getRow(3).getCell(5).getStringCellValue()).isEqualTo("산출 점수");
+            assertThat(sheet.getRow(3).getCell(6).getStringCellValue()).isEqualTo("코멘트 이미지");
             assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(1);
             assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀1");
-            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isEqualTo(60);
+            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isEqualTo(20);
+            assertThat(sheet.getRow(4).getCell(3).getNumericCellValue()).isEqualTo(15);
+            assertThat(sheet.getRow(4).getCell(4).getNumericCellValue()).isEqualTo(25);
+            assertThat(sheet.getRow(4).getCell(5).getNumericCellValue()).isEqualTo(60);
             assertThat(sheet.getRow(5).getCell(0).getNumericCellValue()).isEqualTo(2);
             assertThat(sheet.getRow(5).getCell(1).getStringCellValue()).isEqualTo("팀2");
             assertThat(sheet.getRow(5).getCell(2).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(5).getCell(3).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(5).getCell(4).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(5).getCell(5).getNumericCellValue()).isZero();
             assertThat(workbook.getAllPictures()).hasSize(1);
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), new Color(0x12, 0x12, 0x12))).isTrue();
@@ -118,7 +127,7 @@ class DownloadJudgeSheetsServiceImplTest {
     }
 
     @Test
-    void 코멘트를_1000x500_PNG로_렌더링하고_D셀_100x50_안에_고정한다() throws Exception {
+    void 코멘트를_1000x500_PNG로_렌더링하고_G셀_100x50_안에_고정한다() throws Exception {
         List<TeamEntity> teams = java.util.stream.IntStream.rangeClosed(1, 6)
                 .mapToObj(index -> team(index, index))
                 .toList();
@@ -186,7 +195,7 @@ class DownloadJudgeSheetsServiceImplTest {
         given(judgeProfileRepository.findAllWithUser()).willReturn(List.of(
                 profile(judgeA,
                         stroke("#ff0000", 0.1, 0.5, 0.9, 0.5),
-                        emptyStroke(),
+                        stroke("#00ff00", 0.1, 0.5, 0.9, 0.5),
                         stroke("#121212", 0.5, 0.1, 0.5, 0.9)),
                 profile(judgeB,
                         stroke("#0000ff", 0.1, 0.5, 0.9, 0.5),
@@ -202,11 +211,15 @@ class DownloadJudgeSheetsServiceImplTest {
             var pictures = sheet.getDrawingPatriarch().getShapes().stream()
                     .map(XSSFPicture.class::cast)
                     .toList();
-            assertThat(pictures).hasSize(2);
+            assertThat(pictures).hasSize(3);
             assertProfilePicture(sheet, pictures.get(0), 1);
-            assertProfilePicture(sheet, pictures.get(1), 5);
+            assertProfilePicture(sheet, pictures.get(1), 3);
+            assertProfilePicture(sheet, pictures.get(2), 5);
             assertThat(renderedImageHasColor(pictures.get(0).getPictureData(), Color.RED)).isTrue();
-            assertThat(renderedImageHasColor(pictures.get(1).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
+            assertThat(renderedImageHasColor(pictures.get(1).getPictureData(), Color.GREEN)).isTrue();
+            assertThat(renderedImageHasColor(pictures.get(2).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
+            assertThat(sheet.getDrawingPatriarch().getCTDrawing().getTwoCellAnchorList())
+                    .allMatch(anchor -> anchor.getEditAs() == STEditAs.ONE_CELL);
         }
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_B_개별심사표.xlsx")))) {
             var pictures = workbook.getSheet("개별 심사표").getDrawingPatriarch().getShapes();
@@ -217,8 +230,8 @@ class DownloadJudgeSheetsServiceImplTest {
     }
 
     @Test
-    void 열세번째_행은_보존하고_아홉번째_팀은_열네번째_행부터_작성한다() throws Exception {
-        List<TeamEntity> teams = java.util.stream.IntStream.rangeClosed(1, 9)
+    void 팀을_중간_빈_행_없이_연속으로_작성한다() throws Exception {
+        List<TeamEntity> teams = java.util.stream.IntStream.rangeClosed(1, 10)
                 .mapToObj(index -> team(index, index))
                 .toList();
         UserEntity judge = user(10L);
@@ -231,8 +244,9 @@ class DownloadJudgeSheetsServiceImplTest {
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
             var sheet = workbook.getSheet("개별 심사표");
-            assertThat(sheet.getRow(12).getCell(0).getStringCellValue()).isEqualTo("13행 보존");
-            assertThat(sheet.getRow(13).getCell(0).getNumericCellValue()).isEqualTo(9);
+            assertThat(sheet.getRow(11).getCell(0).getNumericCellValue()).isEqualTo(8);
+            assertThat(sheet.getRow(12).getCell(0).getNumericCellValue()).isEqualTo(9);
+            assertThat(sheet.getRow(13).getCell(0).getNumericCellValue()).isEqualTo(10);
         }
     }
 
@@ -292,14 +306,14 @@ class DownloadJudgeSheetsServiceImplTest {
 
     private void assertCommentPicture(XSSFWorkbook workbook, int rowIndex) throws IOException {
         var sheet = workbook.getSheet("개별 심사표");
-        assertThat(sheet.getColumnWidthInPixels(3)).isBetween(99.9f, 100.1f);
+        assertThat(sheet.getColumnWidthInPixels(6)).isBetween(99.9f, 100.1f);
         assertThat(sheet.getRow(rowIndex).getHeightInPoints()).isEqualTo(37.5f);
-        assertThat(sheet.getMergedRegions()).noneMatch(region -> region.isInRange(rowIndex, 3));
+        assertThat(sheet.getMergedRegions()).noneMatch(region -> region.isInRange(rowIndex, 6));
 
         XSSFPicture picture = (XSSFPicture) sheet.getDrawingPatriarch().getShapes().getFirst();
         ClientAnchor anchor = picture.getClientAnchor();
-        assertThat(anchor.getCol1()).isEqualTo((short) 3);
-        assertThat(anchor.getCol2()).isEqualTo((short) 3);
+        assertThat(anchor.getCol1()).isEqualTo((short) 6);
+        assertThat(anchor.getCol2()).isEqualTo((short) 6);
         assertThat(anchor.getRow1()).isEqualTo(rowIndex);
         assertThat(anchor.getRow2()).isEqualTo(rowIndex);
         assertThat(anchor.getDx1()).isZero();
@@ -319,17 +333,14 @@ class DownloadJudgeSheetsServiceImplTest {
             XSSFPicture picture,
             int column) throws IOException {
         ClientAnchor anchor = picture.getClientAnchor();
-        int width = Math.round(sheet.getColumnWidthInPixels(column))
-                + Math.round(sheet.getColumnWidthInPixels(column + 1));
-        int height = Units.pointsToPixel(sheet.getRow(2).getHeightInPoints());
         assertThat(anchor.getCol1()).isEqualTo((short) column);
-        assertThat(anchor.getCol2()).isEqualTo((short) column);
+        assertThat(anchor.getCol2()).isEqualTo((short) (column + 2));
         assertThat(anchor.getRow1()).isEqualTo(2);
-        assertThat(anchor.getRow2()).isEqualTo(2);
+        assertThat(anchor.getRow2()).isEqualTo(3);
         assertThat(anchor.getDx1()).isZero();
         assertThat(anchor.getDy1()).isZero();
-        assertThat(anchor.getDx2()).isEqualTo(Units.pixelToEMU(width));
-        assertThat(anchor.getDy2()).isEqualTo(Units.pixelToEMU(height));
+        assertThat(anchor.getDx2()).isZero();
+        assertThat(anchor.getDy2()).isZero();
 
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
         assertThat(image.getWidth()).isEqualTo(1000);
