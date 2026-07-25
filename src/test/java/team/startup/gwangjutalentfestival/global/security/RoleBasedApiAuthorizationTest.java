@@ -31,6 +31,7 @@ import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMo
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
+import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.controller.MonitoringController;
@@ -138,6 +139,8 @@ class RoleBasedApiAuthorizationTest {
     private GetJudgeCommentService getJudgeCommentService;
     @MockBean
     private SaveJudgeCommentService saveJudgeCommentService;
+    @MockBean
+    private JudgeProfileService judgeProfileService;
 
     @MockBean
     private GetAnomalyEventListService getAnomalyEventListService;
