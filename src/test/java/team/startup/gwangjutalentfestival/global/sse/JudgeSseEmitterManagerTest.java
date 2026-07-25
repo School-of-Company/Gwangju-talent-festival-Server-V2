@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,20 +26,11 @@ class JudgeSseEmitterManagerTest {
     }
 
     @Test
-    void addEmitter_후_getEmitter로_동일한_emitter를_조회할_수_있다() {
-        SseEmitter emitter = manager.addEmitter(1L, null);
+    void 동일한_userId로_여러_연결을_등록하면_모두_유지된다() {
+        SseEmitter first = manager.addEmitter(1L, null);
+        SseEmitter second = manager.addEmitter(1L, null);
 
-        Optional<SseEmitter> found = manager.getEmitter(1L);
-
-        assertThat(found).isPresent();
-        assertThat(found.get()).isSameAs(emitter);
-    }
-
-    @Test
-    void 등록되지_않은_userId로_getEmitter를_호출하면_empty가_반환된다() {
-        Optional<SseEmitter> found = manager.getEmitter(999L);
-
-        assertThat(found).isEmpty();
+        assertThat(manager.getAllEmitters()).containsExactlyInAnyOrder(first, second);
     }
 
     @Test
@@ -51,15 +43,22 @@ class JudgeSseEmitterManagerTest {
     }
 
     @Test
-    void 동일한_userId로_재연결하면_새로운_emitter로_교체된다() {
-        SseEmitter first = manager.addEmitter(1L, null);
-        SseEmitter second = manager.addEmitter(1L, null);
+    void 동일한_userId의_모든_emitter에_이벤트를_전송한다() {
+        manager.addEmitter(1L, null);
+        manager.addEmitter(1L, null);
+        AtomicInteger sent = new AtomicInteger();
 
-        Optional<SseEmitter> found = manager.getEmitter(1L);
+        manager.forEachEmitterSafe(ignored -> sent.incrementAndGet());
 
-        assertThat(found).isPresent();
-        assertThat(found.get()).isSameAs(second);
-        assertThat(found.get()).isNotSameAs(first);
+        assertThat(sent).hasValue(2);
+    }
+
+    @Test
+    void 동일한_userId로_동시에_연결해도_모든_emitter가_등록된다() {
+        IntStream.range(0, 100).parallel()
+                .forEach(ignored -> manager.addEmitter(1L, null));
+
+        assertThat(manager.getAllEmitters()).hasSize(100);
     }
 
     @Test
