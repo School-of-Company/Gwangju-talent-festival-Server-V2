@@ -82,15 +82,23 @@ class DownloadJudgingSummaryExcelServiceImplTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void 산출점수가_같으면_완성도_평균이_높은_팀을_먼저_순위로_매긴다() {
+    void 산출점수가_같으면_완성도_최고최저_제외평균이_높은_팀을_먼저_순위로_매긴다() {
         TeamEntity teamA = team(2L, 1, "팀A");
         TeamEntity teamB = team(1L, 2, "팀B");
-        UserEntity judge = user(1L, Role.JUDGE);
+        List<UserEntity> judges = java.util.stream.LongStream.rangeClosed(1, 4)
+                .mapToObj(id -> user(id, Role.JUDGE))
+                .toList();
         given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB));
-        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judge));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(judges);
         given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
-                judgement(teamA, judge, 30, 20, 20),
-                judgement(teamB, judge, 25, 25, 20)
+                judgement(teamA, judges.get(0), 0, 30, 30),
+                judgement(teamA, judges.get(1), 20, 20, 20),
+                judgement(teamA, judges.get(2), 20, 20, 20),
+                judgement(teamA, judges.get(3), 20, 20, 20),
+                judgement(teamB, judges.get(0), 18, 21, 21),
+                judgement(teamB, judges.get(1), 18, 21, 21),
+                judgement(teamB, judges.get(2), 18, 21, 21),
+                judgement(teamB, judges.get(3), 30, 15, 15)
         ));
 
         service.execute();
@@ -98,8 +106,8 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = captor.getValue();
-        assertThat(rows.get(1)).containsExactly(1, "팀A", 70, 70, 1);
-        assertThat(rows.get(2)).containsExactly(2, "팀B", 70, 70, 2);
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 60, 60, 60, 60, 1);
+        assertThat(rows.get(2)).containsExactly(2, "팀B", 60, 60, 60, 60, 60, 2);
     }
 
     @Test

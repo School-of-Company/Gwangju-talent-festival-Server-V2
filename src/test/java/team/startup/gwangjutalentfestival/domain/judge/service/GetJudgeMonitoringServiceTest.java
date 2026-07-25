@@ -69,6 +69,37 @@ class GetJudgeMonitoringServiceTest {
                 .containsExactly(strokes, null);
     }
 
+    @Test
+    void 산출점수가_같으면_세부항목의_최고최저_제외평균으로_순위를_정한다() {
+        GetJudgeMonitoringService service = new GetJudgeMonitoringServiceImpl(
+                userRepository, teamRepository, judgementRepository, judgeCommentRepository);
+        List<UserEntity> judges = java.util.stream.LongStream.rangeClosed(1, 4)
+                .mapToObj(id -> user(id, Role.JUDGE))
+                .toList();
+        TeamEntity teamA = team(10L, 1, "팀A");
+        TeamEntity teamB = team(20L, 2, "팀B");
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(judges);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of(teamA, teamB));
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                judgement(teamA, judges.get(0), 0, 30, 30),
+                judgement(teamA, judges.get(1), 20, 20, 20),
+                judgement(teamA, judges.get(2), 20, 20, 20),
+                judgement(teamA, judges.get(3), 20, 20, 20),
+                judgement(teamB, judges.get(0), 18, 21, 21),
+                judgement(teamB, judges.get(1), 18, 21, 21),
+                judgement(teamB, judges.get(2), 18, 21, 21),
+                judgement(teamB, judges.get(3), 30, 15, 15)
+        ));
+        given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of());
+
+        JudgeMonitoringResponse result = service.execute();
+
+        assertThat(result.scoreRows()).extracting(JudgeMonitoringResponse.ScoreRow::calculatedScore)
+                .containsExactly(60, 60);
+        assertThat(result.scoreRows()).extracting(JudgeMonitoringResponse.ScoreRow::rank)
+                .containsExactly(1, 2);
+    }
+
     private UserEntity user(long id, Role role) {
         return UserEntity.builder().id(id).role(role).build();
     }

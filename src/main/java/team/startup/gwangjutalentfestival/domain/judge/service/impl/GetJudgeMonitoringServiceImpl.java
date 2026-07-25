@@ -9,6 +9,7 @@ import team.startup.gwangjutalentfestival.domain.judge.presentation.data.respons
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeMonitoringService;
+import team.startup.gwangjutalentfestival.domain.judge.util.JudgeRankingCalculator;
 import team.startup.gwangjutalentfestival.domain.judge.util.JudgeScoreCalculator;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
@@ -17,7 +18,6 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +53,8 @@ public class GetJudgeMonitoringServiceImpl implements GetJudgeMonitoringService 
                 ));
 
         Map<Long, Integer> calculatedScores = calculateScores(teams, judges, judgements);
-        Map<Long, Integer> ranks = ranks(teams, judgements, calculatedScores);
+        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
+                teams, judgements.values(), calculatedScores);
         List<JudgeMonitoringResponse.JudgeHeader> headers = headers(judges);
 
         return new JudgeMonitoringResponse(
@@ -85,33 +86,6 @@ public class GetJudgeMonitoringServiceImpl implements GetJudgeMonitoringService 
             result.put(team.getId(), JudgeScoreCalculator.calculate(scores));
         }
         return result;
-    }
-
-    private Map<Long, Integer> ranks(
-            List<TeamEntity> teams,
-            Map<JudgeTeamKey, JudgementEntity> judgements,
-            Map<Long, Integer> calculatedScores) {
-        List<TeamEntity> sorted = new ArrayList<>(teams);
-        sorted.sort(Comparator
-                .comparing((TeamEntity team) -> calculatedScores.get(team.getId()), Comparator.reverseOrder())
-                .thenComparing((TeamEntity team) -> average(team, judgements, JudgementEntity::getCompletenessExpressionScore), Comparator.reverseOrder())
-                .thenComparing((TeamEntity team) -> average(team, judgements, JudgementEntity::getCreativityCompositionScore), Comparator.reverseOrder())
-                .thenComparing((TeamEntity team) -> average(team, judgements, JudgementEntity::getStagePerformanceTeamworkScore), Comparator.reverseOrder())
-                .thenComparing(TeamEntity::getId));
-        Map<Long, Integer> result = new HashMap<>();
-        for (int index = 0; index < sorted.size(); index++) {
-            result.put(sorted.get(index).getId(), index + 1);
-        }
-        return result;
-    }
-
-    private double average(TeamEntity team, Map<JudgeTeamKey, JudgementEntity> judgements, java.util.function.Function<JudgementEntity, Integer> score) {
-        return judgements.entrySet().stream()
-                .filter(entry -> entry.getKey().teamId().equals(team.getId()))
-                .map(Map.Entry::getValue)
-                .mapToInt(score::apply)
-                .average()
-                .orElse(0);
     }
 
     private List<JudgeMonitoringResponse.ScoreRow> scoreRows(
