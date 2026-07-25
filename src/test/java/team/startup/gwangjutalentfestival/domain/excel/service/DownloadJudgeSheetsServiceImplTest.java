@@ -8,6 +8,7 @@ import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,8 +16,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.excel.service.impl.DownloadJudgeSheetsServiceImpl;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeCommentEntity;
+import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeProfileEntity;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
+import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeProfileRepository;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.enums.TeamGenre;
@@ -50,6 +53,7 @@ class DownloadJudgeSheetsServiceImplTest {
     @Mock private TeamRepository teamRepository;
     @Mock private JudgementRepository judgementRepository;
     @Mock private JudgeCommentRepository judgeCommentRepository;
+    @Mock private JudgeProfileRepository judgeProfileRepository;
     @Mock private UserRepository userRepository;
     @Mock private DownloadJudgingSummaryExcelService summaryExcelService;
     @Mock private GoogleExcelAdapter googleExcelAdapter;
@@ -61,8 +65,8 @@ class DownloadJudgeSheetsServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new DownloadJudgeSheetsServiceImpl(
-                teamRepository, judgementRepository, judgeCommentRepository, userRepository, summaryExcelService,
-                googleExcelAdapter, googleExcelProperties);
+                teamRepository, judgementRepository, judgeCommentRepository, judgeProfileRepository, userRepository,
+                summaryExcelService, googleExcelAdapter, googleExcelProperties);
         given(summaryExcelService.execute()).willReturn(new byte[]{1, 2, 3});
         given(googleExcelAdapter.exportJudgeTemplate()).willReturn(template());
         given(googleExcelProperties.judgeTemplatePage()).willReturn("개별 심사표");
@@ -92,23 +96,24 @@ class DownloadJudgeSheetsServiceImplTest {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
             var sheet = workbook.getSheet("개별 심사표");
             assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("원본 제목");
-            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("심사순서");
-            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo("팀명");
-            assertThat(sheet.getRow(2).getCell(2).getStringCellValue()).isEqualTo("심사위원 A");
-            assertThat(sheet.getRow(2).getCell(3).getStringCellValue()).isEqualTo("코멘트");
-            assertThat(sheet.getRow(3).getCell(0).getNumericCellValue()).isEqualTo(1);
-            assertThat(sheet.getRow(3).getCell(1).getStringCellValue()).isEqualTo("팀1");
-            assertThat(sheet.getRow(3).getCell(2).getNumericCellValue()).isEqualTo(60);
-            assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(2);
-            assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀2");
-            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("소속/직위/이름");
+            assertThat(sheet.getRow(3).getCell(0).getStringCellValue()).isEqualTo("심사순서");
+            assertThat(sheet.getRow(3).getCell(1).getStringCellValue()).isEqualTo("팀명");
+            assertThat(sheet.getRow(3).getCell(2).getStringCellValue()).isEqualTo("심사위원 A");
+            assertThat(sheet.getRow(3).getCell(3).getStringCellValue()).isEqualTo("코멘트");
+            assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(1);
+            assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀1");
+            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isEqualTo(60);
+            assertThat(sheet.getRow(5).getCell(0).getNumericCellValue()).isEqualTo(2);
+            assertThat(sheet.getRow(5).getCell(1).getStringCellValue()).isEqualTo("팀2");
+            assertThat(sheet.getRow(5).getCell(2).getNumericCellValue()).isZero();
             assertThat(workbook.getAllPictures()).hasSize(1);
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), new Color(0x12, 0x12, 0x12))).isTrue();
-            assertCommentPicture(workbook, 3);
+            assertCommentPicture(workbook, 4);
         }
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_B_개별심사표.xlsx")))) {
-            assertCommentPicture(workbook, 3);
+            assertCommentPicture(workbook, 4);
         }
     }
 
@@ -166,13 +171,53 @@ class DownloadJudgeSheetsServiceImplTest {
             assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
             assertThat(pictures).extracting(picture -> picture.getClientAnchor().getRow1())
-                    .containsExactly(3, 4, 5, 6, 7);
-            assertThat(sheet.getRow(8).getHeightInPoints()).isEqualTo(37.5f);
+                    .containsExactly(4, 5, 6, 7, 8);
+            assertThat(sheet.getRow(9).getHeightInPoints()).isEqualTo(37.5f);
         }
     }
 
     @Test
-    void 열두번째_행은_보존하고_아홉번째_팀은_열세번째_행부터_작성한다() throws Exception {
+    void 심사위원별_소속_직위_이름을_각_병합셀에_삽입한다() throws Exception {
+        UserEntity judgeA = user(10L);
+        UserEntity judgeB = user(20L);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of());
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of());
+        given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of());
+        given(judgeProfileRepository.findAllWithUser()).willReturn(List.of(
+                profile(judgeA,
+                        stroke("#ff0000", 0.1, 0.5, 0.9, 0.5),
+                        emptyStroke(),
+                        stroke("#121212", 0.5, 0.1, 0.5, 0.9)),
+                profile(judgeB,
+                        stroke("#0000ff", 0.1, 0.5, 0.9, 0.5),
+                        objectMapper.createArrayNode(),
+                        objectMapper.createArrayNode())
+        ));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judgeA, judgeB));
+
+        Map<String, byte[]> files = zipEntries(service.execute());
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
+            var sheet = workbook.getSheet("개별 심사표");
+            var pictures = sheet.getDrawingPatriarch().getShapes().stream()
+                    .map(XSSFPicture.class::cast)
+                    .toList();
+            assertThat(pictures).hasSize(2);
+            assertProfilePicture(sheet, pictures.get(0), 1);
+            assertProfilePicture(sheet, pictures.get(1), 5);
+            assertThat(renderedImageHasColor(pictures.get(0).getPictureData(), Color.RED)).isTrue();
+            assertThat(renderedImageHasColor(pictures.get(1).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
+        }
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_B_개별심사표.xlsx")))) {
+            var pictures = workbook.getSheet("개별 심사표").getDrawingPatriarch().getShapes();
+            assertThat(pictures).hasSize(1);
+            assertThat(renderedImageHasColor(
+                    ((XSSFPicture) pictures.getFirst()).getPictureData(), Color.BLUE)).isTrue();
+        }
+    }
+
+    @Test
+    void 열세번째_행은_보존하고_아홉번째_팀은_열네번째_행부터_작성한다() throws Exception {
         List<TeamEntity> teams = java.util.stream.IntStream.rangeClosed(1, 9)
                 .mapToObj(index -> team(index, index))
                 .toList();
@@ -186,22 +231,26 @@ class DownloadJudgeSheetsServiceImplTest {
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
             var sheet = workbook.getSheet("개별 심사표");
-            assertThat(sheet.getRow(11).getCell(0).getStringCellValue()).isEqualTo("12행 보존");
-            assertThat(sheet.getRow(12).getCell(0).getNumericCellValue()).isEqualTo(9);
+            assertThat(sheet.getRow(12).getCell(0).getStringCellValue()).isEqualTo("13행 보존");
+            assertThat(sheet.getRow(13).getCell(0).getNumericCellValue()).isEqualTo(9);
         }
     }
 
     private byte[] template() {
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             var sheet = workbook.createSheet("개별 심사표");
-            for (int rowIndex = 0; rowIndex < 14; rowIndex++) {
+            for (int rowIndex = 0; rowIndex < 15; rowIndex++) {
                 var row = sheet.createRow(rowIndex);
-                for (int column = 0; column < 4; column++) {
+                for (int column = 0; column < 7; column++) {
                     row.createCell(column);
                 }
             }
             sheet.getRow(0).getCell(0).setCellValue("원본 제목");
-            sheet.getRow(11).getCell(0).setCellValue("12행 보존");
+            sheet.getRow(2).getCell(0).setCellValue("소속/직위/이름");
+            sheet.addMergedRegion(new CellRangeAddress(2, 2, 1, 2));
+            sheet.addMergedRegion(new CellRangeAddress(2, 2, 3, 4));
+            sheet.addMergedRegion(new CellRangeAddress(2, 2, 5, 6));
+            sheet.getRow(12).getCell(0).setCellValue("13행 보존");
             workbook.write(output);
             return output.toByteArray();
         } catch (IOException e) {
@@ -265,6 +314,28 @@ class DownloadJudgeSheetsServiceImplTest {
         assertThat(image.getHeight()).isEqualTo(500);
     }
 
+    private void assertProfilePicture(
+            org.apache.poi.ss.usermodel.Sheet sheet,
+            XSSFPicture picture,
+            int column) throws IOException {
+        ClientAnchor anchor = picture.getClientAnchor();
+        int width = Math.round(sheet.getColumnWidthInPixels(column))
+                + Math.round(sheet.getColumnWidthInPixels(column + 1));
+        int height = Units.pointsToPixel(sheet.getRow(2).getHeightInPoints());
+        assertThat(anchor.getCol1()).isEqualTo((short) column);
+        assertThat(anchor.getCol2()).isEqualTo((short) column);
+        assertThat(anchor.getRow1()).isEqualTo(2);
+        assertThat(anchor.getRow2()).isEqualTo(2);
+        assertThat(anchor.getDx1()).isZero();
+        assertThat(anchor.getDy1()).isZero();
+        assertThat(anchor.getDx2()).isEqualTo(Units.pixelToEMU(width));
+        assertThat(anchor.getDy2()).isEqualTo(Units.pixelToEMU(height));
+
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
+        assertThat(image.getWidth()).isEqualTo(1000);
+        assertThat(image.getHeight()).isEqualTo(500);
+    }
+
     private Map<String, byte[]> zipEntries(byte[] zip) throws IOException {
         Map<String, byte[]> files = new java.util.HashMap<>();
         try (ZipInputStream input = new ZipInputStream(new ByteArrayInputStream(zip))) {
@@ -306,6 +377,19 @@ class DownloadJudgeSheetsServiceImplTest {
 
     private JudgeCommentEntity comment(TeamEntity team, UserEntity user, ArrayNode strokes) {
         return JudgeCommentEntity.builder().team(team).user(user).strokes(strokes).build();
+    }
+
+    private JudgeProfileEntity profile(
+            UserEntity user,
+            ArrayNode affiliation,
+            ArrayNode position,
+            ArrayNode name) {
+        return JudgeProfileEntity.builder()
+                .user(user)
+                .affiliationStrokes(affiliation)
+                .positionStrokes(position)
+                .nameStrokes(name)
+                .build();
     }
 
     private ArrayNode strokes() {
