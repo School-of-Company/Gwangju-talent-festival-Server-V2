@@ -10,8 +10,10 @@ import java.util.List;
 public final class PublicEndpointMatcher {
 
     private static final List<RequestMatcher> PUBLIC_ENDPOINTS = List.of(
-            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/auth(?:/.*)?")),
-            RegexRequestMatcher.regexMatcher(withOptionalQuery("^/excel(?:/.*)?")),
+            RegexRequestMatcher.regexMatcher(HttpMethod.POST, withOptionalQuery("^/auth/verify")),
+            RegexRequestMatcher.regexMatcher(HttpMethod.POST, withOptionalQuery("^/auth/join")),
+            RegexRequestMatcher.regexMatcher(HttpMethod.POST, withOptionalQuery("^/auth/login")),
+            RegexRequestMatcher.regexMatcher(HttpMethod.PATCH, withOptionalQuery("^/auth/refresh")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/actuator/health(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/actuator/prometheus(?:/.*)?")),
             RegexRequestMatcher.regexMatcher(withOptionalQuery("^/vote/[^/]+")),
