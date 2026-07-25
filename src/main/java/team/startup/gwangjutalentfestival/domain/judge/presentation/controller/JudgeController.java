@@ -12,14 +12,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeProfileRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeProfileResponse;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEventService;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
+import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
 
@@ -42,6 +45,22 @@ public class JudgeController {
     private final ConnectSseJudgeMonitoringService connectSseJudgeMonitoringService;
     private final GetJudgeCommentService getJudgeCommentService;
     private final SaveJudgeCommentService saveJudgeCommentService;
+    private final JudgeProfileService judgeProfileService;
+
+    @Operation(summary = "심사위원 필기 정보 조회", description = "현재 심사위원의 소속, 직위, 이름 필기를 조회합니다.")
+    @SecurityRequirement(name = "Authorization")
+    @GetMapping("/profile")
+    public ResponseEntity<GetJudgeProfileResponse> getProfile() {
+        return ResponseEntity.ok(judgeProfileService.get());
+    }
+
+    @Operation(summary = "심사위원 필기 정보 저장", description = "현재 심사위원의 소속, 직위, 이름 필기를 저장하거나 덮어씁니다.")
+    @SecurityRequirement(name = "Authorization")
+    @PutMapping("/profile")
+    public ResponseEntity<Void> saveProfile(@RequestBody @Valid SaveJudgeProfileRequest request) {
+        judgeProfileService.save(request);
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "SSE 연결", description = "심사 이벤트 수신을 위한 SSE 연결을 맺습니다.")
     @ApiResponses({

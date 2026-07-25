@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgeSheetsService;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgingSummaryExcelService;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeCommentEntity;
+import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeProfileEntity;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
+import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeProfileRepository;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
@@ -44,14 +46,19 @@ import java.util.zip.ZipOutputStream;
 @RequiredArgsConstructor
 public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsService {
 
-    private static final int COMMENT_WIDTH = 1000;
-    private static final int COMMENT_HEIGHT = 500;
-    private static final int COMMENT_PADDING = 10;
+    private static final int IMAGE_WIDTH = 1000;
+    private static final int IMAGE_HEIGHT = 500;
+    private static final int IMAGE_PADDING = 10;
     private static final int COMMENT_CELL_WIDTH = 100;
     private static final int COMMENT_CELL_HEIGHT = 50;
-    private static final int HEADER_ROW = 2;
-    private static final int FIRST_DATA_ROW = 3;
-    private static final int PRESERVED_ROW = 11;
+    private static final int PROFILE_ROW = 2;
+    private static final int HEADER_ROW = 3;
+    private static final int FIRST_DATA_ROW = 4;
+    private static final int PRESERVED_ROW = 12;
+    private static final int AFFILIATION_COLUMN = 1;
+    private static final int POSITION_COLUMN = 3;
+    private static final int NAME_COLUMN = 5;
+    private static final int PROFILE_COLUMN_SPAN = 2;
     private static final int TEAM_NAME_COLUMN = 1;
     private static final int SCORE_COLUMN = 2;
     private static final int COMMENT_COLUMN = 3;
@@ -59,6 +66,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
     private final JudgeCommentRepository judgeCommentRepository;
+    private final JudgeProfileRepository judgeProfileRepository;
     private final UserRepository userRepository;
     private final DownloadJudgingSummaryExcelService downloadJudgingSummaryExcelService;
     private final GoogleExcelAdapter googleExcelAdapter;
@@ -69,6 +77,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         List<TeamEntity> teams = teamRepository.findAllByOrderByPerformOrderAsc();
         List<JudgementEntity> judgements = judgementRepository.findAllWithUserAndTeam();
         Map<JudgeTeamKey, JudgeCommentEntity> comments = commentMap(judgeCommentRepository.findAllWithUserAndTeam());
+        Map<Long, JudgeProfileEntity> profiles = profileMap(judgeProfileRepository.findAllWithUser());
         byte[] judgeTemplate = googleExcelAdapter.exportJudgeTemplate();
 
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -81,7 +90,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             for (int index = 0; index < judgeIds.size(); index++) {
                 Long judgeId = judgeIds.get(index);
                 writeZipEntry(zip, "심사위원_" + judgeLabel(index) + "_개별심사표.xlsx",
-                        createJudgeSheet(judgeTemplate, teams, judgements, comments, judgeId, judgeLabel(index)));
+                        createJudgeSheet(
+                                judgeTemplate, teams, judgements, comments, profiles.get(judgeId), judgeId, judgeLabel(index)));
             }
         } catch (IOException e) {
             throw new IllegalStateException("심사표 ZIP을 생성할 수 없습니다.", e);
@@ -94,6 +104,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             List<TeamEntity> teams,
             List<JudgementEntity> judgements,
             Map<JudgeTeamKey, JudgeCommentEntity> comments,
+            JudgeProfileEntity profile,
             Long judgeId,
             String judgeLabel) throws IOException {
         Map<Long, JudgementEntity> scoreMap = new HashMap<>();
@@ -118,6 +129,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             if (drawing == null) {
                 drawing = sheet.createDrawingPatriarch();
             }
+            addProfileImages(workbook, drawing, sheet, profile);
             for (int index = 0; index < teams.size(); index++) {
                 TeamEntity team = teams.get(index);
                 JudgementEntity judgement = scoreMap.get(team.getId());
@@ -133,7 +145,14 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
 
                 JudgeCommentEntity comment = comments.get(new JudgeTeamKey(judgeId, team.getId()));
                 if (comment != null && hasPoints(comment.getStrokes())) {
-                    addCommentImage(workbook, drawing, sheet, rowIndex, renderComment(comment.getStrokes()));
+                    addImage(
+                            workbook,
+                            drawing,
+                            COMMENT_COLUMN,
+                            rowIndex,
+                            Math.round(sheet.getColumnWidthInPixels(COMMENT_COLUMN)),
+                            Units.pointsToPixel(row.getHeightInPoints()),
+                            renderStrokes(comment.getStrokes()));
                 }
             }
             workbook.write(output);
@@ -141,30 +160,67 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         }
     }
 
-    private void addCommentImage(Workbook workbook, Drawing<?> drawing, Sheet sheet, int rowIndex, byte[] image) {
+    private void addProfileImages(
+            Workbook workbook,
+            Drawing<?> drawing,
+            Sheet sheet,
+            JudgeProfileEntity profile) throws IOException {
+        if (profile == null) {
+            return;
+        }
+        addProfileImage(workbook, drawing, sheet, AFFILIATION_COLUMN, profile.getAffiliationStrokes());
+        addProfileImage(workbook, drawing, sheet, POSITION_COLUMN, profile.getPositionStrokes());
+        addProfileImage(workbook, drawing, sheet, NAME_COLUMN, profile.getNameStrokes());
+    }
+
+    private void addProfileImage(
+            Workbook workbook,
+            Drawing<?> drawing,
+            Sheet sheet,
+            int column,
+            JsonNode strokes) throws IOException {
+        if (!hasPoints(strokes)) {
+            return;
+        }
+        int width = 0;
+        for (int current = column; current < column + PROFILE_COLUMN_SPAN; current++) {
+            width += Math.round(sheet.getColumnWidthInPixels(current));
+        }
+        int height = Units.pointsToPixel(row(sheet, PROFILE_ROW).getHeightInPoints());
+        addImage(workbook, drawing, column, PROFILE_ROW, width, height, renderStrokes(strokes));
+    }
+
+    private void addImage(
+            Workbook workbook,
+            Drawing<?> drawing,
+            int column,
+            int row,
+            int width,
+            int height,
+            byte[] image) {
         int pictureIndex = workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
         ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
-        anchor.setCol1(COMMENT_COLUMN);
-        anchor.setCol2(COMMENT_COLUMN);
-        anchor.setRow1(rowIndex);
-        anchor.setRow2(rowIndex);
-        anchor.setDx2(Units.pixelToEMU(Math.round(sheet.getColumnWidthInPixels(COMMENT_COLUMN))));
-        anchor.setDy2(Units.pixelToEMU(Units.pointsToPixel(sheet.getRow(rowIndex).getHeightInPoints())));
+        anchor.setCol1(column);
+        anchor.setCol2(column);
+        anchor.setRow1(row);
+        anchor.setRow2(row);
+        anchor.setDx2(Units.pixelToEMU(width));
+        anchor.setDy2(Units.pixelToEMU(height));
         anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
         drawing.createPicture(anchor, pictureIndex);
     }
 
-    private byte[] renderComment(JsonNode strokes) throws IOException {
+    private byte[] renderStrokes(JsonNode strokes) throws IOException {
         double scale = Math.min(
-                (COMMENT_WIDTH - COMMENT_PADDING * 2d) / COMMENT_WIDTH,
-                (COMMENT_HEIGHT - COMMENT_PADDING * 2d) / COMMENT_HEIGHT);
-        double offsetX = (COMMENT_WIDTH - COMMENT_WIDTH * scale) / 2;
-        double offsetY = (COMMENT_HEIGHT - COMMENT_HEIGHT * scale) / 2;
-        BufferedImage image = new BufferedImage(COMMENT_WIDTH, COMMENT_HEIGHT, BufferedImage.TYPE_INT_ARGB);
+                (IMAGE_WIDTH - IMAGE_PADDING * 2d) / IMAGE_WIDTH,
+                (IMAGE_HEIGHT - IMAGE_PADDING * 2d) / IMAGE_HEIGHT);
+        double offsetX = (IMAGE_WIDTH - IMAGE_WIDTH * scale) / 2;
+        double offsetY = (IMAGE_HEIGHT - IMAGE_HEIGHT * scale) / 2;
+        BufferedImage image = new BufferedImage(IMAGE_WIDTH, IMAGE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = image.createGraphics();
         try {
             graphics.setColor(Color.WHITE);
-            graphics.fillRect(0, 0, COMMENT_WIDTH, COMMENT_HEIGHT);
+            graphics.fillRect(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
             graphics.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             for (JsonNode stroke : strokes) {
@@ -179,8 +235,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                     if (!isPoint(point)) {
                         continue;
                     }
-                    double x = offsetX + Math.clamp(point.path("x").asDouble(), 0, 1) * COMMENT_WIDTH * scale;
-                    double y = offsetY + Math.clamp(point.path("y").asDouble(), 0, 1) * COMMENT_HEIGHT * scale;
+                    double x = offsetX + Math.clamp(point.path("x").asDouble(), 0, 1) * IMAGE_WIDTH * scale;
+                    double y = offsetY + Math.clamp(point.path("y").asDouble(), 0, 1) * IMAGE_HEIGHT * scale;
                     if (started) {
                         path.lineTo(x, y);
                     } else {
@@ -226,6 +282,12 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private Map<JudgeTeamKey, JudgeCommentEntity> commentMap(List<JudgeCommentEntity> comments) {
         Map<JudgeTeamKey, JudgeCommentEntity> result = new HashMap<>();
         comments.forEach(comment -> result.put(new JudgeTeamKey(comment.getUser().getId(), comment.getTeam().getId()), comment));
+        return result;
+    }
+
+    private Map<Long, JudgeProfileEntity> profileMap(List<JudgeProfileEntity> profiles) {
+        Map<Long, JudgeProfileEntity> result = new HashMap<>();
+        profiles.forEach(profile -> result.put(profile.getUser().getId(), profile));
         return result;
     }
 
