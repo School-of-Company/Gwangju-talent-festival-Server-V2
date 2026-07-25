@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.domain.excel.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -17,7 +18,7 @@ import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgeShee
 
 import java.nio.charset.StandardCharsets;
 
-@Tag(name = "Excel", description = "엑셀 다운로드 API")
+@Tag(name = "Excel", description = "엑셀 다운로드 API (ADMIN 전용)")
 @RestController
 @RequestMapping("/excel")
 @RequiredArgsConstructor
@@ -27,8 +28,11 @@ public class ExcelController {
     private final DownloadJudgeSheetsService downloadJudgeSheetsService;
 
     @Operation(summary = "심사 집계표 다운로드", description = "전체 팀의 심사 집계 결과를 xlsx 파일로 다운로드합니다.")
+    @SecurityRequirement(name = "Authorization")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "다운로드 성공")
+            @ApiResponse(responseCode = "200", description = "다운로드 성공"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
     })
     @GetMapping("/summary")
     public ResponseEntity<byte[]> downloadSummary() {
@@ -48,8 +52,11 @@ public class ExcelController {
     }
 
     @Operation(summary = "심사위원별 심사표 다운로드", description = "집계표와 심사위원별 개별 심사표가 담긴 ZIP 파일을 다운로드합니다.")
+    @SecurityRequirement(name = "Authorization")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "다운로드 성공")
+            @ApiResponse(responseCode = "200", description = "다운로드 성공"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
+            @ApiResponse(responseCode = "403", description = "권한 없음")
     })
     @GetMapping("/judge-sheets")
     public ResponseEntity<byte[]> downloadJudgeSheets() {

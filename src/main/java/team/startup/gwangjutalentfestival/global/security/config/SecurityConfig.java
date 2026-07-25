@@ -86,6 +86,9 @@ public class SecurityConfig {
                         // monitoring
                         .requestMatchers("/monitoring/**").hasAnyAuthority(Role.ADMIN.name())
 
+                        // excel
+                        .requestMatchers("/excel/**").hasAnyAuthority(Role.ADMIN.name())
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
