@@ -102,8 +102,8 @@ class DownloadJudgeSheetsServiceImplTest {
             assertThat(sheet.getRow(3).getCell(2).getStringCellValue()).isEqualTo("완성도·표현력");
             assertThat(sheet.getRow(3).getCell(3).getStringCellValue()).isEqualTo("창의력·구성");
             assertThat(sheet.getRow(3).getCell(4).getStringCellValue()).isEqualTo("무대매너·퍼포먼스");
-            assertThat(sheet.getRow(3).getCell(5).getStringCellValue()).isEqualTo("산출 점수");
-            assertThat(sheet.getRow(3).getCell(6).getStringCellValue()).isEqualTo("코멘트 이미지");
+            assertThat(sheet.getRow(3).getCell(5).getStringCellValue()).isEqualTo("총합 점수");
+            assertThat(sheet.getRow(3).getCell(6).getStringCellValue()).isEqualTo("심사 의견");
             assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(1);
             assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀1");
             assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isEqualTo(20);
@@ -194,12 +194,12 @@ class DownloadJudgeSheetsServiceImplTest {
         given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of());
         given(judgeProfileRepository.findAllWithUser()).willReturn(List.of(
                 profile(judgeA,
-                        stroke("#ff0000", 0.1, 0.5, 0.9, 0.5),
-                        stroke("#00ff00", 0.1, 0.5, 0.9, 0.5),
-                        stroke("#121212", 0.5, 0.1, 0.5, 0.9)),
+                        path(0.1, 0.5, 0.9, 0.5),
+                        path(0.1, 0.5, 0.9, 0.5),
+                        path(0.5, 0.1, 0.5, 0.9)),
                 profile(judgeB,
-                        stroke("#0000ff", 0.1, 0.5, 0.9, 0.5),
-                        objectMapper.createArrayNode(),
+                        path(0.1, 0.5, 0.9, 0.5),
+                        emptyPath(),
                         objectMapper.createArrayNode())
         ));
         given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judgeA, judgeB));
@@ -215,9 +215,9 @@ class DownloadJudgeSheetsServiceImplTest {
             assertProfilePicture(sheet, pictures.get(0), 1);
             assertProfilePicture(sheet, pictures.get(1), 3);
             assertProfilePicture(sheet, pictures.get(2), 5);
-            assertThat(renderedImageHasColor(pictures.get(0).getPictureData(), Color.RED)).isTrue();
-            assertThat(renderedImageHasColor(pictures.get(1).getPictureData(), Color.GREEN)).isTrue();
-            assertThat(renderedImageHasColor(pictures.get(2).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
+            for (XSSFPicture picture : pictures) {
+                assertThat(renderedImageHasColor(picture.getPictureData(), Color.BLACK)).isTrue();
+            }
             assertThat(sheet.getDrawingPatriarch().getCTDrawing().getTwoCellAnchorList())
                     .allMatch(anchor -> anchor.getEditAs() == STEditAs.ONE_CELL);
         }
@@ -225,7 +225,7 @@ class DownloadJudgeSheetsServiceImplTest {
             var pictures = workbook.getSheet("개별 심사표").getDrawingPatriarch().getShapes();
             assertThat(pictures).hasSize(1);
             assertThat(renderedImageHasColor(
-                    ((XSSFPicture) pictures.getFirst()).getPictureData(), Color.BLUE)).isTrue();
+                    ((XSSFPicture) pictures.getFirst()).getPictureData(), Color.BLACK)).isTrue();
         }
     }
 
@@ -422,9 +422,23 @@ class DownloadJudgeSheetsServiceImplTest {
         return strokes;
     }
 
+    private ArrayNode path(double x1, double y1, double x2, double y2) {
+        ArrayNode strokes = objectMapper.createArrayNode();
+        var points = strokes.addArray();
+        points.addObject().put("x", x1).put("y", y1);
+        points.addObject().put("x", x2).put("y", y2);
+        return strokes;
+    }
+
     private ArrayNode emptyStroke() {
         ArrayNode strokes = objectMapper.createArrayNode();
         strokes.addObject().put("color", "#000000").putArray("points");
+        return strokes;
+    }
+
+    private ArrayNode emptyPath() {
+        ArrayNode strokes = objectMapper.createArrayNode();
+        strokes.addArray();
         return strokes;
     }
 }
