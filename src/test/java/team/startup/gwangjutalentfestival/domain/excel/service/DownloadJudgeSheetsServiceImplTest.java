@@ -2,7 +2,11 @@ package team.startup.gwangjutalentfestival.domain.excel.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.PictureData;
+import org.apache.poi.util.Units;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,11 +27,13 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.properties.GoogleExcelProperties;
+import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.STEditAs;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 import java.util.List;
@@ -75,7 +81,8 @@ class DownloadJudgeSheetsServiceImplTest {
         ));
         given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of(
                 comment(teamA, judgeA, strokes()),
-                comment(teamB, judgeA, objectMapper.createArrayNode())
+                comment(teamB, judgeA, objectMapper.createArrayNode()),
+                comment(teamA, judgeB, strokes())
         ));
         given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judgeA, judgeB));
         Map<String, byte[]> files = zipEntries(service.execute());
@@ -98,6 +105,69 @@ class DownloadJudgeSheetsServiceImplTest {
             assertThat(workbook.getAllPictures()).hasSize(1);
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), new Color(0x12, 0x12, 0x12))).isTrue();
+            assertCommentPicture(workbook, 3);
+        }
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_B_개별심사표.xlsx")))) {
+            assertCommentPicture(workbook, 3);
+        }
+    }
+
+    @Test
+    void 코멘트를_1000x500_PNG로_렌더링하고_D셀_100x50_안에_고정한다() throws Exception {
+        List<TeamEntity> teams = java.util.stream.IntStream.rangeClosed(1, 6)
+                .mapToObj(index -> team(index, index))
+                .toList();
+        UserEntity judge = user(10L);
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(teams);
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of());
+        given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of(
+                comment(teams.get(0), judge, stroke("#ff0000", 0.1, 0.5, 0.9, 0.5)),
+                comment(teams.get(1), judge, stroke("#121212", 0.5, 0.1, 0.5, 0.9)),
+                comment(teams.get(2), judge, stroke("#0000ff", 0.45, 0.45, 0.55, 0.55)),
+                comment(teams.get(3), judge, stroke("#00ff00", 0, 0, 1, 1)),
+                comment(teams.get(4), judge, strokes()),
+                comment(teams.get(5), judge, emptyStroke())
+        ));
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of(judge));
+
+        Map<String, byte[]> files = zipEntries(service.execute());
+
+        try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
+            var sheet = workbook.getSheet("개별 심사표");
+            var pictures = sheet.getDrawingPatriarch().getShapes().stream()
+                    .map(XSSFPicture.class::cast)
+                    .toList();
+            assertThat(pictures).hasSize(5);
+            pictures.forEach(picture -> {
+                BufferedImage image;
+                try {
+                    image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+                assertThat(image.getWidth()).isEqualTo(1000);
+                assertThat(image.getHeight()).isEqualTo(500);
+            });
+
+            Rectangle horizontal = renderedBounds(pictures.get(0).getPictureData());
+            Rectangle vertical = renderedBounds(pictures.get(1).getPictureData());
+            Rectangle center = renderedBounds(pictures.get(2).getPictureData());
+            Rectangle corner = renderedBounds(pictures.get(3).getPictureData());
+            assertThat(horizontal.width).isGreaterThan(horizontal.height);
+            assertThat(horizontal.getCenterY()).isBetween(249d, 251d);
+            assertThat(vertical.height).isGreaterThan(vertical.width);
+            assertThat(vertical.getCenterX()).isBetween(499d, 501d);
+            assertThat(center.getCenterX()).isBetween(499d, 501d);
+            assertThat(center.getCenterY()).isBetween(249d, 251d);
+            assertThat(corner.x).isGreaterThanOrEqualTo(18);
+            assertThat(corner.y).isGreaterThanOrEqualTo(8);
+            assertThat(corner.getMaxX()).isLessThanOrEqualTo(982);
+            assertThat(corner.getMaxY()).isLessThanOrEqualTo(492);
+            assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), Color.RED)).isTrue();
+            assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
+            assertThat(pictures).extracting(picture -> picture.getClientAnchor().getRow1())
+                    .containsExactly(3, 4, 5, 6, 7);
+            assertThat(sheet.getRow(8).getHeightInPoints()).isEqualTo(37.5f);
         }
     }
 
@@ -152,6 +222,49 @@ class DownloadJudgeSheetsServiceImplTest {
         return false;
     }
 
+    private Rectangle renderedBounds(PictureData picture) throws IOException {
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getData()));
+        int minX = image.getWidth();
+        int minY = image.getHeight();
+        int maxX = -1;
+        int maxY = -1;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                if ((image.getRGB(x, y) & 0x00ffffff) != 0x00ffffff) {
+                    minX = Math.min(minX, x);
+                    minY = Math.min(minY, y);
+                    maxX = Math.max(maxX, x);
+                    maxY = Math.max(maxY, y);
+                }
+            }
+        }
+        return new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    private void assertCommentPicture(XSSFWorkbook workbook, int rowIndex) throws IOException {
+        var sheet = workbook.getSheet("개별 심사표");
+        assertThat(sheet.getColumnWidthInPixels(3)).isBetween(99.9f, 100.1f);
+        assertThat(sheet.getRow(rowIndex).getHeightInPoints()).isEqualTo(37.5f);
+        assertThat(sheet.getMergedRegions()).noneMatch(region -> region.isInRange(rowIndex, 3));
+
+        XSSFPicture picture = (XSSFPicture) sheet.getDrawingPatriarch().getShapes().getFirst();
+        ClientAnchor anchor = picture.getClientAnchor();
+        assertThat(anchor.getCol1()).isEqualTo((short) 3);
+        assertThat(anchor.getCol2()).isEqualTo((short) 3);
+        assertThat(anchor.getRow1()).isEqualTo(rowIndex);
+        assertThat(anchor.getRow2()).isEqualTo(rowIndex);
+        assertThat(anchor.getDx1()).isZero();
+        assertThat(anchor.getDy1()).isZero();
+        assertThat(anchor.getDx2()).isEqualTo(Units.pixelToEMU(100));
+        assertThat(anchor.getDy2()).isEqualTo(Units.pixelToEMU(50));
+        XSSFDrawing drawing = sheet.getDrawingPatriarch();
+        assertThat(drawing.getCTDrawing().getTwoCellAnchorArray(0).getEditAs()).isEqualTo(STEditAs.ONE_CELL);
+
+        BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
+        assertThat(image.getWidth()).isEqualTo(1000);
+        assertThat(image.getHeight()).isEqualTo(500);
+    }
+
     private Map<String, byte[]> zipEntries(byte[] zip) throws IOException {
         Map<String, byte[]> files = new java.util.HashMap<>();
         try (ZipInputStream input = new ZipInputStream(new ByteArrayInputStream(zip))) {
@@ -203,6 +316,20 @@ class DownloadJudgeSheetsServiceImplTest {
         points = strokes.addObject().put("color", "#121212").putArray("points");
         points.addObject().put("x", 0.2).put("y", 0.3);
         points.addObject().put("x", 0.7).put("y", 0.4);
+        return strokes;
+    }
+
+    private ArrayNode stroke(String color, double x1, double y1, double x2, double y2) {
+        ArrayNode strokes = objectMapper.createArrayNode();
+        var points = strokes.addObject().put("color", color).putArray("points");
+        points.addObject().put("x", x1).put("y", y1);
+        points.addObject().put("x", x2).put("y", y2);
+        return strokes;
+    }
+
+    private ArrayNode emptyStroke() {
+        ArrayNode strokes = objectMapper.createArrayNode();
+        strokes.addObject().put("color", "#000000").putArray("points");
         return strokes;
     }
 }
