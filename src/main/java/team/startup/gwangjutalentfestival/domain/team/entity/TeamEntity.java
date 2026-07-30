@@ -37,6 +37,9 @@ public class TeamEntity {
     @Enumerated(EnumType.STRING)
     private TeamGenre teamGenre;
 
+    @Column(name = "applicant_name")
+    private String applicantName;
+
     @Column(name = "perform_order")
     private Integer performOrder;
 
