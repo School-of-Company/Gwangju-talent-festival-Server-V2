@@ -77,6 +77,9 @@ monitoring:
     enabled: false
     prometheus-base-url: http://localhost:9090
     discord-webhook-url: ""
+  request-alert:
+    enabled: false
+    slow-threshold-millis: 3000
   ml:
     enabled: false
     base-url: ""
