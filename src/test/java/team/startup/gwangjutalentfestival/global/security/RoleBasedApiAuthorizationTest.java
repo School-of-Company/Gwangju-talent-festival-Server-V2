@@ -34,6 +34,7 @@ import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementServi
 import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
+import team.startup.gwangjutalentfestival.domain.monitoring.client.DiscordWebhookClient;
 import team.startup.gwangjutalentfestival.domain.monitoring.presentation.controller.MonitoringController;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.CreateIncidentFeedbackService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.ExportDatasetService;
@@ -152,6 +153,8 @@ class RoleBasedApiAuthorizationTest {
     private GetAnomalyEventSummaryService getAnomalyEventSummaryService;
     @MockBean
     private ExportDatasetService exportDatasetService;
+    @MockBean
+    private DiscordWebhookClient discordWebhookClient;
 
     @MockBean
     private DownloadJudgingSummaryExcelService downloadJudgingSummaryExcelService;
