@@ -12,10 +12,9 @@ spring:
       max-request-size: ${MAX_REQUEST_SIZE:500MB}
 
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
+    url: ${DB_URL:jdbc:mariadb://localhost:3306/gwangjutalentfestival?serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
-    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -46,6 +45,9 @@ jwt:
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003,http://localhost:3004}
 
+rate-limit:
+  cooldown-seconds: ${RATE_LIMIT_COOLDOWN_SECONDS:1}
+
 feign:
   log-level: ${FEIGN_LOG_LEVEL:BASIC}
 
@@ -75,6 +77,8 @@ google:
   excel:
     template-sheet-id: ${GOOGLE_EXCEL_TEMPLATE_SHEET_ID}
     summary-page: ${GOOGLE_EXCEL_SUMMARY_PAGE}
+    judge-template-sheet-id: ${GOOGLE_EXCEL_JUDGE_TEMPLATE_SHEET_ID}
+    judge-template-page: ${GOOGLE_EXCEL_JUDGE_TEMPLATE_PAGE}
 
 slogan:
   submission:
@@ -120,6 +124,9 @@ monitoring:
     enabled: ${ANOMALY_DETECTOR_ENABLED:false}
     prometheus-base-url: ${PROMETHEUS_BASE_URL:http://localhost:9090}
     discord-webhook-url: ${DISCORD_WEBHOOK_URL:}
+  request-alert:
+    enabled: ${REQUEST_ALERT_ENABLED:false}
+    slow-threshold-millis: ${REQUEST_ALERT_SLOW_THRESHOLD_MILLIS:3000}
   ml:
     enabled: ${ML_ANOMALY_SCORE_ENABLED:false}
     base-url: ${ML_SERVER_BASE_URL:}

@@ -12,13 +12,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeProfileRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeProfileResponse;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgementResponse;
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEventService;
+import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
+import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
 
@@ -38,8 +42,25 @@ public class JudgeController {
     private final GetAllJudgementService getAllJudgementService;
     private final GetJudgementService getJudgementService;
     private final ConnectSseJudgeEventService connectSseJudgeEventService;
+    private final ConnectSseJudgeMonitoringService connectSseJudgeMonitoringService;
     private final GetJudgeCommentService getJudgeCommentService;
     private final SaveJudgeCommentService saveJudgeCommentService;
+    private final JudgeProfileService judgeProfileService;
+
+    @Operation(summary = "심사위원 필기 정보 조회", description = "현재 심사위원의 소속, 직위, 이름 필기를 조회합니다.")
+    @SecurityRequirement(name = "Authorization")
+    @GetMapping("/profile")
+    public ResponseEntity<GetJudgeProfileResponse> getProfile() {
+        return ResponseEntity.ok(judgeProfileService.get());
+    }
+
+    @Operation(summary = "심사위원 필기 정보 저장", description = "현재 심사위원의 소속, 직위, 이름 필기를 저장하거나 덮어씁니다.")
+    @SecurityRequirement(name = "Authorization")
+    @PutMapping("/profile")
+    public ResponseEntity<Void> saveProfile(@RequestBody @Valid SaveJudgeProfileRequest request) {
+        judgeProfileService.save(request);
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "SSE 연결", description = "심사 이벤트 수신을 위한 SSE 연결을 맺습니다.")
     @ApiResponses({
@@ -54,6 +75,17 @@ public class JudgeController {
     @GetMapping(value = "/changes", produces = "text/event-stream")
     public SseEmitter connect() {
         return connectSseJudgeEventService.execute();
+    }
+
+    @Operation(summary = "심사 모니터링 SSE 연결", description = "관리자가 팀별 심사 점수, 산출점수, 순위, 필기 코멘트의 전체 스냅샷을 실시간으로 수신합니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "SSE 연결 성공"),
+            @ApiResponse(responseCode = "403", description = "관리자 권한 필요")
+    })
+    @SecurityRequirement(name = "Authorization")
+    @GetMapping(value = "/monitor/changes", produces = "text/event-stream")
+    public SseEmitter connectMonitoring() {
+        return connectSseJudgeMonitoringService.execute();
     }
 
     @Operation(summary = "심사 점수 저장", description = "팀에 대한 심사 점수를 저장하거나 수정합니다.")

@@ -2,10 +2,12 @@ package team.startup.gwangjutalentfestival.domain.judge.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
+import team.startup.gwangjutalentfestival.domain.judge.event.JudgeMonitoringChangedEvent;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgementScoreService;
@@ -13,10 +15,10 @@ import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.exception.TeamNotFoundException;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -32,6 +34,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
     private final TeamRepository teamRepository;
     private final UserUtil userUtil;
     private final OperationMetricRecorder metricRecorder;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 현재 로그인한 심사위원의 특정 팀 심사 점수를 저장하거나 수정한다.
@@ -69,6 +72,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
                                             .user(user)
                                             .build()));
                     updateTotalScore(team);
+                    applicationEventPublisher.publishEvent(new JudgeMonitoringChangedEvent());
                 }
         );
     }
@@ -81,7 +85,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
      * @param team 총점을 갱신할 팀 엔티티
      */
     private void updateTotalScore(TeamEntity team) {
-        List<Integer> scores = judgementRepository.findAllJudgeTotalScoresByTeam(team);
+        List<Integer> scores = judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE);
         team.updateTotalScore(calculateTotalScore(scores));
     }
 
@@ -89,14 +93,6 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
         if (scores.isEmpty()) {
             return 0;
         }
-        int sum = scores.stream().mapToInt(Integer::intValue).sum();
-        // ponytail: 최고/최저를 제외하면 최소 1명은 남아야 트리밍이 의미 있으므로 3명 미만은 단순 평균
-        if (scores.size() < 3) {
-            return Math.round(sum / (float) scores.size());
-        }
-        int max = Collections.max(scores);
-        int min = Collections.min(scores);
-        int remainingCount = scores.size() - 2;
-        return Math.round((sum - max - min) / (float) remainingCount);
+        return team.startup.gwangjutalentfestival.domain.judge.util.JudgeScoreCalculator.calculate(scores);
     }
 }

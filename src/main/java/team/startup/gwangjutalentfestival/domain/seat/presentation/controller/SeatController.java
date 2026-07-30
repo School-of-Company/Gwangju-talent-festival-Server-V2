@@ -18,6 +18,7 @@ import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatResponse;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatsBySectionResponse;
 import team.startup.gwangjutalentfestival.domain.seat.service.*;
+import team.startup.gwangjutalentfestival.global.ratelimit.RateLimited;
 
 import java.util.List;
 
@@ -51,8 +52,10 @@ public class SeatController {
             @ApiResponse(responseCode = "201", description = "좌석 예약 성공"),
             @ApiResponse(responseCode = "400", description = "유효하지 않은 좌석 구역"),
             @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
-            @ApiResponse(responseCode = "409", description = "이미 예약된 좌석")
+            @ApiResponse(responseCode = "409", description = "이미 예약된 좌석"),
+            @ApiResponse(responseCode = "429", description = "쿨다운 내 재요청")
     })
+    @RateLimited(key = "seat:reservation")
     @PostMapping
     public ResponseEntity<Void> reservationSeat(
             @Valid @RequestBody ReservationSeatRequest reservationSeatRequest) {

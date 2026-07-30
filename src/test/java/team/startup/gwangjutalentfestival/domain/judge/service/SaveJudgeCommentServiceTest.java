@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
@@ -45,6 +46,9 @@ class SaveJudgeCommentServiceTest {
     @Mock
     private JudgeCommentRepository judgeCommentRepository;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private SaveJudgeCommentServiceImpl saveJudgeCommentService;
@@ -56,11 +60,11 @@ class SaveJudgeCommentServiceTest {
     @BeforeEach
     void setUp() {
         saveJudgeCommentService = new SaveJudgeCommentServiceImpl(
-                userUtil, teamRepository, judgeCommentRepository, objectMapper);
+                userUtil, teamRepository, judgeCommentRepository, objectMapper, applicationEventPublisher);
 
         user = UserEntity.builder()
                 .id(USER_ID)
-                .role(Role.ADMIN)
+                .role(Role.JUDGE)
                 .build();
 
         team = TeamEntity.builder()

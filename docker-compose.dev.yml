@@ -2,17 +2,17 @@ name: gwangjutalentfestival
 
 services:
   mysql:
-    image: mysql:8.0
+    image: mariadb:10.11
     container_name: mysql
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-}
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-}
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD:-}
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MARIADB_ROOT_PASSWORD"]
       interval: 10s
       timeout: 5s
       retries: 10

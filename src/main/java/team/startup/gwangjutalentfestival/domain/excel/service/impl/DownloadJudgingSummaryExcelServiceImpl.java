@@ -6,8 +6,13 @@ import org.springframework.stereotype.Service;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgingSummaryExcelService;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
+import team.startup.gwangjutalentfestival.domain.judge.util.JudgeRankingCalculator;
+import team.startup.gwangjutalentfestival.domain.judge.util.JudgeScoreCalculator;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
 import team.startup.gwangjutalentfestival.domain.team.repository.TeamRepository;
+import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 
 import java.util.*;
@@ -23,29 +28,34 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
 
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
+    private final UserRepository userRepository;
     private final GoogleExcelAdapter googleExcelAdapter;
 
     @Override
     public byte[] execute() {
         List<TeamEntity> teams = teamRepository.findAllByOrderByPerformOrderAsc();
         List<JudgementEntity> judgements = judgementRepository.findAllWithUserAndTeam();
+        List<Long> allJudgeIds = userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE).stream()
+                .map(UserEntity::getId)
+                .toList();
+        List<Long> judgeIds = allJudgeIds.stream()
+                .limit(MAX_JUDGE_COLUMNS)
+                .toList();
 
-        long totalJudgeCount = judgements.stream().map(j -> j.getUser().getId()).distinct().count();
+        long totalJudgeCount = allJudgeIds.size();
         if (totalJudgeCount > MAX_JUDGE_COLUMNS) {
             log.warn("심사위원 수가 최대 허용 인원을 초과하였습니다. - total: {}, max: {}", totalJudgeCount, MAX_JUDGE_COLUMNS);
         }
 
-        List<Long> judgeIds = judgements.stream()
-                .map(j -> j.getUser().getId())
-                .distinct()
-                .sorted()
-                .limit(MAX_JUDGE_COLUMNS)
+        Map<Long, Map<Long, Integer>> scoreMap = buildScoreMap(judgements, judgeIds);
+        Map<Long, Integer> teamTotalMap = teams.stream().collect(Collectors.toMap(
+                TeamEntity::getId,
+                team -> JudgeScoreCalculator.calculate(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).values())
+        ));
+        List<JudgementEntity> judgeJudgements = judgements.stream()
+                .filter(judgement -> judgeIds.contains(judgement.getUser().getId()))
                 .toList();
-
-        Map<Long, Map<Long, Integer>> scoreMap = buildScoreMap(judgements);
-        Map<Long, Integer> teamTotalMap = teams.stream()
-                .collect(Collectors.toMap(TeamEntity::getId, TeamEntity::getTotalScore));
-        Map<Long, Integer> rankMap = denseRank(teamTotalMap);
+        Map<Long, Integer> rankMap = JudgeRankingCalculator.calculate(teams, judgeJudgements, teamTotalMap);
 
         List<List<Object>> rows = new ArrayList<>();
         rows.add(buildHeaderRow(judgeIds.size()));
@@ -54,9 +64,12 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
         return googleExcelAdapter.exportSummary(rows);
     }
 
-    private Map<Long, Map<Long, Integer>> buildScoreMap(List<JudgementEntity> judgements) {
+    private Map<Long, Map<Long, Integer>> buildScoreMap(List<JudgementEntity> judgements, List<Long> judgeIds) {
         Map<Long, Map<Long, Integer>> scoreMap = new HashMap<>();
         for (JudgementEntity j : judgements) {
+            if (!judgeIds.contains(j.getUser().getId())) {
+                continue;
+            }
             int score = nz(j.getCompletenessExpressionScore())
                     + nz(j.getCreativityCompositionScore())
                     + nz(j.getStagePerformanceTeamworkScore());
@@ -68,7 +81,8 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
 
     private List<Object> buildHeaderRow(int judgeCount) {
         List<Object> header = new ArrayList<>();
-        header.add("심사번호");
+        header.add("심사순서");
+        header.add("팀명");
         for (int i = 0; i < judgeCount; i++) {
             header.add("심사위원 (" + (char) ('A' + i) + ")");
         }
@@ -84,11 +98,12 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
             Map<Long, Integer> teamTotalMap,
             Map<Long, Integer> rankMap) {
         List<Object> row = new ArrayList<>();
-        row.add(team.getPerformOrder());
-        judgeIds.forEach(judgeId ->
-                row.add(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).get(judgeId)));
-        row.add(teamTotalMap.get(team.getId()));
-        row.add(rankMap.get(team.getId()));
+        row.add(nz(team.getPerformOrder()));
+        row.add(team.getTeamName());
+        Map<Long, Integer> teamScores = scoreMap.getOrDefault(team.getId(), Collections.emptyMap());
+        judgeIds.forEach(judgeId -> row.add(teamScores.getOrDefault(judgeId, 0)));
+        row.add(nz(teamTotalMap.get(team.getId())));
+        row.add(nz(rankMap.get(team.getId())));
         return row;
     }
 
@@ -96,16 +111,4 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
         return Optional.ofNullable(v).orElse(0);
     }
 
-    private Map<Long, Integer> denseRank(Map<Long, Integer> teamTotalMap) {
-        List<Integer> sortedScores = teamTotalMap.values().stream()
-                .distinct()
-                .sorted(Comparator.reverseOrder())
-                .toList();
-        Map<Integer, Integer> scoreToRank = new HashMap<>();
-        for (int i = 0; i < sortedScores.size(); i++) {
-            scoreToRank.put(sortedScores.get(i), i + 1);
-        }
-        return teamTotalMap.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> scoreToRank.get(e.getValue())));
-    }
 }

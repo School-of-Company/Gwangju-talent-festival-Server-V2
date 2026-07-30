@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgementScoreRequest;
@@ -44,6 +45,9 @@ class SaveJudgementScoreServiceTest {
     @Mock
     private UserUtil userUtil;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
     private final OperationMetricRecorder metricRecorder =
             new OperationMetricRecorder(new SimpleMeterRegistry());
 
@@ -59,12 +63,13 @@ class SaveJudgementScoreServiceTest {
                 judgementRepository,
                 teamRepository,
                 userUtil,
-                metricRecorder
+                metricRecorder,
+                applicationEventPublisher
         );
 
         user = UserEntity.builder()
                 .id(1L)
-                .role(Role.ADMIN)
+                .role(Role.JUDGE)
                 .build();
 
         team = TeamEntity.builder()
@@ -85,7 +90,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -106,7 +111,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.of(existing));
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(50));
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE)).willReturn(List.of(50));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -121,7 +126,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(80, 70));
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE)).willReturn(List.of(80, 70));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -133,7 +138,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of(90, 60, 30));
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE)).willReturn(List.of(90, 60, 30));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -145,7 +150,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team)).willReturn(List.of());
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE)).willReturn(List.of());
 
         saveJudgementScoreService.execute(request, TEAM_ID);
 
@@ -157,7 +162,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE))
                 .willReturn(List.of(100, 90, 80, 70, 60));
 
         saveJudgementScoreService.execute(request, TEAM_ID);
@@ -170,7 +175,7 @@ class SaveJudgementScoreServiceTest {
         given(userUtil.getCurrentUser()).willReturn(user);
         given(teamRepository.findByIdForUpdate(TEAM_ID)).willReturn(Optional.of(team));
         given(judgementRepository.findByTeamAndUser(team, user)).willReturn(Optional.empty());
-        given(judgementRepository.findAllJudgeTotalScoresByTeam(team))
+        given(judgementRepository.findAllJudgeTotalScoresByTeam(team, Role.JUDGE))
                 .willReturn(List.of(100, 90, 85, 70, 60));
 
         saveJudgementScoreService.execute(request, TEAM_ID);

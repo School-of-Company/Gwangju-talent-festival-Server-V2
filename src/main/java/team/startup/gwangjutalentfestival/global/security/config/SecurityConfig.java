@@ -80,13 +80,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/seat").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name(), Role.PERFORMER.name())
 
                         // judge
-                        .requestMatchers(HttpMethod.GET, "/judge/changes").hasAnyAuthority(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/judge").hasAnyAuthority(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.GET, "/judge/{teamId}").hasAnyAuthority(Role.ADMIN.name())
-                        .requestMatchers(HttpMethod.PATCH, "/judge/{teamId}").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/judge/monitor/changes").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers("/judge/**").hasAnyAuthority(Role.JUDGE.name())
 
                         // monitoring
                         .requestMatchers("/monitoring/**").hasAnyAuthority(Role.ADMIN.name())
+
+                        // excel
+                        .requestMatchers("/excel/**").hasAnyAuthority(Role.ADMIN.name())
 
                         .anyRequest().authenticated()
                 )
