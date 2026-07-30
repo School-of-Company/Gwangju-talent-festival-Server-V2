@@ -36,6 +36,8 @@ public class GetAllTeamServiceImpl implements GetAllTeamService {
                         t.getId(),
                         t.getTeamName(),
                         t.getSchool(),
+                        t.getTeamGenre(),
+                        t.getApplicantName(),
                         t.getPerformOrder(),
                         t.getTeamStatus()
                 )).toList();
