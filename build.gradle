@@ -81,6 +81,8 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.3.0'
 
     // Database
+    implementation 'org.flywaydb:flyway-core'
+    runtimeOnly 'org.flywaydb:flyway-mysql'
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 
     // QueryDSL
