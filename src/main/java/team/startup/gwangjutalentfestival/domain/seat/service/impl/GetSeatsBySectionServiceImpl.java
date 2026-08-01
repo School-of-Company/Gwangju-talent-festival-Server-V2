@@ -30,8 +30,8 @@ public class GetSeatsBySectionServiceImpl implements GetSeatsBySectionService {
         Role role = UserUtil.getCurrentUserRole();
 
         Set<Integer> reservedSeatNumbers = seatReservationCustomRepository.findSeatNumbersBySeatSection(section);
-        Set<Integer> bannedSeatNumbers = seatBanCustomRepository.findSeatNumbersBySeatSectionAndRole(section, role);
+        Set<Integer> bannedSeatNumbers = seatBanCustomRepository.findSeatNumbersBySeatSection(section);
 
-        return seatUtil.buildSeatAvailability(section, bannedSeatNumbers, reservedSeatNumbers);
+        return seatUtil.buildSeatAvailability(section, bannedSeatNumbers, reservedSeatNumbers, role);
     }
 }

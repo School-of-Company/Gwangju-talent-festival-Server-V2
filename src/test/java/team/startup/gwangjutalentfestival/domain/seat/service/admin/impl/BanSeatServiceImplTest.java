@@ -10,7 +10,6 @@ import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
-import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +34,7 @@ class BanSeatServiceImplTest {
     }
 
     private BanSeatRequest request() {
-        return new BanSeatRequest(SEAT_SECTION, SEAT_NUMBER, Role.USER);
+        return new BanSeatRequest(SEAT_SECTION, SEAT_NUMBER);
     }
 
     @Test

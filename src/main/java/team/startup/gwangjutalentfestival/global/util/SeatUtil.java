@@ -3,6 +3,7 @@ package team.startup.gwangjutalentfestival.global.util;
 import org.springframework.stereotype.Component;
 import team.startup.gwangjutalentfestival.domain.seat.exception.InvalidSeatSectionException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatsBySectionResponse;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class SeatUtil {
 
     private static final Map<String, Integer> SEAT_MAP = Map.of(
             "A", 101, "B", 132, "C", 101, "D", 89, "E", 96,
-            "F", 89, "W", 6
+            "F", 89
     );
 
     /**
@@ -45,9 +46,25 @@ public class SeatUtil {
         return SEAT_MAP.get(section);
     }
 
-    public GetSeatsBySectionResponse buildSeatAvailability(String section, Set<Integer> bans, Set<Integer> reservations) {
+    public boolean isAllowedForRole(Role role, String section, int seatNumber) {
+        boolean performerSeat = switch (section) {
+            case "A" -> seatNumber <= 15 || seatNumber >= 21 && seatNumber <= 23;
+            case "B" -> seatNumber <= 36;
+            case "C" -> seatNumber <= 18;
+            default -> false;
+        };
+
+        return role == Role.PERFORMER ? performerSeat : role != Role.USER || !performerSeat;
+    }
+
+    public GetSeatsBySectionResponse buildSeatAvailability(
+            String section,
+            Set<Integer> bans,
+            Set<Integer> reservations,
+            Role role
+    ) {
         List<Boolean> seats = IntStream.rangeClosed(1, getMaxSeats(section))
-                .mapToObj(i -> !bans.contains(i) && !reservations.contains(i))
+                .mapToObj(i -> isAllowedForRole(role, section, i) && !bans.contains(i) && !reservations.contains(i))
                 .toList();
         return new GetSeatsBySectionResponse(seats);
     }

@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBanne
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 
 /**
  * {@link BanSeatService}의 구현체.
@@ -26,11 +29,15 @@ public class BanSeatServiceImpl implements BanSeatService {
     /**
      * 요청한 좌석을 차단 처리하고 SSE 이벤트를 발행한다.
      *
-     * @param request 차단할 좌석의 구역, 번호, 적용 역할 정보
+     * @param request 차단할 좌석의 구역과 번호 정보
      * @throws team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBannedException 이미 차단된 좌석일 때
      */
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.SEATS_ALL, allEntries = true),
+            @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
+    })
     public void execute(BanSeatRequest request) {
         if (seatBanRepository
                 .existsBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())) {
@@ -40,7 +47,6 @@ public class BanSeatServiceImpl implements BanSeatService {
         SeatBanEntity seatBan = SeatBanEntity.builder()
                 .seatSection(request.seatSection())
                 .seatNumber(request.seatNumber())
-                .role(request.role())
                 .build();
 
         try {

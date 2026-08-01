@@ -9,6 +9,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationL
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
+import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
 import static team.startup.gwangjutalentfestival.domain.user.enums.Role.PERFORMER;
@@ -20,8 +21,9 @@ public class SeatReservationValidator {
     private final SeatReservationRepository seatReservationRepository;
     private final SeatBanRepository seatBanRepository;
     private final UserRepository userRepository;
+    private final SeatUtil seatUtil;
 
-    private static final int PERFORMER_SEAT_LIMIT = 3;
+    private static final int PERFORMER_SEAT_LIMIT = 2;
     private static final int DEFAULT_SEAT_LIMIT = 1;
 
     public void validateSeatRange(Integer seatNumber, Integer maxSeats) {
@@ -33,6 +35,12 @@ public class SeatReservationValidator {
     public void validateSeatAvailability(String seatSection, Integer seatNumber) {
         if (seatReservationRepository.existsBySeatSectionAndSeatNumber(seatSection, seatNumber)) throw new SeatAlreadyReservedException();
         if (seatBanRepository.existsBySeatSectionAndSeatNumber(seatSection, seatNumber)) throw new SeatBannedException();
+    }
+
+    public void validateSeatAccess(String seatSection, Integer seatNumber) {
+        if (!seatUtil.isAllowedForRole(UserUtil.getCurrentUserRole(), seatSection, seatNumber)) {
+            throw new SeatBannedException();
+        }
     }
 
     public void validateReservationLimit() {
