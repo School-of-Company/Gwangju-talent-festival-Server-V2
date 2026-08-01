@@ -100,7 +100,7 @@ public class SeatController {
     /**
      * 특정 구역의 좌석 예약 가능 여부 목록을 조회한다.
      *
-     * @param section 조회할 좌석 구역 (A~J)
+     * @param section 조회할 좌석 구역 (A~F)
      * @return 해당 구역의 좌석별 예약 가능 여부 목록
      */
     @Operation(summary = "구역별 좌석 현황 조회", description = "특정 구역의 좌석 예약 가능 여부 목록을 조회합니다.")

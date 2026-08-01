@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.service.admin.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +12,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBanNotFoundE
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.CancelSeatBanRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
+import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 
 /**
  * {@link CancelSeatBanService}의 구현체.
@@ -30,6 +33,10 @@ public class CancelSeatBanServiceImpl implements CancelSeatBanService {
      */
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.SEATS_ALL, allEntries = true),
+            @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
+    })
     public void execute(CancelSeatBanRequest request) {
         SeatBanEntity seatBan = seatBanRepository
                 .findBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())

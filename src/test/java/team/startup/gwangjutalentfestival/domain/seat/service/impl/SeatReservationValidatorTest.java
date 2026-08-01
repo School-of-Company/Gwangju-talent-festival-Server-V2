@@ -16,10 +16,12 @@ import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
+import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
@@ -37,6 +39,9 @@ class SeatReservationValidatorTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private SeatUtil seatUtil;
 
     private static final String SECTION = "A";
     private static final Integer SEAT_NUMBER = 1;
@@ -73,6 +78,17 @@ class SeatReservationValidatorTest {
     }
 
     @Test
+    void 현재_역할에_허용되지_않은_좌석이면_SeatBannedException이_발생한다() {
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
+            given(seatUtil.isAllowedForRole(Role.PERFORMER, SECTION, SEAT_NUMBER)).willReturn(false);
+
+            assertThatThrownBy(() -> validator.validateSeatAccess(SECTION, SEAT_NUMBER))
+                    .isInstanceOf(SeatBannedException.class);
+        }
+    }
+
+    @Test
     void USER_예약_한도_초과시_SeatReservationLimitExceededException이_발생한다() {
         try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
             UserEntity user = UserEntity.builder().id(USER_ID).role(Role.USER).build();
@@ -93,10 +109,23 @@ class SeatReservationValidatorTest {
             userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
             userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
             given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
-            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(3L);
+            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(2L);
 
             assertThatThrownBy(() -> validator.validateReservationLimit())
                     .isInstanceOf(SeatReservationLimitExceededException.class);
+        }
+    }
+
+    @Test
+    void PERFORMER_1석_보유시_추가_예약이_가능하다() {
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            UserEntity user = UserEntity.builder().id(USER_ID).role(Role.PERFORMER).build();
+            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
+            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
+            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(1L);
+
+            assertThatCode(validator::validateReservationLimit).doesNotThrowAnyException();
         }
     }
 }

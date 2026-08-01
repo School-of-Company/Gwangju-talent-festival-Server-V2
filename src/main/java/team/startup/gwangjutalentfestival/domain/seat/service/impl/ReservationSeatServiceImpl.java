@@ -45,6 +45,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
                     Integer seatNumber = request.seatNumber();
 
                     seatReservationValidator.validateSeatRange(seatNumber, seatUtil.getMaxSeats(seatSection));
+                    seatReservationValidator.validateSeatAccess(seatSection, seatNumber);
                     seatReservationValidator.validateReservationLimit();
                     seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
 

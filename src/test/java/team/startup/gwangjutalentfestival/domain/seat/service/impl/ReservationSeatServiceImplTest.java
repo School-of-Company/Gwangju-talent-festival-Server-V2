@@ -129,6 +129,15 @@ class ReservationSeatServiceImplTest {
     }
 
     @Test
+    void 역할에_허용되지_않은_좌석_예외() {
+        given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
+        willThrow(SeatBannedException.class).given(seatReservationValidator).validateSeatAccess(SEAT_SECTION, SEAT_NUMBER);
+
+        assertThatThrownBy(() -> reservationSeatService.execute(request()))
+                .isInstanceOf(SeatBannedException.class);
+    }
+
+    @Test
     void 유저_없음_예외() {
         given(seatUtil.getMaxSeats(SEAT_SECTION)).willReturn(MAX_SEATS);
         willThrow(UserNotFoundException.class).given(seatReservationValidator).validateReservationLimit();

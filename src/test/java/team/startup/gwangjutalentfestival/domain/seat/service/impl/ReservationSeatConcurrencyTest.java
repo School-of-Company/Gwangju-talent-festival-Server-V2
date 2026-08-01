@@ -93,7 +93,7 @@ class ReservationSeatConcurrencyTest {
                     try {
                         startLatch.await();
                         setAuth(userId, Role.USER);
-                        reservationSeatService.execute(new ReservationSeatRequest("A", 1));
+                        reservationSeatService.execute(new ReservationSeatRequest("A", 16));
                         successCount.incrementAndGet();
                     } catch (SeatAlreadyReservedException e) {
                         failCount.incrementAndGet();
@@ -132,7 +132,7 @@ class ReservationSeatConcurrencyTest {
 
         long userId = testUsers.get(0).getId();
         String[] sections = {"A", "A"};
-        Integer[] seatNumbers = {1, 2};
+        Integer[] seatNumbers = {16, 17};
 
         try {
             for (int i = 0; i < threadCount; i++) {
