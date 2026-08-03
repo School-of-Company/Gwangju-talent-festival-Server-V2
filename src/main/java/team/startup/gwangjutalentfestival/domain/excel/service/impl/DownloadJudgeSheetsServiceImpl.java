@@ -51,6 +51,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private static final int IMAGE_PADDING = 10;
     private static final int COMMENT_CELL_WIDTH = 100;
     private static final int COMMENT_CELL_HEIGHT = 50;
+    private static final int CELL_PADDING = 6;
     private static final int PROFILE_ROW = 2;
     private static final int HEADER_ROW = 3;
     private static final int FIRST_DATA_ROW = 4;
@@ -133,7 +134,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
             if (drawing == null) {
                 drawing = sheet.createDrawingPatriarch();
             }
-            addProfileImages(workbook, drawing, profile);
+            addProfileImages(workbook, drawing, sheet, profile);
             for (int index = 0; index < teams.size(); index++) {
                 TeamEntity team = teams.get(index);
                 JudgementEntity judgement = scoreMap.get(team.getId());
@@ -155,12 +156,11 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                     addImage(
                             workbook,
                             drawing,
+                            sheet,
                             COMMENT_COLUMN,
+                            1,
                             rowIndex,
-                            COMMENT_COLUMN,
-                            rowIndex,
-                            Math.round(sheet.getColumnWidthInPixels(COMMENT_COLUMN)),
-                            Units.pointsToPixel(row.getHeightInPoints()),
+                            CELL_PADDING,
                             renderStrokes(comment.getStrokes()));
                 }
             }
@@ -172,18 +172,20 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private void addProfileImages(
             Workbook workbook,
             Drawing<?> drawing,
+            Sheet sheet,
             JudgeProfileEntity profile) throws IOException {
         if (profile == null) {
             return;
         }
-        addProfileImage(workbook, drawing, AFFILIATION_COLUMN, profile.getAffiliationStrokes());
-        addProfileImage(workbook, drawing, POSITION_COLUMN, profile.getPositionStrokes());
-        addProfileImage(workbook, drawing, NAME_COLUMN, profile.getNameStrokes());
+        addProfileImage(workbook, drawing, sheet, AFFILIATION_COLUMN, profile.getAffiliationStrokes());
+        addProfileImage(workbook, drawing, sheet, POSITION_COLUMN, profile.getPositionStrokes());
+        addProfileImage(workbook, drawing, sheet, NAME_COLUMN, profile.getNameStrokes());
     }
 
     private void addProfileImage(
             Workbook workbook,
             Drawing<?> drawing,
+            Sheet sheet,
             int column,
             JsonNode strokes) throws IOException {
         if (!hasPoints(strokes)) {
@@ -192,35 +194,55 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
         addImage(
                 workbook,
                 drawing,
+                sheet,
                 column,
+                PROFILE_COLUMN_SPAN,
                 PROFILE_ROW,
-                column + PROFILE_COLUMN_SPAN,
-                PROFILE_ROW + 1,
-                0,
-                0,
+                CELL_PADDING,
                 renderStrokes(strokes));
     }
 
+    /**
+     * 이미지를 대상 영역 안쪽에 배치한다.
+     * <p>영역은 {@code startColumn}부터 {@code columnSpan}개 열과 {@code rowIndex} 한 행이며,
+     * 네 방향 모두 {@code paddingPx}만큼 안으로 들여 표 테두리에 획이 닿지 않게 한다.
+     * 여백이 영역보다 크면 해당 축의 여백을 버린다.</p>
+     */
     private void addImage(
             Workbook workbook,
             Drawing<?> drawing,
+            Sheet sheet,
             int startColumn,
-            int startRow,
-            int endColumn,
-            int endRow,
-            int endColumnOffset,
-            int endRowOffset,
+            int columnSpan,
+            int rowIndex,
+            int paddingPx,
             byte[] image) {
+        int lastColumn = startColumn + columnSpan - 1;
+        int areaWidth = 0;
+        for (int column = startColumn; column <= lastColumn; column++) {
+            areaWidth += Math.round(sheet.getColumnWidthInPixels(column));
+        }
+        int lastColumnWidth = Math.round(sheet.getColumnWidthInPixels(lastColumn));
+        int rowHeight = Units.pointsToPixel(row(sheet, rowIndex).getHeightInPoints());
+        int horizontalPadding = fitPadding(paddingPx, areaWidth);
+        int verticalPadding = fitPadding(paddingPx, rowHeight);
+
         int pictureIndex = workbook.addPicture(image, Workbook.PICTURE_TYPE_PNG);
         ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
         anchor.setCol1(startColumn);
-        anchor.setCol2(endColumn);
-        anchor.setRow1(startRow);
-        anchor.setRow2(endRow);
-        anchor.setDx2(Units.pixelToEMU(endColumnOffset));
-        anchor.setDy2(Units.pixelToEMU(endRowOffset));
+        anchor.setDx1(Units.pixelToEMU(horizontalPadding));
+        anchor.setCol2(lastColumn);
+        anchor.setDx2(Units.pixelToEMU(lastColumnWidth - horizontalPadding));
+        anchor.setRow1(rowIndex);
+        anchor.setDy1(Units.pixelToEMU(verticalPadding));
+        anchor.setRow2(rowIndex);
+        anchor.setDy2(Units.pixelToEMU(rowHeight - verticalPadding));
         anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
         drawing.createPicture(anchor, pictureIndex);
+    }
+
+    private int fitPadding(int paddingPx, int availablePx) {
+        return availablePx > paddingPx * 2 ? paddingPx : 0;
     }
 
     private byte[] renderStrokes(JsonNode strokes) throws IOException {
