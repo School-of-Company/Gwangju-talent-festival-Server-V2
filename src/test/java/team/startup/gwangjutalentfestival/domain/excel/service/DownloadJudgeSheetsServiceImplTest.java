@@ -59,6 +59,11 @@ class DownloadJudgeSheetsServiceImplTest {
     @Mock private GoogleExcelAdapter googleExcelAdapter;
     @Mock private GoogleExcelProperties googleExcelProperties;
 
+    /** 이미지가 표 테두리에 닿지 않도록 네 방향에 두는 여백. 프로덕션 CELL_PADDING과 같은 값. */
+    private static final int CELL_PADDING = 6;
+    private static final int PROFILE_ROW_HEIGHT = 50;
+    private static final int CELL_WIDTH = 100;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private DownloadJudgeSheetsServiceImpl service;
 
@@ -261,6 +266,10 @@ class DownloadJudgeSheetsServiceImplTest {
             }
             sheet.getRow(0).getCell(0).setCellValue("원본 제목");
             sheet.getRow(2).getCell(0).setCellValue("소속/직위/이름");
+            sheet.getRow(2).setHeightInPoints((float) Units.pixelToPoints(PROFILE_ROW_HEIGHT));
+            for (int column = 0; column < 7; column++) {
+                sheet.setColumnWidth(column, Math.round(100 / Units.DEFAULT_CHARACTER_WIDTH * 256));
+            }
             sheet.addMergedRegion(new CellRangeAddress(2, 2, 1, 2));
             sheet.addMergedRegion(new CellRangeAddress(2, 2, 3, 4));
             sheet.addMergedRegion(new CellRangeAddress(2, 2, 5, 6));
@@ -316,10 +325,7 @@ class DownloadJudgeSheetsServiceImplTest {
         assertThat(anchor.getCol2()).isEqualTo((short) 6);
         assertThat(anchor.getRow1()).isEqualTo(rowIndex);
         assertThat(anchor.getRow2()).isEqualTo(rowIndex);
-        assertThat(anchor.getDx1()).isZero();
-        assertThat(anchor.getDy1()).isZero();
-        assertThat(anchor.getDx2()).isEqualTo(Units.pixelToEMU(100));
-        assertThat(anchor.getDy2()).isEqualTo(Units.pixelToEMU(50));
+        assertCellPadding(anchor, CELL_WIDTH, 50);
         XSSFDrawing drawing = sheet.getDrawingPatriarch();
         assertThat(drawing.getCTDrawing().getTwoCellAnchorArray(0).getEditAs()).isEqualTo(STEditAs.ONE_CELL);
 
@@ -334,17 +340,28 @@ class DownloadJudgeSheetsServiceImplTest {
             int column) throws IOException {
         ClientAnchor anchor = picture.getClientAnchor();
         assertThat(anchor.getCol1()).isEqualTo((short) column);
-        assertThat(anchor.getCol2()).isEqualTo((short) (column + 2));
+        assertThat(anchor.getCol2()).isEqualTo((short) (column + 1));
         assertThat(anchor.getRow1()).isEqualTo(2);
-        assertThat(anchor.getRow2()).isEqualTo(3);
-        assertThat(anchor.getDx1()).isZero();
-        assertThat(anchor.getDy1()).isZero();
-        assertThat(anchor.getDx2()).isZero();
-        assertThat(anchor.getDy2()).isZero();
+        assertThat(anchor.getRow2()).isEqualTo(2);
+        assertCellPadding(anchor, CELL_WIDTH, PROFILE_ROW_HEIGHT);
 
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
         assertThat(image.getWidth()).isEqualTo(1000);
         assertThat(image.getHeight()).isEqualTo(500);
+    }
+
+    /**
+     * 이미지가 대상 영역의 네 테두리에 닿지 않는지 검증한다.
+     * <p>{@code lastColumnWidth}는 앵커 종료 열의 너비, {@code rowHeight}는 대상 행 높이(px)다.</p>
+     */
+    private void assertCellPadding(ClientAnchor anchor, int lastColumnWidth, int rowHeight) {
+        assertThat(anchor.getDx1()).isEqualTo(Units.pixelToEMU(CELL_PADDING));
+        assertThat(anchor.getDy1()).isEqualTo(Units.pixelToEMU(CELL_PADDING));
+        assertThat(anchor.getDx2()).isEqualTo(Units.pixelToEMU(lastColumnWidth - CELL_PADDING));
+        assertThat(anchor.getDy2()).isEqualTo(Units.pixelToEMU(rowHeight - CELL_PADDING));
+        assertThat(anchor.getDx1()).isPositive();
+        assertThat(anchor.getDy1()).isPositive();
+        assertThat(anchor.getDy2()).isLessThan(Units.pixelToEMU(rowHeight));
     }
 
     private Map<String, byte[]> zipEntries(byte[] zip) throws IOException {
