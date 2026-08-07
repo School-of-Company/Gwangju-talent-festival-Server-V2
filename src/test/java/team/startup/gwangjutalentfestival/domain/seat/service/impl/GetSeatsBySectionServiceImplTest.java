@@ -20,6 +20,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
 
 @ExtendWith(MockitoExtension.class)
@@ -131,19 +132,49 @@ class GetSeatsBySectionServiceImplTest {
         try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
             userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
             GetSeatsBySectionResponse performer = getSeatsBySectionService.execute("A");
-            assertThat(performer.seats().get(14)).isTrue();  // A15
-            assertThat(performer.seats().get(15)).isFalse(); // A16
-            assertThat(performer.seats().get(20)).isTrue();  // A21
-            assertThat(performer.seats().get(23)).isFalse(); // A24
+            assertThat(performer.seats().get(14)).isFalse(); // A15
+            assertThat(performer.seats().get(15)).isTrue();  // A16
+            assertThat(performer.seats().get(31)).isTrue();  // A32
+            assertThat(performer.seats().get(32)).isFalse(); // A33
         }
 
         try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
             userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
             GetSeatsBySectionResponse user = getSeatsBySectionService.execute("A");
-            assertThat(user.seats().get(14)).isFalse();
-            assertThat(user.seats().get(15)).isTrue();
-            assertThat(user.seats().get(20)).isFalse();
-            assertThat(user.seats().get(23)).isTrue();
+            assertThat(user.seats().get(14)).isTrue();
+            assertThat(user.seats().get(15)).isFalse();
+            assertThat(user.seats().get(31)).isFalse();
+            assertThat(user.seats().get(32)).isTrue();
+        }
+    }
+
+    @Test
+    void B와_C구역의_공연자_좌석_경계를_반영한다() {
+        given(seatReservationCustomRepository.findSeatNumbersBySeatSection(anyString())).willReturn(Set.of());
+        given(seatBanCustomRepository.findSeatNumbersBySeatSection(anyString())).willReturn(Set.of());
+
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
+
+            GetSeatsBySectionResponse b = getSeatsBySectionService.execute("B");
+            assertThat(b.seats().get(11)).isFalse(); // B12
+            assertThat(b.seats().get(12)).isTrue();  // B13
+            assertThat(b.seats().get(38)).isTrue();  // B39
+            assertThat(b.seats().get(39)).isFalse(); // B40
+            assertThat(b.seats().get(42)).isFalse(); // B43
+            assertThat(b.seats().get(43)).isTrue();  // B44
+            assertThat(b.seats().get(47)).isTrue();  // B48
+            assertThat(b.seats().get(48)).isFalse(); // B49
+
+            GetSeatsBySectionResponse c = getSeatsBySectionService.execute("C");
+            assertThat(c.seats().get(6)).isFalse();  // C7
+            assertThat(c.seats().get(7)).isTrue();   // C8
+            assertThat(c.seats().get(12)).isTrue();  // C13
+            assertThat(c.seats().get(13)).isFalse(); // C14
+            assertThat(c.seats().get(14)).isFalse(); // C15
+            assertThat(c.seats().get(15)).isTrue();  // C16
+            assertThat(c.seats().get(31)).isTrue();  // C32
+            assertThat(c.seats().get(32)).isFalse(); // C33
         }
     }
 

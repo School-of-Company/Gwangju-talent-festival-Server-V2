@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
 
 import java.util.Optional;
@@ -26,5 +28,6 @@ public interface SeatBanRepository extends JpaRepository<SeatBanEntity, Long> {
      * @param seatNumber  좌석 번호
      * @return 차단 엔티티 (없으면 empty)
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<SeatBanEntity> findBySeatSectionAndSeatNumber(String seatSection, Integer seatNumber);
 }

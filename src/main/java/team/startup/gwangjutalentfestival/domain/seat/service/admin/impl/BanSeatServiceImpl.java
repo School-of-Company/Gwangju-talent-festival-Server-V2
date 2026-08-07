@@ -10,8 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatBanEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBannedException;
+import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 
@@ -24,6 +27,8 @@ import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 public class BanSeatServiceImpl implements BanSeatService {
 
     private final SeatBanRepository seatBanRepository;
+    private final SeatReservationRepository seatReservationRepository;
+    private final SeatLockRepository seatLockRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
@@ -39,6 +44,11 @@ public class BanSeatServiceImpl implements BanSeatService {
             @CacheEvict(value = CacheConfig.SEATS_SECTION, allEntries = true)
     })
     public void execute(BanSeatRequest request) {
+        seatLockRepository.lock(request.seatSection(), request.seatNumber());
+        if (seatReservationRepository
+                .existsBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())) {
+            throw new SeatAlreadyReservedException();
+        }
         if (seatBanRepository
                 .existsBySeatSectionAndSeatNumber(request.seatSection(), request.seatNumber())) {
             throw new SeatAlreadyBannedException();
