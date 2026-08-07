@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 
 @RequiredArgsConstructor
 public abstract class AbstractCancelSeatReservationService {
 
     protected final SeatReservationRepository seatReservationRepository;
+    protected final SeatLockRepository seatLockRepository;
     protected final ApplicationEventPublisher applicationEventPublisher;
 
     protected void cancelAndPublish(SeatEntity seat) {

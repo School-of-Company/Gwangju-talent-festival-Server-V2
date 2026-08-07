@@ -12,6 +12,7 @@ import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
 import team.startup.gwangjutalentfestival.global.util.OperationMetricRecorder;
@@ -23,6 +24,7 @@ import team.startup.gwangjutalentfestival.global.util.UserUtil;
 public class ReservationSeatServiceImpl implements ReservationSeatService {
 
     private final SeatReservationRepository seatReservationRepository;
+    private final SeatLockRepository seatLockRepository;
     private final SeatReservationValidator seatReservationValidator;
     private final SeatUtil seatUtil;
     private final UserUtil userUtil;
@@ -46,6 +48,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
 
                     seatReservationValidator.validateSeatRange(seatNumber, seatUtil.getMaxSeats(seatSection));
                     seatReservationValidator.validateSeatAccess(seatSection, seatNumber);
+                    seatLockRepository.lock(seatSection, seatNumber);
                     seatReservationValidator.validateReservationLimit();
                     seatReservationValidator.validateSeatAvailability(seatSection, seatNumber);
 

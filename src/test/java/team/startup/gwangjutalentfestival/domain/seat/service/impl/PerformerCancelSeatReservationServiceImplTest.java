@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.PerformerCancelSeatReservationRequest;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
@@ -30,6 +31,9 @@ class PerformerCancelSeatReservationServiceImplTest {
 
     @Mock
     private SeatReservationRepository seatReservationRepository;
+
+    @Mock
+    private SeatLockRepository seatLockRepository;
 
     @Mock
     private UserUtil userUtil;
@@ -64,6 +68,7 @@ class PerformerCancelSeatReservationServiceImplTest {
 
         performerCancelSeatReservationService.execute(request());
 
+        verify(seatLockRepository).lock(SEAT_SECTION, SEAT_NUMBER);
         verify(seatReservationRepository).delete(any(SeatEntity.class));
         verify(applicationEventPublisher).publishEvent(new SeatChangeEvent(SEAT_SECTION, SEAT_NUMBER, true));
     }

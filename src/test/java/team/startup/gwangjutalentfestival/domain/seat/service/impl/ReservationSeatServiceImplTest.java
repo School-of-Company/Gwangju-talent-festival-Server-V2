@@ -15,6 +15,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedExcept
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInSectionException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationLimitExceededException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
@@ -36,6 +37,9 @@ class ReservationSeatServiceImplTest {
 
     @Mock
     private SeatReservationRepository seatReservationRepository;
+
+    @Mock
+    private SeatLockRepository seatLockRepository;
 
     @Mock
     private SeatReservationValidator seatReservationValidator;
@@ -60,6 +64,7 @@ class ReservationSeatServiceImplTest {
     void setUp() {
         reservationSeatService = new ReservationSeatServiceImpl(
                 seatReservationRepository,
+                seatLockRepository,
                 seatReservationValidator,
                 seatUtil,
                 userUtil,
@@ -86,6 +91,7 @@ class ReservationSeatServiceImplTest {
 
         reservationSeatService.execute(request());
 
+        verify(seatLockRepository).lock(SEAT_SECTION, SEAT_NUMBER);
         verify(seatReservationRepository).saveAndFlush(any(SeatEntity.class));
         verify(applicationEventPublisher).publishEvent(new SeatChangeEvent(SEAT_SECTION, SEAT_NUMBER, false));
     }
