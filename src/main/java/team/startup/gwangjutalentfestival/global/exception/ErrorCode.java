@@ -29,6 +29,11 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(401, "유효하지 않은 Refresh Token입니다."),
     FORBIDDEN(403, "접근 권한이 없습니다."),
 
+    // Performer
+    INVALID_PERFORMER_VERIFICATION(400, "출연진 인증 정보가 올바르지 않습니다."),
+    PERFORMER_VERIFICATION_ALREADY_CLAIMED(409, "이미 사용된 출연진 인증 정보입니다."),
+    ALREADY_PERFORMER(409, "이미 출연진 인증을 완료한 계정입니다."),
+
     // Verify
     EXPIRED_VERIFY_CODE(401, "인증번호가 만료되었습니다."),
     INVALID_VERIFY_CODE(400, "인증번호가 올바르지 않습니다."),

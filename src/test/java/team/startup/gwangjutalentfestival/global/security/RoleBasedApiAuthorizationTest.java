@@ -44,6 +44,8 @@ import team.startup.gwangjutalentfestival.domain.monitoring.service.ExportDatase
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventDetailService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventListService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventSummaryService;
+import team.startup.gwangjutalentfestival.domain.performer.presentation.controller.PerformerController;
+import team.startup.gwangjutalentfestival.domain.performer.service.VerifyPerformerService;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.controller.SeatController;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.controller.SeatAdminController;
 import team.startup.gwangjutalentfestival.domain.seat.service.CancelSeatReservationService;
@@ -93,7 +95,8 @@ import static org.mockito.BDDMockito.given;
         JudgeController.class,
         MonitoringController.class,
         ExcelController.class,
-        AuthController.class
+        AuthController.class,
+        PerformerController.class
 })
 @Import({SecurityConfig.class, JwtFilter.class, JwtProvider.class, JwtAccessDeniedHandler.class, JwtAuthenticationEntryPoint.class})
 @EnableConfigurationProperties({JwtProperties.class, CorsProperties.class})
@@ -187,6 +190,8 @@ class RoleBasedApiAuthorizationTest {
     @MockBean
     private ReissueTokenService reissueTokenService;
     @MockBean
+    private VerifyPerformerService verifyPerformerService;
+    @MockBean
     private TokenBlacklistRepository tokenBlacklistRepository;
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
@@ -248,7 +253,9 @@ class RoleBasedApiAuthorizationTest {
             new Endpoint("심사위원별 심사표 다운로드", HttpMethod.GET, "/excel/judge-sheets", new String[0], null, 200,
                     Set.of(Role.ADMIN)),
             new Endpoint("로그아웃", HttpMethod.DELETE, "/auth/logout", new String[0], null, 204,
-                    EnumSet.allOf(Role.class))
+                    EnumSet.allOf(Role.class)),
+            new Endpoint("출연진 인증", HttpMethod.POST, "/performer/verify", new String[0],
+                    "{\"name\":\"홍길동\",\"code\":\"verification-code\"}", 200, Set.of(Role.USER))
     );
 
     @TestFactory

@@ -64,6 +64,9 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PublicEndpointMatcher.matchers()).permitAll()
 
+                        // performer
+                        .requestMatchers(HttpMethod.POST, "/performer/verify").hasAuthority(Role.USER.name())
+
                         // team
                         .requestMatchers("/team/**").hasAnyAuthority(Role.ADMIN.name())
 
