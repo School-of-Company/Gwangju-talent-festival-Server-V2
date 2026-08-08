@@ -12,6 +12,9 @@ import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response
 import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
 import team.startup.gwangjutalentfestival.domain.auth.service.ReissueTokenService;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
+import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProvider;
 
@@ -26,6 +29,7 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
+    private final UserRepository userRepository;
 
     /**
      * RefreshToken을 검증하고 기존 토큰을 교체한 뒤 새로운 JWT 토큰을 반환합니다.
@@ -49,7 +53,9 @@ public class ReissueTokenServiceImpl implements ReissueTokenService {
             throw new InvalidRefreshTokenException();
         }
         Long userId = jwtProvider.getUserId(claims);
-        Role role = Role.valueOf(jwtProvider.getRole(claims));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        Role role = user.getRole();
 
         RefreshToken stored = refreshTokenRepository.findById(String.valueOf(userId))
                 .orElseThrow(RefreshTokenNotFoundException::new);

@@ -29,4 +29,8 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, name = "role")
     private Role role;
+
+    public void promoteToPerformer() {
+        this.role = Role.PERFORMER;
+    }
 }
