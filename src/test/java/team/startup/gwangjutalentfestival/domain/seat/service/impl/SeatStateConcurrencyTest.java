@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SeatStateConcurrencyTest {
 
     private static final String SECTION = "A";
-    private static final int NUMBER = 1;
+    private static final int NUMBER = 33;
 
     @MockBean
     Sheets sheets;
@@ -203,7 +203,7 @@ class SeatStateConcurrencyTest {
                 .mapToObj(index -> (Runnable) () -> {
                     setAuth(concurrentUsers.get(index));
                     try {
-                        reservationSeatService.execute(new ReservationSeatRequest(SECTION, index + 1));
+                        reservationSeatService.execute(new ReservationSeatRequest(SECTION, NUMBER + index));
                         success.incrementAndGet();
                     } finally {
                         SecurityContextHolder.clearContext();

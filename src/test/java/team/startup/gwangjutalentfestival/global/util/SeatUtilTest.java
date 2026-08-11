@@ -31,17 +31,24 @@ class SeatUtilTest {
     })
     void 공연자_좌석_범위를_검증한다(String section, int seatNumber, boolean performerAllowed) {
         assertThat(seatUtil.isAllowedForRole(Role.PERFORMER, section, seatNumber)).isEqualTo(performerAllowed);
-        assertThat(seatUtil.isAllowedForRole(Role.USER, section, seatNumber)).isEqualTo(!performerAllowed);
     }
 
     @Test
-    void 역할별_좌석은_겹치거나_비는_자리_없이_전체_좌석을_나눈다() {
+    void 역할별_좌석과_정적_금지_좌석을_전체_좌석에서_분리한다() {
         Set<String> expectedPerformerSeats = Set.of(
                 range("A", 16, 32),
                 range("B", 13, 39),
                 range("B", 44, 48),
                 range("C", 8, 13),
                 range("C", 16, 32)
+        ).stream().flatMap(List::stream).collect(java.util.stream.Collectors.toSet());
+        Set<String> restrictedSeats = Set.of(
+                range("A", 1, 15),
+                range("B", 1, 12),
+                range("C", 1, 7),
+                range("C", 14, 15),
+                range("E", 1, 24),
+                range("E", 73, 96)
         ).stream().flatMap(List::stream).collect(java.util.stream.Collectors.toSet());
 
         List<String> allSeats = seatUtil.getSections().stream()
@@ -53,12 +60,20 @@ class SeatUtilTest {
         List<String> userSeats = allSeats.stream()
                 .filter(seat -> allowed(Role.USER, seat))
                 .toList();
+        List<String> expectedUserSeats = allSeats.stream()
+                .filter(seat -> !expectedPerformerSeats.contains(seat) && !restrictedSeats.contains(seat))
+                .toList();
 
         assertThat(performerSeats).containsExactlyInAnyOrderElementsOf(expectedPerformerSeats);
         assertThat(performerSeats).hasSize(72);
-        assertThat(userSeats).hasSize(536);
+        assertThat(restrictedSeats).hasSize(84);
+        assertThat(userSeats).containsExactlyInAnyOrderElementsOf(expectedUserSeats);
+        assertThat(userSeats).hasSize(452);
         assertThat(performerSeats).doesNotContainAnyElementsOf(userSeats);
-        assertThat(performerSeats).hasSize(allSeats.size() - userSeats.size());
+        assertThat(performerSeats).hasSize(allSeats.size() - userSeats.size() - restrictedSeats.size());
+        for (Role role : Role.values()) {
+            assertThat(restrictedSeats).allSatisfy(seat -> assertThat(allowed(role, seat)).isFalse());
+        }
     }
 
     private List<String> range(String section, int start, int end) {

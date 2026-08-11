@@ -2,6 +2,8 @@ package team.startup.gwangjutalentfestival.domain.seat.service.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -85,6 +87,30 @@ class SeatReservationValidatorTest {
 
             assertThatThrownBy(() -> validator.validateSeatAccess(SECTION, SEAT_NUMBER))
                     .isInstanceOf(SeatBannedException.class);
+        }
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "A, 1", "A, 15",
+            "B, 1", "B, 12",
+            "C, 1", "C, 7", "C, 14", "C, 15",
+            "E, 1", "E, 24", "E, 73", "E, 96"
+    })
+    void 정적_금지_좌석은_모든_역할의_예약을_거부한다(String section, int seatNumber) {
+        SeatReservationValidator realValidator = new SeatReservationValidator(
+                seatReservationRepository,
+                seatBanRepository,
+                userRepository,
+                new SeatUtil()
+        );
+
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            for (Role role : Role.values()) {
+                userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(role);
+                assertThatThrownBy(() -> realValidator.validateSeatAccess(section, seatNumber))
+                        .isInstanceOf(SeatBannedException.class);
+            }
         }
     }
 
