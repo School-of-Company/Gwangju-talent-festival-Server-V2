@@ -47,6 +47,17 @@ public class SeatUtil {
     }
 
     public boolean isAllowedForRole(Role role, String section, int seatNumber) {
+        boolean restrictedSeat = switch (section) {
+            case "A" -> seatNumber >= 1 && seatNumber <= 15;
+            case "B" -> seatNumber >= 1 && seatNumber <= 12;
+            case "C" -> seatNumber >= 1 && seatNumber <= 7
+                    || seatNumber >= 14 && seatNumber <= 15;
+            case "E" -> seatNumber >= 1 && seatNumber <= 24
+                    || seatNumber >= 73 && seatNumber <= 96;
+            default -> false;
+        };
+        if (restrictedSeat) return false;
+
         boolean performerSeat = switch (section) {
             case "A" -> seatNumber >= 16 && seatNumber <= 32;
             case "B" -> seatNumber >= 13 && seatNumber <= 39
