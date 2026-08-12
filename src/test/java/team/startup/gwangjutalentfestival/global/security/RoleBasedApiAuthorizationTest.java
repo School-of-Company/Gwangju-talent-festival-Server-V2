@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.global.security;
 
 import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -8,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
@@ -41,7 +44,10 @@ import team.startup.gwangjutalentfestival.domain.monitoring.service.ExportDatase
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventDetailService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventListService;
 import team.startup.gwangjutalentfestival.domain.monitoring.service.GetAnomalyEventSummaryService;
+import team.startup.gwangjutalentfestival.domain.performer.presentation.controller.PerformerController;
+import team.startup.gwangjutalentfestival.domain.performer.service.VerifyPerformerService;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.controller.SeatController;
+import team.startup.gwangjutalentfestival.domain.seat.presentation.controller.SeatAdminController;
 import team.startup.gwangjutalentfestival.domain.seat.service.CancelSeatReservationService;
 import team.startup.gwangjutalentfestival.domain.seat.service.ConnectSseSeatEventService;
 import team.startup.gwangjutalentfestival.domain.seat.service.GetAllSeatsService;
@@ -50,6 +56,8 @@ import team.startup.gwangjutalentfestival.domain.seat.service.GetCurrentUserSeat
 import team.startup.gwangjutalentfestival.domain.seat.service.GetSeatsBySectionService;
 import team.startup.gwangjutalentfestival.domain.seat.service.PerformerCancelSeatReservationService;
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
+import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
+import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
 import team.startup.gwangjutalentfestival.domain.team.presentation.controller.TeamController;
 import team.startup.gwangjutalentfestival.domain.team.service.GetAllTeamService;
 import team.startup.gwangjutalentfestival.domain.team.service.GetTeamRankingService;
@@ -65,11 +73,15 @@ import team.startup.gwangjutalentfestival.global.security.handler.JwtAuthenticat
 import team.startup.gwangjutalentfestival.global.security.properties.CorsProperties;
 
 import java.util.EnumSet;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
 
 /**
  * USER, ADMIN, JUDGE, PERFORMER 역할별 API 접근 허용 상태를 회귀 테스트로 고정한다.
@@ -79,10 +91,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = {
         TeamController.class,
         SeatController.class,
+        SeatAdminController.class,
         JudgeController.class,
         MonitoringController.class,
         ExcelController.class,
-        AuthController.class
+        AuthController.class,
+        PerformerController.class
 })
 @Import({SecurityConfig.class, JwtFilter.class, JwtProvider.class, JwtAccessDeniedHandler.class, JwtAuthenticationEntryPoint.class})
 @EnableConfigurationProperties({JwtProperties.class, CorsProperties.class})
@@ -125,6 +139,10 @@ class RoleBasedApiAuthorizationTest {
     private GetAllSeatsService getAllSeatsService;
     @MockBean
     private ConnectSseSeatEventService connectSseSeatEventService;
+    @MockBean
+    private BanSeatService banSeatService;
+    @MockBean
+    private CancelSeatBanService cancelSeatBanService;
 
     @MockBean
     private SaveJudgementScoreService saveJudgementScoreService;
@@ -172,9 +190,19 @@ class RoleBasedApiAuthorizationTest {
     @MockBean
     private ReissueTokenService reissueTokenService;
     @MockBean
+    private VerifyPerformerService verifyPerformerService;
+    @MockBean
     private TokenBlacklistRepository tokenBlacklistRepository;
     @MockBean
     private StringRedisTemplate stringRedisTemplate;
+    @MockBean
+    private ValueOperations<String, String> valueOperations;
+
+    @BeforeEach
+    void setUpRateLimit() {
+        given(stringRedisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class))).willReturn(true);
+    }
 
     private record Endpoint(
             String description,
@@ -200,6 +228,15 @@ class RoleBasedApiAuthorizationTest {
     private static final List<Endpoint> ENDPOINTS = List.of(
             new Endpoint("팀 공연 순서 변경", HttpMethod.PATCH, "/team/order", new String[0],
                     "{\"orderItems\":[{\"teamId\":1,\"order\":1}]}", 204, Set.of(Role.ADMIN)),
+            new Endpoint("좌석 예약", HttpMethod.POST, "/seat", new String[0],
+                    "{\"seatSection\":\"A\",\"seatNumber\":1}", 201, Set.of(Role.USER, Role.PERFORMER)),
+            new Endpoint("참가자 다중 좌석 예약", HttpMethod.POST, "/seat/bulk", new String[0],
+                    "{\"seats\":[{\"seatSection\":\"A\",\"seatNumber\":16},{\"seatSection\":\"A\",\"seatNumber\":17}]}",
+                    201, Set.of(Role.PERFORMER)),
+            new Endpoint("좌석 차단", HttpMethod.POST, "/seat/ban", new String[0],
+                    "{\"seatSection\":\"A\",\"seatNumber\":1}", 201, Set.of(Role.ADMIN)),
+            new Endpoint("좌석 차단 해제", HttpMethod.DELETE, "/seat/ban", new String[0],
+                    "{\"seatSection\":\"A\",\"seatNumber\":1}", 204, Set.of(Role.ADMIN)),
             new Endpoint("구역별 좌석 조회", HttpMethod.GET, "/seat", new String[]{"section", "A"}, null, 200,
                     Set.of(Role.ADMIN, Role.USER, Role.PERFORMER)),
             new Endpoint("내 좌석 조회", HttpMethod.GET, "/seat/myself", new String[0], null, 200,
@@ -219,7 +256,9 @@ class RoleBasedApiAuthorizationTest {
             new Endpoint("심사위원별 심사표 다운로드", HttpMethod.GET, "/excel/judge-sheets", new String[0], null, 200,
                     Set.of(Role.ADMIN)),
             new Endpoint("로그아웃", HttpMethod.DELETE, "/auth/logout", new String[0], null, 204,
-                    EnumSet.allOf(Role.class))
+                    EnumSet.allOf(Role.class)),
+            new Endpoint("출연진 인증", HttpMethod.POST, "/performer/verify", new String[0],
+                    "{\"name\":\"홍길동\",\"code\":\"verification-code\"}", 200, Set.of(Role.USER))
     );
 
     @TestFactory
@@ -252,5 +291,16 @@ class RoleBasedApiAuthorizationTest {
                         )
                 )
         );
+    }
+
+    @Test
+    void ADMIN이_W구역을_차단하면_400을_반환한다() throws Exception {
+        String token = jwtProvider.generateAccessToken(1L, Role.ADMIN);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/seat/ban")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"seatSection\":\"W\",\"seatNumber\":1}"))
+                .andExpect(status().isBadRequest());
     }
 }

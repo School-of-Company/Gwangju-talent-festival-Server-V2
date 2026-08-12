@@ -1,6 +1,8 @@
 package team.startup.gwangjutalentfestival.domain.seat.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 
@@ -53,6 +55,7 @@ public interface SeatReservationRepository extends JpaRepository<SeatEntity, Lon
      * @param user        사용자 엔티티
      * @return 예약 좌석 엔티티 (없으면 empty)
      */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<SeatEntity> findBySeatSectionAndSeatNumberAndUser(String seatSection, Integer seatNumber, UserEntity user);
 
     /**

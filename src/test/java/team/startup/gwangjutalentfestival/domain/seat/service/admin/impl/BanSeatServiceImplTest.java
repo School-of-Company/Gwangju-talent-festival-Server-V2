@@ -8,9 +8,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyBannedException;
+import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReservedException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
-import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,14 +30,21 @@ class BanSeatServiceImplTest {
     private SeatBanRepository seatBanRepository;
 
     @Mock
+    private SeatReservationRepository seatReservationRepository;
+
+    @Mock
+    private SeatLockRepository seatLockRepository;
+
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     private BanSeatServiceImpl service() {
-        return new BanSeatServiceImpl(seatBanRepository, applicationEventPublisher);
+        return new BanSeatServiceImpl(
+                seatBanRepository, seatReservationRepository, seatLockRepository, applicationEventPublisher);
     }
 
     private BanSeatRequest request() {
-        return new BanSeatRequest(SEAT_SECTION, SEAT_NUMBER, Role.USER);
+        return new BanSeatRequest(SEAT_SECTION, SEAT_NUMBER);
     }
 
     @Test
@@ -44,8 +53,21 @@ class BanSeatServiceImplTest {
 
         service().execute(request());
 
+        verify(seatLockRepository).lock(SEAT_SECTION, SEAT_NUMBER);
         verify(seatBanRepository).saveAndFlush(any());
         verify(applicationEventPublisher).publishEvent(new SeatChangeEvent(SEAT_SECTION, SEAT_NUMBER, false));
+    }
+
+    @Test
+    void 이미_예약된_좌석은_차단할_수_없다() {
+        given(seatReservationRepository
+                .existsBySeatSectionAndSeatNumber(SEAT_SECTION, SEAT_NUMBER)).willReturn(true);
+
+        assertThatThrownBy(() -> service().execute(request()))
+                .isInstanceOf(SeatAlreadyReservedException.class);
+
+        verify(seatBanRepository, never()).saveAndFlush(any());
+        verify(applicationEventPublisher, never()).publishEvent(any());
     }
 
     @Test

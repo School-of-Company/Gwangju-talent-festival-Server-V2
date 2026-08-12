@@ -1,0 +1,1 @@
+ALTER TABLE seat_ban DROP COLUMN role;

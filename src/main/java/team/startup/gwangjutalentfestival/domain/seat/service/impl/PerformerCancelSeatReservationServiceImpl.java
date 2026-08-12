@@ -9,6 +9,7 @@ import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.PerformerCancelSeatReservationRequest;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.seat.service.PerformerCancelSeatReservationService;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
@@ -21,10 +22,11 @@ public class PerformerCancelSeatReservationServiceImpl extends AbstractCancelSea
 
     public PerformerCancelSeatReservationServiceImpl(
             SeatReservationRepository seatReservationRepository,
+            SeatLockRepository seatLockRepository,
             ApplicationEventPublisher applicationEventPublisher,
             UserUtil userUtil
     ) {
-        super(seatReservationRepository, applicationEventPublisher);
+        super(seatReservationRepository, seatLockRepository, applicationEventPublisher);
         this.userUtil = userUtil;
     }
 
@@ -36,6 +38,7 @@ public class PerformerCancelSeatReservationServiceImpl extends AbstractCancelSea
     })
     public void execute(PerformerCancelSeatReservationRequest request) {
         UserEntity user = userUtil.getCurrentUser();
+        seatLockRepository.lock(request.seatSection(), request.seatNumber());
 
         SeatEntity seat = seatReservationRepository.findBySeatSectionAndSeatNumberAndUser(
                 request.seatSection(),

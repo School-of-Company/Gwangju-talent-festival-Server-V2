@@ -64,11 +64,15 @@ public class SecurityConfig {
                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(PublicEndpointMatcher.matchers()).permitAll()
 
+                        // performer
+                        .requestMatchers(HttpMethod.POST, "/performer/verify").hasAuthority(Role.USER.name())
+
                         // team
                         .requestMatchers("/team/**").hasAnyAuthority(Role.ADMIN.name())
 
                         // seat
-                        .requestMatchers(HttpMethod.POST, "/seat").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/seat/bulk").hasAuthority(Role.PERFORMER.name())
+                        .requestMatchers(HttpMethod.POST, "/seat").hasAnyAuthority(Role.USER.name(), Role.PERFORMER.name())
                         .requestMatchers(HttpMethod.DELETE, "/seat").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
                         .requestMatchers(HttpMethod.POST, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.DELETE, "/seat/ban").hasAnyAuthority(Role.ADMIN.name())

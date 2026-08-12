@@ -32,7 +32,7 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
     public GetAllSeatsResponse execute() {
         Role role = UserUtil.getCurrentUserRole();
 
-        List<SectionSeatNumber> seatBans = seatBanCustomRepository.findSeatNumbersByRole(role);
+        List<SectionSeatNumber> seatBans = seatBanCustomRepository.findAllSeatNumbers();
         List<SectionSeatNumber> seatReservations = seatReservationCustomRepository.findAllSeatNumbers();
 
         Map<String, Set<Integer>> seatBansMap = seatBans.stream()
@@ -51,7 +51,7 @@ public class GetAllSeatsServiceImpl implements GetAllSeatsService {
         for (String section : seatUtil.getSections()) {
             Set<Integer> bans = seatBansMap.getOrDefault(section, Set.of());
             Set<Integer> reservations = seatReservationMap.getOrDefault(section, Set.of());
-            responseMap.put(section, seatUtil.buildSeatAvailability(section, bans, reservations));
+            responseMap.put(section, seatUtil.buildSeatAvailability(section, bans, reservations, role));
         }
 
         return new GetAllSeatsResponse(responseMap);

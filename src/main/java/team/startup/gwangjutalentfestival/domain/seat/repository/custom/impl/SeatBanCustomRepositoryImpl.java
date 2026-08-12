@@ -7,8 +7,6 @@ import org.springframework.stereotype.Repository;
 import team.startup.gwangjutalentfestival.domain.seat.entity.QSeatBanEntity;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.SectionSeatNumber;
 import team.startup.gwangjutalentfestival.domain.seat.repository.custom.SeatBanCustomRepository;
-import team.startup.gwangjutalentfestival.domain.user.enums.Role;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +26,7 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
      * {@inheritDoc}
      */
     @Override
-    public List<SectionSeatNumber> findSeatNumbersByRole(Role role) {
+    public List<SectionSeatNumber> findAllSeatNumbers() {
         return queryFactory
                 .select(Projections.constructor(
                         SectionSeatNumber.class,
@@ -36,7 +34,6 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
                         seatBan.seatNumber
                 ))
                 .from(seatBan)
-                .where(seatBan.role.eq(role))
                 .fetch();
     }
 
@@ -44,11 +41,11 @@ public class SeatBanCustomRepositoryImpl implements SeatBanCustomRepository {
      * {@inheritDoc}
      */
     @Override
-    public Set<Integer> findSeatNumbersBySeatSectionAndRole(String seatSection, Role role) {
+    public Set<Integer> findSeatNumbersBySeatSection(String seatSection) {
         return new HashSet<>(queryFactory
                 .select(seatBan.seatNumber)
                 .from(seatBan)
-                .where(seatBan.seatSection.eq(seatSection).and(seatBan.role.eq(role)))
+                .where(seatBan.seatSection.eq(seatSection))
                 .fetch());
     }
 }

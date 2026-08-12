@@ -8,13 +8,13 @@ import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 /**
  * 좌석 차단 취소 요청 DTO.
  *
- * @param seatSection 차단을 해제할 좌석 구역 (A, B, C, D, E, F, W 중 하나)
+ * @param seatSection 차단을 해제할 좌석 구역 (A, B, C, D, E, F 중 하나)
  * @param seatNumber  차단을 해제할 좌석 번호 (1~132)
  */
 public record CancelSeatBanRequest(
         @Pattern(
-                regexp = "^[ABCDEFW]$",
-                message = "좌석 섹션은 A, B, C, D, E, F, W 중 하나여야 합니다."
+                regexp = "^[ABCDEF]$",
+                message = "좌석 섹션은 A, B, C, D, E, F 중 하나여야 합니다."
         )
         String seatSection,
 

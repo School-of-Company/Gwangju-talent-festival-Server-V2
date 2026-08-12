@@ -10,7 +10,7 @@ public interface GetSeatsBySectionService {
     /**
      * 현재 사용자 역할에 맞는 특정 구역의 좌석 가용 여부 목록을 반환한다.
      *
-     * @param section 조회할 좌석 구역 (A~J)
+     * @param section 조회할 좌석 구역 (A~F)
      * @return 해당 구역의 좌석별 예약 가능 여부 목록
      */
     GetSeatsBySectionResponse execute(String section);

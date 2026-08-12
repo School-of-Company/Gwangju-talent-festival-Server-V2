@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.PerformerCancelSeatReservationRequest;
+import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BulkReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetAllSeatsResponse;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.response.GetSeatResponse;
@@ -63,6 +64,21 @@ public class SeatController {
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
+    @Operation(summary = "참가자 다중 좌석 예약", description = "참가자가 최대 두 좌석을 하나의 트랜잭션으로 예약합니다.")
+    @SecurityRequirement(name = "Authorization")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "좌석 예약 성공"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않거나 예약할 수 없는 좌석"),
+            @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
+            @ApiResponse(responseCode = "403", description = "참가자 권한 없음")
+    })
+    @PostMapping("/bulk")
+    public ResponseEntity<List<GetSeatResponse>> reservationSeats(
+            @Valid @RequestBody BulkReservationSeatRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(reservationSeatService.executeBulk(request));
+    }
+
     /**
      * 현재 로그인한 사용자의 예약 좌석을 조회한다.
      *
@@ -100,7 +116,7 @@ public class SeatController {
     /**
      * 특정 구역의 좌석 예약 가능 여부 목록을 조회한다.
      *
-     * @param section 조회할 좌석 구역 (A~J)
+     * @param section 조회할 좌석 구역 (A~F)
      * @return 해당 구역의 좌석별 예약 가능 여부 목록
      */
     @Operation(summary = "구역별 좌석 현황 조회", description = "특정 구역의 좌석 예약 가능 여부 목록을 조회합니다.")

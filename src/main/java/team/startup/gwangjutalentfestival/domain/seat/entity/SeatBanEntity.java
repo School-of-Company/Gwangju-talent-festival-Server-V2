@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 
 /**
  * 관리자가 차단한 좌석 정보를 저장하는 엔티티.
@@ -33,8 +32,4 @@ public class SeatBanEntity {
 
     @Column(name = "seat_number", nullable = false)
     private Integer seatNumber;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
-    private Role role;
 }

@@ -8,6 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
+import team.startup.gwangjutalentfestival.domain.seat.repository.SeatLockRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
@@ -31,6 +32,9 @@ class CancelSeatReservationServiceImplTest {
     private SeatReservationRepository seatReservationRepository;
 
     @Mock
+    private SeatLockRepository seatLockRepository;
+
+    @Mock
     private UserUtil userUtil;
 
     @Mock
@@ -52,9 +56,12 @@ class CancelSeatReservationServiceImplTest {
     void 정상_예약_취소_성공() {
         given(userUtil.getCurrentUser()).willReturn(user());
         given(seatReservationRepository.findByUser(any())).willReturn(Optional.of(seat()));
+        given(seatReservationRepository.findBySeatSectionAndSeatNumberAndUser(any(), any(), any()))
+                .willReturn(Optional.of(seat()));
 
         cancelSeatReservationService.execute();
 
+        verify(seatLockRepository).lock("A", 1);
         verify(seatReservationRepository).delete(any(SeatEntity.class));
         verify(applicationEventPublisher).publishEvent(new SeatChangeEvent("A", 1, true));
     }
