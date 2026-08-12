@@ -16,6 +16,7 @@ import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanReposito
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
@@ -24,6 +25,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mockStatic;
 
@@ -115,43 +117,42 @@ class SeatReservationValidatorTest {
     }
 
     @Test
-    void USER_예약_한도_초과시_SeatReservationLimitExceededException이_발생한다() {
-        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
-            UserEntity user = UserEntity.builder().id(USER_ID).role(Role.USER).build();
-            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
-            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.USER);
-            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
-            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(1L);
-
-            assertThatThrownBy(() -> validator.validateReservationLimit())
-                    .isInstanceOf(SeatReservationLimitExceededException.class);
-        }
+    void USER가_보유한_좌석과_신규_좌석의_합이_한도를_넘으면_예외가_발생한다() {
+        assertThatThrownBy(() -> validator.validateReservationLimit(Role.USER, 1, 1))
+                .isInstanceOf(SeatReservationLimitExceededException.class);
     }
 
     @Test
-    void PERFORMER_예약_한도_초과시_SeatReservationLimitExceededException이_발생한다() {
-        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
-            UserEntity user = UserEntity.builder().id(USER_ID).role(Role.PERFORMER).build();
-            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
-            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
-            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
-            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(2L);
-
-            assertThatThrownBy(() -> validator.validateReservationLimit())
-                    .isInstanceOf(SeatReservationLimitExceededException.class);
-        }
+    void PERFORMER가_보유한_좌석과_신규_좌석의_합이_두_석을_넘으면_예외가_발생한다() {
+        assertThatThrownBy(() -> validator.validateReservationLimit(Role.PERFORMER, 1, 2))
+                .isInstanceOf(SeatReservationLimitExceededException.class);
     }
 
     @Test
     void PERFORMER_1석_보유시_추가_예약이_가능하다() {
-        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
-            UserEntity user = UserEntity.builder().id(USER_ID).role(Role.PERFORMER).build();
-            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
-            userUtilMock.when(UserUtil::getCurrentUserRole).thenReturn(Role.PERFORMER);
-            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
-            given(seatReservationRepository.countByUserId(USER_ID)).willReturn(1L);
+        assertThatCode(() -> validator.validateReservationLimit(Role.PERFORMER, 1, 1))
+                .doesNotThrowAnyException();
+    }
 
-            assertThatCode(validator::validateReservationLimit).doesNotThrowAnyException();
+    @Test
+    void 현재_사용자_행을_잠가서_반환한다() {
+        UserEntity user = UserEntity.builder().id(USER_ID).role(Role.PERFORMER).build();
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
+            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.of(user));
+
+            assertThat(validator.lockCurrentUser()).isSameAs(user);
+        }
+    }
+
+    @Test
+    void 잠글_현재_사용자가_없으면_UserNotFoundException이_발생한다() {
+        try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
+            userUtilMock.when(UserUtil::getCurrentUserId).thenReturn(USER_ID);
+            given(userRepository.findByIdForUpdate(USER_ID)).willReturn(Optional.empty());
+
+            assertThatThrownBy(validator::lockCurrentUser)
+                    .isInstanceOf(UserNotFoundException.class);
         }
     }
 }

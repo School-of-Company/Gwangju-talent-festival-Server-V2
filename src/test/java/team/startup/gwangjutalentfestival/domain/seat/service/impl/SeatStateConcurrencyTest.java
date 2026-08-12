@@ -18,6 +18,7 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBanNotFoundE
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotFoundException;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BanSeatRequest;
+import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.BulkReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.CancelSeatBanRequest;
 import team.startup.gwangjutalentfestival.domain.seat.presentation.data.request.ReservationSeatRequest;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
@@ -279,6 +280,51 @@ class SeatStateConcurrencyTest {
         assertThat(unexpected).isEmpty();
         assertThat(cancelBanSuccess.get()).isEqualTo(1);
         assertThat(seatBanRepository.existsBySeatSectionAndSeatNumber(SECTION, NUMBER)).isFalse();
+    }
+
+    @Test
+    void 다중_예약과_한_좌석_차단이_경쟁해도_부분_예약은_남지_않는다() throws InterruptedException {
+        UserEntity performer = userRepository.save(UserEntity.builder()
+                .phoneNumber("01077779999")
+                .role(Role.PERFORMER)
+                .build());
+        users.add(performer);
+        AtomicInteger reservationSuccess = new AtomicInteger();
+        AtomicInteger banSuccess = new AtomicInteger();
+        BulkReservationSeatRequest request = new BulkReservationSeatRequest(List.of(
+                new ReservationSeatRequest("A", 16),
+                new ReservationSeatRequest("A", 17)));
+
+        List<Throwable> unexpected = runConcurrently(
+                () -> {
+                    setAuth(performer);
+                    try {
+                        reservationSeatService.executeBulk(request);
+                        reservationSuccess.incrementAndGet();
+                    } catch (SeatBannedException ignored) {
+                    } finally {
+                        SecurityContextHolder.clearContext();
+                    }
+                },
+                () -> {
+                    try {
+                        banSeatService.execute(new BanSeatRequest("A", 17));
+                        banSuccess.incrementAndGet();
+                    } catch (SeatAlreadyReservedException ignored) {
+                    }
+                }
+        );
+
+        assertThat(unexpected).isEmpty();
+        assertThat(reservationSuccess.get() + banSuccess.get()).isEqualTo(1);
+        if (reservationSuccess.get() == 1) {
+            assertThat(seatReservationRepository.countByUserId(performer.getId())).isEqualTo(2);
+            assertThat(seatBanRepository.existsBySeatSectionAndSeatNumber("A", 17)).isFalse();
+        } else {
+            assertThat(seatReservationRepository.countByUserId(performer.getId())).isZero();
+            assertThat(seatReservationRepository.existsBySeatSectionAndSeatNumber("A", 16)).isFalse();
+            assertThat(seatBanRepository.existsBySeatSectionAndSeatNumber("A", 17)).isTrue();
+        }
     }
 
     private UserEntity saveUser(int suffix) {
