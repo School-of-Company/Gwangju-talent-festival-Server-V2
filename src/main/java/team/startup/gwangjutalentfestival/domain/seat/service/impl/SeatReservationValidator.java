@@ -9,6 +9,9 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationL
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
+import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
+import team.startup.gwangjutalentfestival.domain.user.enums.Role;
+import team.startup.gwangjutalentfestival.domain.user.exception.UserNotFoundException;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
@@ -38,16 +41,24 @@ public class SeatReservationValidator {
     }
 
     public void validateSeatAccess(String seatSection, Integer seatNumber) {
-        if (!seatUtil.isAllowedForRole(UserUtil.getCurrentUserRole(), seatSection, seatNumber)) {
+        validateSeatAccess(UserUtil.getCurrentUserRole(), seatSection, seatNumber);
+    }
+
+    public void validateSeatAccess(Role role, String seatSection, Integer seatNumber) {
+        if (!seatUtil.isAllowedForRole(role, seatSection, seatNumber)) {
             throw new SeatBannedException();
         }
     }
 
-    public void validateReservationLimit() {
+    public UserEntity lockCurrentUser() {
         long userId = UserUtil.getCurrentUserId();
-        userRepository.findByIdForUpdate(userId);
-        int limit = UserUtil.getCurrentUserRole() == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
-        if (seatReservationRepository.countByUserId(userId) >= limit) {
+        return userRepository.findByIdForUpdate(userId)
+                .orElseThrow(UserNotFoundException::new);
+    }
+
+    public void validateReservationLimit(Role role, long currentReservationCount, int newReservationCount) {
+        int limit = role == PERFORMER ? PERFORMER_SEAT_LIMIT : DEFAULT_SEAT_LIMIT;
+        if (currentReservationCount + newReservationCount > limit) {
             throw new SeatReservationLimitExceededException();
         }
     }

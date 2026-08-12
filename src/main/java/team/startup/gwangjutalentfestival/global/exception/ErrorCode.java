@@ -50,6 +50,7 @@ public enum ErrorCode {
     // Seat
     SEAT_NOT_EXISTS_IN_SECTION(400, "해당 섹션에 존재하지 않는 좌석입니다."),
     SEAT_ALREADY_RESERVED(400, "이미 예약된 좌석입니다."),
+    DUPLICATE_SEAT_REQUEST(400, "중복된 좌석이 포함되어 있습니다."),
     SEAT_BANNED(400, "예약할 수 없는 좌석입니다."),
     SEAT_ALREADY_BANNED(400, "이미 금지된 좌석입니다."),
     INVALID_SEAT_SECTION(400, "유효하지 않은 좌석 구역입니다."),
