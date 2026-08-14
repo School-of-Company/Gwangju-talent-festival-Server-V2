@@ -88,6 +88,15 @@ slogan:
     start-at: ${START_AT:2026-04-18T00:00:00}
     end-at: ${END_AT:2026-05-28T18:00:00}
 
+seat:
+  reservation:
+    performer:
+      start-at: ${SEAT_PERFORMER_START_AT:2026-08-14T14:00:00}
+      end-at: ${SEAT_PERFORMER_END_AT:2026-08-19T23:59:59}
+    user:
+      start-at: ${SEAT_USER_START_AT:2026-08-20T19:00:00}
+      end-at: ${SEAT_USER_END_AT:2026-09-04T18:00:00}
+
 management:
   security:
     enabled: false
