@@ -52,7 +52,7 @@ public class SeatController {
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "좌석 예약 성공"),
-            @ApiResponse(responseCode = "400", description = "유효하지 않은 좌석 구역"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 좌석 구역 또는 예매 가능 기간이 아님"),
             @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
             @ApiResponse(responseCode = "409", description = "이미 예약된 좌석"),
             @ApiResponse(responseCode = "429", description = "쿨다운 내 재요청")
@@ -69,7 +69,7 @@ public class SeatController {
     @SecurityRequirement(name = "Authorization")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "좌석 예약 성공"),
-            @ApiResponse(responseCode = "400", description = "유효하지 않거나 예약할 수 없는 좌석"),
+            @ApiResponse(responseCode = "400", description = "유효하지 않거나 예약할 수 없는 좌석, 또는 예매 가능 기간이 아님"),
             @ApiResponse(responseCode = "401", description = "유효하지 않은 토큰"),
             @ApiResponse(responseCode = "403", description = "참가자 권한 없음")
     })
