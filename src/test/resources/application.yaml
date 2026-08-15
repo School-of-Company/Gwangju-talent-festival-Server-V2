@@ -68,6 +68,16 @@ slogan:
     start-at: "2026-04-18T00:00:00"
     end-at: "2026-05-28T18:00:00"
 
+# 테스트는 실제 예매를 수행하므로 항상 열린 기간으로 둔다.
+seat:
+  reservation:
+    performer:
+      start-at: "2000-01-01T00:00:00"
+      end-at: "2099-12-31T23:59:59"
+    user:
+      start-at: "2000-01-01T00:00:00"
+      end-at: "2099-12-31T23:59:59"
+
 aws:
   s3:
     access-key: test-access-key

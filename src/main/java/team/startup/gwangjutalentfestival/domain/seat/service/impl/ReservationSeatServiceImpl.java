@@ -78,6 +78,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
         validateRequests(requests);
 
         var currentUser = seatReservationValidator.lockCurrentUser();
+        seatReservationValidator.validateReservationPeriod(currentUser.getRole());
         requests.forEach(request -> seatReservationValidator.validateSeatAccess(
                 currentUser.getRole(), request.seatSection(), request.seatNumber()));
         requests.stream()
