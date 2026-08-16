@@ -12,6 +12,9 @@ import team.startup.gwangjutalentfestival.domain.seat.exception.SeatAlreadyReser
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatBannedException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatNotExistsInSectionException;
 import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationLimitExceededException;
+import team.startup.gwangjutalentfestival.domain.seat.exception.SeatReservationPeriodException;
+import team.startup.gwangjutalentfestival.domain.seat.properties.SeatReservationPeriodProperties;
+import team.startup.gwangjutalentfestival.domain.seat.properties.SeatReservationPeriodProperties.Period;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatBanRepository;
 import team.startup.gwangjutalentfestival.domain.seat.repository.SeatReservationRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
@@ -21,6 +24,7 @@ import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 import team.startup.gwangjutalentfestival.global.util.SeatUtil;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +55,13 @@ class SeatReservationValidatorTest {
     private static final Integer SEAT_NUMBER = 1;
     private static final Integer MAX_SEATS = 101;
     private static final long USER_ID = 1L;
+
+    /** 현재 시각을 포함하는 기간 */
+    private static final Period OPEN = new Period(
+            LocalDateTime.of(2000, 1, 1, 0, 0, 0), LocalDateTime.of(2099, 12, 31, 23, 59, 59));
+    /** 이미 종료된 기간 */
+    private static final Period CLOSED = new Period(
+            LocalDateTime.of(2000, 1, 1, 0, 0, 0), LocalDateTime.of(2000, 1, 2, 0, 0, 0));
 
     @Test
     void 좌석_번호가_1_미만이면_SeatNotExistsInSectionException이_발생한다() {
@@ -104,7 +115,8 @@ class SeatReservationValidatorTest {
                 seatReservationRepository,
                 seatBanRepository,
                 userRepository,
-                new SeatUtil()
+                new SeatUtil(),
+                new SeatReservationPeriodProperties(OPEN, OPEN)
         );
 
         try (MockedStatic<UserUtil> userUtilMock = mockStatic(UserUtil.class)) {
@@ -154,5 +166,51 @@ class SeatReservationValidatorTest {
             assertThatThrownBy(validator::lockCurrentUser)
                     .isInstanceOf(UserNotFoundException.class);
         }
+    }
+
+    @Test
+    void 참가자_기간이_지났으면_SeatReservationPeriodException이_발생한다() {
+        SeatReservationValidator periodValidator = validatorWithPeriods(CLOSED, OPEN);
+
+        assertThatThrownBy(() -> periodValidator.validateReservationPeriod(Role.PERFORMER))
+                .isInstanceOf(SeatReservationPeriodException.class);
+    }
+
+    @Test
+    void 일반_유저_기간이_아니면_SeatReservationPeriodException이_발생한다() {
+        SeatReservationValidator periodValidator = validatorWithPeriods(OPEN, CLOSED);
+
+        assertThatThrownBy(() -> periodValidator.validateReservationPeriod(Role.USER))
+                .isInstanceOf(SeatReservationPeriodException.class);
+    }
+
+    @Test
+    void 참가자는_일반_유저_기간이_열려있어도_예매할_수_없다() {
+        SeatReservationValidator periodValidator = validatorWithPeriods(CLOSED, OPEN);
+
+        assertThatThrownBy(() -> periodValidator.validateReservationPeriod(Role.PERFORMER))
+                .isInstanceOf(SeatReservationPeriodException.class);
+        assertThatCode(() -> periodValidator.validateReservationPeriod(Role.USER))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void 기간_안이면_예외가_발생하지_않는다() {
+        SeatReservationValidator periodValidator = validatorWithPeriods(OPEN, OPEN);
+
+        assertThatCode(() -> periodValidator.validateReservationPeriod(Role.PERFORMER))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> periodValidator.validateReservationPeriod(Role.USER))
+                .doesNotThrowAnyException();
+    }
+
+    private SeatReservationValidator validatorWithPeriods(Period performer, Period user) {
+        return new SeatReservationValidator(
+                seatReservationRepository,
+                seatBanRepository,
+                userRepository,
+                seatUtil,
+                new SeatReservationPeriodProperties(performer, user)
+        );
     }
 }
