@@ -52,6 +52,8 @@ public class SeatUtil {
             case "B" -> seatNumber >= 1 && seatNumber <= 12;
             case "C" -> seatNumber >= 1 && seatNumber <= 7
                     || seatNumber >= 14 && seatNumber <= 15;
+            case "D" -> seatNumber >= 70 && seatNumber <= 75
+                    || seatNumber >= 80 && seatNumber <= 89;
             case "E" -> seatNumber >= 1 && seatNumber <= 24
                     || seatNumber >= 73 && seatNumber <= 96;
             default -> false;

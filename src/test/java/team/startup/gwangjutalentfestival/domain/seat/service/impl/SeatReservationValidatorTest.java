@@ -108,6 +108,7 @@ class SeatReservationValidatorTest {
             "A, 1", "A, 15",
             "B, 1", "B, 12",
             "C, 1", "C, 7", "C, 14", "C, 15",
+            "D, 70", "D, 75", "D, 80", "D, 89",
             "E, 1", "E, 24", "E, 73", "E, 96"
     })
     void 정적_금지_좌석은_모든_역할의_예약을_거부한다(String section, int seatNumber) {
