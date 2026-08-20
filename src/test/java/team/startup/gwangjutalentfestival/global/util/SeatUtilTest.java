@@ -47,10 +47,10 @@ class SeatUtilTest {
                 range("B", 1, 12),
                 range("C", 1, 7),
                 range("C", 14, 15),
-                range("D", 70, 75),
-                range("D", 80, 89),
+                range("D", 60, 89),
                 range("E", 1, 24),
-                range("E", 73, 96)
+                range("E", 73, 96),
+                range("F", 60, 89)
         ).stream().flatMap(List::stream).collect(java.util.stream.Collectors.toSet());
 
         List<String> allSeats = seatUtil.getSections().stream()
@@ -68,9 +68,9 @@ class SeatUtilTest {
 
         assertThat(performerSeats).containsExactlyInAnyOrderElementsOf(expectedPerformerSeats);
         assertThat(performerSeats).hasSize(72);
-        assertThat(restrictedSeats).hasSize(100);
+        assertThat(restrictedSeats).hasSize(144);
         assertThat(userSeats).containsExactlyInAnyOrderElementsOf(expectedUserSeats);
-        assertThat(userSeats).hasSize(436);
+        assertThat(userSeats).hasSize(392);
         assertThat(performerSeats).doesNotContainAnyElementsOf(userSeats);
         assertThat(performerSeats).hasSize(allSeats.size() - userSeats.size() - restrictedSeats.size());
         for (Role role : Role.values()) {
