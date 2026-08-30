@@ -52,9 +52,9 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
     private static final int COMMENT_CELL_WIDTH = 100;
     private static final int COMMENT_CELL_HEIGHT = 50;
     private static final int CELL_PADDING = 6;
-    private static final int PROFILE_ROW = 2;
-    private static final int HEADER_ROW = 3;
-    private static final int FIRST_DATA_ROW = 4;
+    private static final int PROFILE_ROW = 1;
+    private static final int HEADER_ROW = 2;
+    private static final int FIRST_DATA_ROW = 3;
     private static final int AFFILIATION_COLUMN = 1;
     private static final int POSITION_COLUMN = 3;
     private static final int NAME_COLUMN = 5;
