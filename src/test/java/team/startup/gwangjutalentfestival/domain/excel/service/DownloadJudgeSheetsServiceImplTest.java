@@ -101,33 +101,33 @@ class DownloadJudgeSheetsServiceImplTest {
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
             var sheet = workbook.getSheet("개별 심사표");
             assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("원본 제목");
-            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("소속/직위/이름");
-            assertThat(sheet.getRow(3).getCell(0).getStringCellValue()).isEqualTo("심사순서");
-            assertThat(sheet.getRow(3).getCell(1).getStringCellValue()).isEqualTo("팀명");
-            assertThat(sheet.getRow(3).getCell(2).getStringCellValue()).isEqualTo("완성도·표현력");
-            assertThat(sheet.getRow(3).getCell(3).getStringCellValue()).isEqualTo("창의력·구성");
-            assertThat(sheet.getRow(3).getCell(4).getStringCellValue()).isEqualTo("무대매너·퍼포먼스");
-            assertThat(sheet.getRow(3).getCell(5).getStringCellValue()).isEqualTo("총합 점수");
-            assertThat(sheet.getRow(3).getCell(6).getStringCellValue()).isEqualTo("심사 의견");
-            assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(1);
-            assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀1");
-            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isEqualTo(20);
-            assertThat(sheet.getRow(4).getCell(3).getNumericCellValue()).isEqualTo(15);
-            assertThat(sheet.getRow(4).getCell(4).getNumericCellValue()).isEqualTo(25);
-            assertThat(sheet.getRow(4).getCell(5).getNumericCellValue()).isEqualTo(60);
-            assertThat(sheet.getRow(5).getCell(0).getNumericCellValue()).isEqualTo(2);
-            assertThat(sheet.getRow(5).getCell(1).getStringCellValue()).isEqualTo("팀2");
-            assertThat(sheet.getRow(5).getCell(2).getNumericCellValue()).isZero();
-            assertThat(sheet.getRow(5).getCell(3).getNumericCellValue()).isZero();
-            assertThat(sheet.getRow(5).getCell(4).getNumericCellValue()).isZero();
-            assertThat(sheet.getRow(5).getCell(5).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).isEqualTo("소속/직위/이름");
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("심사순서");
+            assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo("팀명");
+            assertThat(sheet.getRow(2).getCell(2).getStringCellValue()).isEqualTo("완성도·표현력");
+            assertThat(sheet.getRow(2).getCell(3).getStringCellValue()).isEqualTo("창의력·구성");
+            assertThat(sheet.getRow(2).getCell(4).getStringCellValue()).isEqualTo("무대매너·퍼포먼스");
+            assertThat(sheet.getRow(2).getCell(5).getStringCellValue()).isEqualTo("총합 점수");
+            assertThat(sheet.getRow(2).getCell(6).getStringCellValue()).isEqualTo("심사 의견");
+            assertThat(sheet.getRow(3).getCell(0).getNumericCellValue()).isEqualTo(1);
+            assertThat(sheet.getRow(3).getCell(1).getStringCellValue()).isEqualTo("팀1");
+            assertThat(sheet.getRow(3).getCell(2).getNumericCellValue()).isEqualTo(20);
+            assertThat(sheet.getRow(3).getCell(3).getNumericCellValue()).isEqualTo(15);
+            assertThat(sheet.getRow(3).getCell(4).getNumericCellValue()).isEqualTo(25);
+            assertThat(sheet.getRow(3).getCell(5).getNumericCellValue()).isEqualTo(60);
+            assertThat(sheet.getRow(4).getCell(0).getNumericCellValue()).isEqualTo(2);
+            assertThat(sheet.getRow(4).getCell(1).getStringCellValue()).isEqualTo("팀2");
+            assertThat(sheet.getRow(4).getCell(2).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(4).getCell(3).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(4).getCell(4).getNumericCellValue()).isZero();
+            assertThat(sheet.getRow(4).getCell(5).getNumericCellValue()).isZero();
             assertThat(workbook.getAllPictures()).hasSize(1);
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(workbook.getAllPictures().getFirst(), new Color(0x12, 0x12, 0x12))).isTrue();
-            assertCommentPicture(workbook, 4);
+            assertCommentPicture(workbook, 3);
         }
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_B_개별심사표.xlsx")))) {
-            assertCommentPicture(workbook, 4);
+            assertCommentPicture(workbook, 3);
         }
     }
 
@@ -185,8 +185,8 @@ class DownloadJudgeSheetsServiceImplTest {
             assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), Color.RED)).isTrue();
             assertThat(renderedImageHasColor(pictures.get(4).getPictureData(), new Color(0x12, 0x12, 0x12))).isTrue();
             assertThat(pictures).extracting(picture -> picture.getClientAnchor().getRow1())
-                    .containsExactly(4, 5, 6, 7, 8);
-            assertThat(sheet.getRow(9).getHeightInPoints()).isEqualTo(37.5f);
+                    .containsExactly(3, 4, 5, 6, 7);
+            assertThat(sheet.getRow(8).getHeightInPoints()).isEqualTo(37.5f);
         }
     }
 
@@ -249,9 +249,9 @@ class DownloadJudgeSheetsServiceImplTest {
 
         try (XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(files.get("심사위원_A_개별심사표.xlsx")))) {
             var sheet = workbook.getSheet("개별 심사표");
-            assertThat(sheet.getRow(11).getCell(0).getNumericCellValue()).isEqualTo(8);
-            assertThat(sheet.getRow(12).getCell(0).getNumericCellValue()).isEqualTo(9);
-            assertThat(sheet.getRow(13).getCell(0).getNumericCellValue()).isEqualTo(10);
+            assertThat(sheet.getRow(10).getCell(0).getNumericCellValue()).isEqualTo(8);
+            assertThat(sheet.getRow(11).getCell(0).getNumericCellValue()).isEqualTo(9);
+            assertThat(sheet.getRow(12).getCell(0).getNumericCellValue()).isEqualTo(10);
         }
     }
 
@@ -265,14 +265,14 @@ class DownloadJudgeSheetsServiceImplTest {
                 }
             }
             sheet.getRow(0).getCell(0).setCellValue("원본 제목");
-            sheet.getRow(2).getCell(0).setCellValue("소속/직위/이름");
-            sheet.getRow(2).setHeightInPoints((float) Units.pixelToPoints(PROFILE_ROW_HEIGHT));
+            sheet.getRow(1).getCell(0).setCellValue("소속/직위/이름");
+            sheet.getRow(1).setHeightInPoints((float) Units.pixelToPoints(PROFILE_ROW_HEIGHT));
             for (int column = 0; column < 7; column++) {
                 sheet.setColumnWidth(column, Math.round(100 / Units.DEFAULT_CHARACTER_WIDTH * 256));
             }
-            sheet.addMergedRegion(new CellRangeAddress(2, 2, 1, 2));
-            sheet.addMergedRegion(new CellRangeAddress(2, 2, 3, 4));
-            sheet.addMergedRegion(new CellRangeAddress(2, 2, 5, 6));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 1, 2));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 3, 4));
+            sheet.addMergedRegion(new CellRangeAddress(1, 1, 5, 6));
             sheet.getRow(12).getCell(0).setCellValue("13행 보존");
             workbook.write(output);
             return output.toByteArray();
@@ -341,8 +341,8 @@ class DownloadJudgeSheetsServiceImplTest {
         ClientAnchor anchor = picture.getClientAnchor();
         assertThat(anchor.getCol1()).isEqualTo((short) column);
         assertThat(anchor.getCol2()).isEqualTo((short) (column + 1));
-        assertThat(anchor.getRow1()).isEqualTo(2);
-        assertThat(anchor.getRow2()).isEqualTo(2);
+        assertThat(anchor.getRow1()).isEqualTo(1);
+        assertThat(anchor.getRow2()).isEqualTo(1);
         assertCellPadding(anchor, CELL_WIDTH, PROFILE_ROW_HEIGHT);
 
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(picture.getPictureData().getData()));
