@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsConfigMissingException.require;
+
 /**
  * Google Sheets API 연동 어댑터.
  * <p>슬로건 데이터를 Google Sheets에 행(row) 단위로 추가하는 기능을 제공한다.
@@ -36,7 +38,7 @@ public class GoogleSheetsAdapter {
      * @param data 추가할 재학생 슬로건 행 데이터 목록
      */
     public void appendEnrolledSlogan(List<EnrolledSloganSheetRowData> data) {
-        append(properties.enrolledSheetPage(), toEnrolledRows(data));
+        append(require(properties.enrolledSheetPage(), "google.sheets.enrolled-sheet-page"), toEnrolledRows(data));
     }
 
     /**
@@ -45,15 +47,16 @@ public class GoogleSheetsAdapter {
      * @param data 추가할 학교 밖 청소년 슬로건 행 데이터 목록
      */
     public void appendOutOfSchoolSlogan(List<OutOfSchoolSloganSheetRowData> data) {
-        append(properties.outOfSchoolSheetPage(), toOutOfSchoolRows(data));
+        append(require(properties.outOfSchoolSheetPage(), "google.sheets.out-of-school-sheet-page"), toOutOfSchoolRows(data));
     }
 
     private void append(String sheetPage, List<List<Object>> rows) {
+        String sheetId = require(properties.sheetId(), "google.sheets.sheet-id");
         try {
             ValueRange valueRange = new ValueRange().setValues(rows);
 
             sheets.spreadsheets().values()
-                    .append(properties.sheetId(), toAppendRange(sheetPage), valueRange)
+                    .append(sheetId, toAppendRange(sheetPage), valueRange)
                     .setValueInputOption("RAW")
                     .setInsertDataOption("INSERT_ROWS")
                     .execute();

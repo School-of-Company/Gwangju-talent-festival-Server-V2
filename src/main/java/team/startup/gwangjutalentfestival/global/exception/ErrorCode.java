@@ -83,6 +83,10 @@ public enum ErrorCode {
     GOOGLE_SHEETS_API_ERROR(502, "Google Sheets API 오류가 발생했습니다."),
     GOOGLE_SHEETS_IO_ERROR(503, "Google Sheets 서버와 연결할 수 없습니다."),
     GOOGLE_SHEETS_INIT_ERROR(500, "Google Sheets 초기화 중 오류가 발생했습니다."),
+    GOOGLE_CONFIG_MISSING(500, "Google 연동 설정이 누락되었습니다."),
+
+    // Excel
+    JUDGE_SHEET_EXPORT_FAILED(500, "심사표 생성 중 오류가 발생했습니다."),
 
     // RateLimit
     TOO_MANY_REQUESTS(429, "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요."),
