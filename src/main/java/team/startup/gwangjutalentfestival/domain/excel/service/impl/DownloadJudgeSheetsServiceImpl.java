@@ -2,6 +2,7 @@ package team.startup.gwangjutalentfestival.domain.excel.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Row;
@@ -10,6 +11,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import team.startup.gwangjutalentfestival.domain.excel.exception.JudgeSheetExportException;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgeSheetsService;
 import team.startup.gwangjutalentfestival.domain.excel.service.DownloadJudgingSummaryExcelService;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeCommentEntity;
@@ -42,6 +44,9 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsConfigMissingException.require;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsService {
@@ -97,7 +102,8 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                                 judgeTemplate, teams, judgements, comments, profiles.get(judgeId), judgeId));
             }
         } catch (IOException e) {
-            throw new IllegalStateException("심사표 ZIP을 생성할 수 없습니다.", e);
+            log.error("심사표 ZIP 생성 실패 - message: {}", e.getMessage(), e);
+            throw new JudgeSheetExportException();
         }
         return output.toByteArray();
     }
@@ -114,10 +120,12 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 .filter(judgement -> judgeId.equals(judgement.getUser().getId()))
                 .forEach(judgement -> scoreMap.put(judgement.getTeam().getId(), judgement));
 
+        String templatePage = require(googleExcelProperties.judgeTemplatePage(), "google.excel.judge-template-page");
         try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(template)); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.getSheet(googleExcelProperties.judgeTemplatePage());
+            Sheet sheet = workbook.getSheet(templatePage);
             if (sheet == null) {
-                throw new IllegalStateException("개별 심사표 템플릿 탭을 찾을 수 없습니다.");
+                log.error("개별 심사표 템플릿 탭을 찾을 수 없음 - page: {}", templatePage);
+                throw new JudgeSheetExportException();
             }
             Row headerRow = row(sheet, HEADER_ROW);
             cell(headerRow, 0).setCellValue("심사순서");
