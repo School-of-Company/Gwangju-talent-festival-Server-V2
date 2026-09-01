@@ -34,6 +34,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static team.startup.gwangjutalentfestival.global.thirdparty.google.exception.GoogleSheetsConfigMissingException.require;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -55,8 +57,8 @@ public class GoogleExcelAdapter {
     private final GoogleExcelProperties properties;
 
     public synchronized byte[] exportSummary(List<List<Object>> rows) {
-        String sheetId = properties.templateSheetId();
-        String page = properties.summaryPage().replace("'", "''");
+        String sheetId = require(properties.templateSheetId(), "google.excel.template-sheet-id");
+        String page = require(properties.summaryPage(), "google.excel.summary-page").replace("'", "''");
         int columnCount = rows.isEmpty() ? 0 : rows.get(0).size();
         String endColumn = columnLetter(columnCount);
         String writeRange = "'" + page + "'!A" + HEADER_ROW;
@@ -104,8 +106,9 @@ public class GoogleExcelAdapter {
     }
 
     public byte[] exportJudgeTemplate() {
+        String judgeTemplateSheetId = require(properties.judgeTemplateSheetId(), "google.excel.judge-template-sheet-id");
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            drive.files().export(properties.judgeTemplateSheetId(), XLSX_MIME_TYPE)
+            drive.files().export(judgeTemplateSheetId, XLSX_MIME_TYPE)
                     .executeMediaAndDownloadTo(outputStream);
             return outputStream.toByteArray();
         } catch (GoogleJsonResponseException e) {
