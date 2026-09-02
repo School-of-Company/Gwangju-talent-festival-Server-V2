@@ -81,6 +81,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/seat/myself/performer").hasAnyAuthority(Role.PERFORMER.name())
                         .requestMatchers(HttpMethod.GET, "/seat/all").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name(), Role.PERFORMER.name())
                         .requestMatchers(HttpMethod.GET, "/seat/changes").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name(), Role.PERFORMER.name())
+                        .requestMatchers(HttpMethod.GET, "/seat/search").hasAnyAuthority(Role.ADMIN.name())
                         .requestMatchers(HttpMethod.GET, "/seat").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name(), Role.PERFORMER.name())
 
                         // judge
