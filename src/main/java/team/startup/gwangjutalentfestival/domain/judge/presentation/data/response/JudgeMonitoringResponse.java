@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 
 public record JudgeMonitoringResponse(
+        long version,
         List<JudgeHeader> judges,
         List<ScoreRow> scoreRows,
         List<CommentRow> commentRows
