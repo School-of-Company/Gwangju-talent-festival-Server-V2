@@ -86,6 +86,7 @@ public class SecurityConfig {
 
                         // judge
                         .requestMatchers(HttpMethod.GET, "/judge/monitor/changes").hasAnyAuthority(Role.ADMIN.name())
+                        .requestMatchers(HttpMethod.GET, "/judge/monitor/*/comment/*").hasAuthority(Role.ADMIN.name())
                         .requestMatchers("/judge/**").hasAnyAuthority(Role.JUDGE.name())
 
                         // monitoring

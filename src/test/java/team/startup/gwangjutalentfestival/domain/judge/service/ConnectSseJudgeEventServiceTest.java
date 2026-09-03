@@ -37,11 +37,17 @@ class ConnectSseJudgeEventServiceTest {
     private ConnectSseJudgeEventServiceImpl connectSseJudgeEventService;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         CustomUserDetails userDetails = CustomUserDetails.fromToken(1L, Role.ADMIN);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities())
         );
+        doAnswer(invocation -> {
+            SseEmitter emitter = invocation.getArgument(0);
+            JudgeSseEmitterManager.EmitterAction action = invocation.getArgument(1);
+            action.accept(emitter);
+            return null;
+        }).when(judgeSseEmitterManager).sendSafely(any(), any());
     }
 
     @AfterEach
@@ -89,6 +95,6 @@ class ConnectSseJudgeEventServiceTest {
         SseEmitter result = connectSseJudgeEventService.execute();
 
         assertThat(result).isSameAs(mockEmitter);
-        verify(mockEmitter).completeWithError(any(IOException.class));
+        verify(judgeSseEmitterManager).completeWithErrorSafely(eq(mockEmitter), any(IOException.class));
     }
 }

@@ -48,7 +48,8 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
         validateSize(strokes);
 
         judgeCommentRepository.upsert(team.getId(), user.getId(), strokes);
-        applicationEventPublisher.publishEvent(new JudgeMonitoringChangedEvent());
+        applicationEventPublisher.publishEvent(
+                JudgeMonitoringChangedEvent.commentChanged(team.getId(), user.getId()));
     }
 
     private String writeValueAsString(Object strokes) {

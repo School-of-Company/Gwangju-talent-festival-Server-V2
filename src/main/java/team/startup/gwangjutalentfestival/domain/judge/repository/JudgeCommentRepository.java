@@ -14,6 +14,8 @@ import java.util.List;
 public interface JudgeCommentRepository extends JpaRepository<JudgeCommentEntity, Long> {
     Optional<JudgeCommentEntity> findByTeamAndUser(TeamEntity team, UserEntity user);
 
+    Optional<JudgeCommentEntity> findByTeamIdAndUserId(Long teamId, Long userId);
+
     /**
      * (team_id, user_id) 유니크 제약을 이용한 원자적 upsert.
      * 동시에 같은 팀/심사위원 조합으로 첫 저장이 들어와도 유니크 제약 위반 없이 하나만 반영된다.

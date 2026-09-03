@@ -9,7 +9,6 @@ import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeMonitorin
 import team.startup.gwangjutalentfestival.global.sse.JudgeMonitoringSseEmitterManager;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,17 +34,19 @@ public class ConnectSseJudgeMonitoringServiceImpl implements ConnectSseJudgeMoni
         });
 
         try {
-            emitter.send(SseEmitter.event().name("judge-monitoring").data(getJudgeMonitoringService.execute()));
-        } catch (IOException e) {
-            emitter.completeWithError(e);
+            emitterManager.sendSafely(emitter, target -> target.send(
+                    SseEmitter.event().name("judge-monitoring").data(getJudgeMonitoringService.execute())));
+        } catch (Exception e) {
+            emitterManager.completeWithErrorSafely(emitter, e);
             return emitter;
         }
 
         ScheduledFuture<?> scheduled = taskScheduler.scheduleAtFixedRate(() -> {
             try {
-                emitter.send(SseEmitter.event().name("heartbeat").data("ok"));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
+                emitterManager.trySendSafely(emitter, target -> target.send(
+                        SseEmitter.event().name("heartbeat").data("ok")));
+            } catch (Exception e) {
+                emitterManager.completeWithErrorSafely(emitter, e);
             }
         }, Duration.ofSeconds(15));
         heartbeat.set(scheduled);

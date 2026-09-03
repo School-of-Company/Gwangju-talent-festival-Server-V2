@@ -21,6 +21,7 @@ import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEv
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
+import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
@@ -43,6 +44,7 @@ public class JudgeController {
     private final GetJudgementService getJudgementService;
     private final ConnectSseJudgeEventService connectSseJudgeEventService;
     private final ConnectSseJudgeMonitoringService connectSseJudgeMonitoringService;
+    private final GetJudgeMonitoringService getJudgeMonitoringService;
     private final GetJudgeCommentService getJudgeCommentService;
     private final SaveJudgeCommentService saveJudgeCommentService;
     private final JudgeProfileService judgeProfileService;
@@ -86,6 +88,12 @@ public class JudgeController {
     @GetMapping(value = "/monitor/changes", produces = "text/event-stream")
     public SseEmitter connectMonitoring() {
         return connectSseJudgeMonitoringService.execute();
+    }
+
+    @GetMapping("/monitor/{teamId}/comment/{judgeId}")
+    public ResponseEntity<GetJudgeCommentResponse> getMonitoringComment(
+            @PathVariable Long teamId, @PathVariable Long judgeId) {
+        return ResponseEntity.ok(getJudgeMonitoringService.getComment(teamId, judgeId));
     }
 
     @Operation(summary = "심사 점수 저장", description = "팀에 대한 심사 점수를 저장하거나 수정합니다.")
