@@ -1,11 +1,16 @@
 package team.startup.gwangjutalentfestival.global.sse;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -18,12 +23,22 @@ import java.util.function.Consumer;
  *
  * @param <K> Emitter를 식별하는 키 타입
  */
+@Slf4j
 public abstract class AbstractSseEmitterManager<K> {
 
     private static final long SSE_TIMEOUT_MILLIS = 30 * 60 * 1000L;
+    private static final int MAX_PENDING_ACTIONS = 8;
 
     private final Map<K, Set<SseEmitter>> emitters = new ConcurrentHashMap<>();
     private final Map<SseEmitter, ReentrantLock> locks = new ConcurrentHashMap<>();
+    private final Map<SseEmitter, BlockingQueue<EmitterAction>> pendingActions = new ConcurrentHashMap<>();
+    private final Set<SseEmitter> drainingEmitters = ConcurrentHashMap.newKeySet();
+    private final Set<SseEmitter> overflowedEmitters = ConcurrentHashMap.newKeySet();
+
+    @FunctionalInterface
+    public interface EmitterAction {
+        void accept(SseEmitter emitter) throws IOException;
+    }
 
     /**
      * 새 {@link SseEmitter}를 생성하고 등록한다.
@@ -42,6 +57,9 @@ public abstract class AbstractSseEmitterManager<K> {
                 return connections.isEmpty() ? null : connections;
             });
             locks.remove(emitter);
+            pendingActions.remove(emitter);
+            drainingEmitters.remove(emitter);
+            overflowedEmitters.remove(emitter);
             if (onCleanup != null) onCleanup.run();
         };
 
@@ -65,15 +83,88 @@ public abstract class AbstractSseEmitterManager<K> {
      */
     public void forEachEmitterSafe(Consumer<SseEmitter> action) {
         emitters.values().stream().flatMap(Collection::stream).forEach(emitter -> {
-            ReentrantLock lock = locks.get(emitter);
-            if (lock == null) return;
-            lock.lock();
             try {
-                action.accept(emitter);
-            } finally {
-                lock.unlock();
+                sendSafely(emitter, action::accept);
+            } catch (IOException ignored) {
+                // Consumer 기반 기존 호출은 checked exception을 발생시키지 않는다.
             }
         });
+    }
+
+    public void sendSafely(SseEmitter emitter, EmitterAction action) throws IOException {
+        ReentrantLock lock = locks.get(emitter);
+        if (lock == null) return;
+        lock.lock();
+        try {
+            action.accept(emitter);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public boolean trySendSafely(SseEmitter emitter, EmitterAction action) throws IOException {
+        ReentrantLock lock = locks.get(emitter);
+        if (lock == null || !lock.tryLock()) return false;
+        try {
+            action.accept(emitter);
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void completeWithErrorSafely(SseEmitter emitter, Throwable error) {
+        try {
+            emitter.completeWithError(error);
+        } catch (IllegalStateException ignored) {
+            // 이미 종료된 emitter는 추가 완료가 필요 없다.
+        }
+    }
+
+    /** Emitter별 bounded queue가 가득 차면 재연결시킨다. */
+    public void forEachEmitterBounded(EmitterAction action, Executor executor) {
+        getAllEmitters().forEach(emitter -> {
+            BlockingQueue<EmitterAction> pending = pendingActions.computeIfAbsent(
+                    emitter, ignored -> new ArrayBlockingQueue<>(MAX_PENDING_ACTIONS));
+            if (!pending.offer(action)) {
+                if (overflowedEmitters.add(emitter)) {
+                    executor.execute(() -> completeWithErrorSafely(
+                            emitter, new IOException("SSE client is too slow")));
+                }
+                return;
+            }
+            startDraining(emitter, executor);
+        });
+    }
+
+    private void startDraining(SseEmitter emitter, Executor executor) {
+        if (!drainingEmitters.add(emitter)) return;
+        try {
+            executor.execute(() -> drain(emitter, executor));
+        } catch (RuntimeException e) {
+            drainingEmitters.remove(emitter);
+            throw e;
+        }
+    }
+
+    private void drain(SseEmitter emitter, Executor executor) {
+        BlockingQueue<EmitterAction> pending = pendingActions.get(emitter);
+        try {
+            EmitterAction action;
+            while (pending != null && (action = pending.poll()) != null) {
+                try {
+                    sendSafely(emitter, action);
+                } catch (Exception e) {
+                    log.debug("SSE 연결 종료: {}", e.toString());
+                    completeWithErrorSafely(emitter, e);
+                    return;
+                }
+            }
+        } finally {
+            drainingEmitters.remove(emitter);
+            pending = pendingActions.get(emitter);
+            if (pending != null && !pending.isEmpty()) startDraining(emitter, executor);
+        }
     }
 
     /**
@@ -84,6 +175,7 @@ public abstract class AbstractSseEmitterManager<K> {
     public Collection<SseEmitter> getAllEmitters() {
         return emitters.values().stream()
                 .flatMap(Collection::stream)
+                .filter(emitter -> !overflowedEmitters.contains(emitter))
                 .toList();
     }
 }
