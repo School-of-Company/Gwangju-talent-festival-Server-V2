@@ -128,7 +128,7 @@ public class DownloadJudgeSheetsServiceImpl implements DownloadJudgeSheetsServic
                 throw new JudgeSheetExportException();
             }
             Row headerRow = row(sheet, HEADER_ROW);
-            cell(headerRow, 0).setCellValue("심사순서");
+            cell(headerRow, 0).setCellValue("심사번호");
             cell(headerRow, TEAM_NAME_COLUMN).setCellValue("팀명");
             cell(headerRow, COMPLETENESS_COLUMN).setCellValue("완성도·표현력");
             cell(headerRow, CREATIVITY_COLUMN).setCellValue("창의력·구성");
