@@ -9,8 +9,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import team.startup.gwangjutalentfestival.global.config.CacheConfig;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
@@ -123,7 +121,7 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
             }
 
             if (allowIdempotentReplay) {
-                evictSeatCachesAfterCommit();
+                evictSeatCaches();
             }
             newRequests.forEach(request -> applicationEventPublisher.publishEvent(new SeatChangeEvent(
                     request.seatSection(), request.seatNumber(), false)));
@@ -151,19 +149,6 @@ public class ReservationSeatServiceImpl implements ReservationSeatService {
 
     private String seatKey(String seatSection, Integer seatNumber) {
         return seatSection + ":" + seatNumber;
-    }
-
-    private void evictSeatCachesAfterCommit() {
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    evictSeatCaches();
-                }
-            });
-            return;
-        }
-        evictSeatCaches();
     }
 
     private void evictSeatCaches() {
