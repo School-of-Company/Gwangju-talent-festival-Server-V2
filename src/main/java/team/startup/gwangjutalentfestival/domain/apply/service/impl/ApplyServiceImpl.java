@@ -3,7 +3,6 @@ package team.startup.gwangjutalentfestival.domain.apply.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
 import team.startup.gwangjutalentfestival.domain.apply.entity.ApplyEntity;
 import team.startup.gwangjutalentfestival.domain.apply.presentation.data.request.ApplyCompleteRequest;
@@ -35,7 +34,6 @@ public class ApplyServiceImpl implements ApplyService {
     private final ApplyRepository applyRepository;
 
     @Override
-    @Transactional
     public ApplyResponse execute(ApplyCompleteRequest request) {
         validateRequest(request);
 

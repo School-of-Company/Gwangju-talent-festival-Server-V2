@@ -9,6 +9,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response.TokenResponse;
 import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -51,11 +54,15 @@ class VerifyPerformerServiceImplTest {
     private JwtProvider jwtProvider;
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+    @Mock
+    private TransactionTemplate transactionTemplate;
 
     private final JwtProperties jwtProperties = new JwtProperties("secret", 1000L, 1209600L);
 
     @BeforeEach
     void setUp() {
+        given(transactionTemplate.execute(any(TransactionCallback.class))).willAnswer(invocation ->
+                invocation.<TransactionCallback<?>>getArgument(0).doInTransaction(null));
         CustomUserDetails details = CustomUserDetails.fromToken(USER_ID, Role.USER);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities()));
@@ -125,7 +132,7 @@ class VerifyPerformerServiceImplTest {
     private VerifyPerformerServiceImpl service() {
         return new VerifyPerformerServiceImpl(
                 performerVerificationRepository, userRepository, jwtProvider,
-                refreshTokenRepository, jwtProperties);
+                refreshTokenRepository, jwtProperties, transactionTemplate);
     }
 
     private PerformerVerificationEntity verification(String name, LocalDateTime expiresAt, Long claimedUserId) {

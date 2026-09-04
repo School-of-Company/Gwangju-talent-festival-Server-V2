@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response.TokenResponse;
 import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
 import team.startup.gwangjutalentfestival.domain.performer.entity.PerformerVerificationEntity;
@@ -30,12 +31,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest
 class PerformerVerificationConcurrencyTest {
@@ -94,6 +97,30 @@ class PerformerVerificationConcurrencyTest {
         PerformerVerificationEntity verification = performerVerificationRepository.findAll().getFirst();
         assertThat(successCount).hasValue(1);
         assertThat(verification.getClaimedUserId()).isIn(first.getId(), second.getId());
+    }
+
+    @Test
+    void Redis_리프레시_토큰은_DB_트랜잭션_종료_후_저장한다() throws Exception {
+        UserEntity user = userRepository.save(user("01033333333"));
+        performerVerificationRepository.save(PerformerVerificationEntity.builder()
+                .participantName(NAME)
+                .codeHash(hash(CODE))
+                .expiresAt(LocalDateTime.now().plusDays(1))
+                .build());
+        given(jwtProvider.receiveToken(user.getId(), Role.PERFORMER)).willReturn(
+                new TokenResponse("access", LocalDateTime.now(), "refresh", LocalDateTime.now(), Role.PERFORMER));
+        AtomicBoolean transactionActiveDuringRedisSave = new AtomicBoolean(true);
+        doAnswer(invocation -> {
+            transactionActiveDuringRedisSave.set(TransactionSynchronizationManager.isActualTransactionActive());
+            return invocation.getArgument(0);
+        }).when(refreshTokenRepository).save(any());
+
+        CustomUserDetails details = CustomUserDetails.fromToken(user.getId(), Role.USER);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities()));
+        verifyPerformerService.execute(new VerifyPerformerRequest(NAME, CODE));
+
+        assertThat(transactionActiveDuringRedisSave).isFalse();
     }
 
     private Throwable verify(Long userId, CountDownLatch ready, CountDownLatch start, AtomicInteger successCount) {

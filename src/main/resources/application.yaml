@@ -18,6 +18,7 @@ spring:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:3000}
 
   data:
     redis:
@@ -28,10 +29,10 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
-    show-sql: true
+    show-sql: ${JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        format_sql: true
+        format_sql: ${HIBERNATE_FORMAT_SQL:false}
 
   flyway:
     baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:false}
@@ -70,7 +71,7 @@ sms:
 
 logging:
   level:
-    org.springframework.security: DEBUG
+    org.springframework.security: ${SECURITY_LOG_LEVEL:WARN}
 
 google:
   sheets:
