@@ -2,6 +2,9 @@ package team.startup.gwangjutalentfestival.global.sse;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.http.MediaType;
+
+import java.util.concurrent.Executor;
 
 /**
  * SSE 이벤트를 전체 구독자에게 전송하는 추상 리스너.
@@ -40,8 +43,13 @@ public abstract class AbstractSseEventListener<E> {
                 emitter.send(SseEmitter.event().name(getEventName()).data(event));
             } catch (Exception e) {
                 log.error("SSE 전송 실패", e);
-                emitter.completeWithError(e);
+                getEmitterManager().completeWithErrorSafely(emitter, e);
             }
         });
+    }
+
+    protected void sendBoundedTextToAll(String event, Executor executor) {
+        getEmitterManager().forEachEmitterBounded(emitter ->
+                emitter.send(SseEmitter.event().name(getEventName()).data(event, MediaType.TEXT_PLAIN)), executor);
     }
 }

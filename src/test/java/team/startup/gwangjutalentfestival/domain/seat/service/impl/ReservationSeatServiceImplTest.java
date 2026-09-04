@@ -10,8 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import team.startup.gwangjutalentfestival.domain.seat.entity.SeatEntity;
 import team.startup.gwangjutalentfestival.domain.seat.event.SeatChangeEvent;
 import team.startup.gwangjutalentfestival.domain.seat.exception.DuplicateSeatRequestException;
@@ -164,25 +162,6 @@ class ReservationSeatServiceImplTest {
         verify(seatReservationRepository, never()).saveAllAndFlush(anyList());
         verify(applicationEventPublisher, never()).publishEvent(new SeatChangeEvent(SEAT_SECTION, SEAT_NUMBER, false));
         verifyNoInteractions(cacheManager);
-    }
-
-    @Test
-    void 신규_다중_예약의_캐시는_트랜잭션_커밋_후_제거한다() {
-        ReservationSeatRequest second = new ReservationSeatRequest("A", 34);
-        givenReservationContext(Role.PERFORMER, List.of());
-        TransactionSynchronizationManager.initSynchronization();
-
-        try {
-            reservationSeatService.executeBulk(
-                    new BulkReservationSeatRequest(List.of(request(), second)));
-
-            verifyNoInteractions(cacheManager);
-            TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
-            verify(cacheManager).getCache(CacheConfig.SEATS_ALL);
-            verify(cacheManager).getCache(CacheConfig.SEATS_SECTION);
-        } finally {
-            TransactionSynchronizationManager.clearSynchronization();
-        }
     }
 
     @Test

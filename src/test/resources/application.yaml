@@ -9,6 +9,7 @@ spring:
     hikari:
       maximum-pool-size: 5
       minimum-idle: 1
+      connection-timeout: 3000
 
   data:
     redis:
@@ -16,6 +17,7 @@ spring:
       port: 6379
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
     show-sql: false

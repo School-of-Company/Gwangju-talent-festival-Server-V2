@@ -72,7 +72,7 @@ public class SaveJudgementScoreServiceImpl implements SaveJudgementScoreService 
                                             .user(user)
                                             .build()));
                     updateTotalScore(team);
-                    applicationEventPublisher.publishEvent(new JudgeMonitoringChangedEvent());
+                    applicationEventPublisher.publishEvent(JudgeMonitoringChangedEvent.scoreChanged());
                 }
         );
     }

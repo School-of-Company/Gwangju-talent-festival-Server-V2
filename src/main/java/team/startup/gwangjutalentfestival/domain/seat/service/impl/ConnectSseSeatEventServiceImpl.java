@@ -8,7 +8,6 @@ import team.startup.gwangjutalentfestival.domain.seat.service.ConnectSseSeatEven
 import team.startup.gwangjutalentfestival.global.sse.SeatSseEmitterManager;
 import team.startup.gwangjutalentfestival.global.util.UserUtil;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,23 +46,23 @@ public class ConnectSseSeatEventServiceImpl implements ConnectSseSeatEventServic
         });
 
         try {
-            emitter.send(SseEmitter.event()
+            sseEmitterManager.sendSafely(emitter, target -> target.send(SseEmitter.event()
                     .name(CONNECTED_EVENT_NAME)
                     .id(String.valueOf(System.currentTimeMillis()))
-                    .data("ok"));
-        } catch (IOException e) {
-            emitter.completeWithError(e);
+                    .data("ok")));
+        } catch (Exception e) {
+            sseEmitterManager.completeWithErrorSafely(emitter, e);
             return emitter;
         }
 
         ScheduledFuture<?> beat = taskScheduler.scheduleAtFixedRate(() -> {
             try {
-                emitter.send(SseEmitter.event()
+                sseEmitterManager.trySendSafely(emitter, target -> target.send(SseEmitter.event()
                         .name(HEARTBEAT_EVENT_NAME)
                         .id(String.valueOf(System.currentTimeMillis()))
-                        .data("ok"));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
+                        .data("ok")));
+            } catch (Exception e) {
+                sseEmitterManager.completeWithErrorSafely(emitter, e);
             }
         }, Duration.ofSeconds(15));
         beatHolder.set(beat);

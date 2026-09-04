@@ -33,6 +33,7 @@ import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeEv
 import team.startup.gwangjutalentfestival.domain.judge.service.ConnectSseJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetAllJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeCommentService;
+import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeMonitoringService;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgementService;
 import team.startup.gwangjutalentfestival.domain.judge.service.JudgeProfileService;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
@@ -58,6 +59,7 @@ import team.startup.gwangjutalentfestival.domain.seat.service.PerformerCancelSea
 import team.startup.gwangjutalentfestival.domain.seat.service.ReservationSeatService;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.BanSeatService;
 import team.startup.gwangjutalentfestival.domain.seat.service.admin.CancelSeatBanService;
+import team.startup.gwangjutalentfestival.domain.seat.service.admin.GetSeatsByPhoneNumberService;
 import team.startup.gwangjutalentfestival.domain.team.presentation.controller.TeamController;
 import team.startup.gwangjutalentfestival.domain.team.service.GetAllTeamService;
 import team.startup.gwangjutalentfestival.domain.team.service.GetTeamRankingService;
@@ -143,6 +145,8 @@ class RoleBasedApiAuthorizationTest {
     private BanSeatService banSeatService;
     @MockBean
     private CancelSeatBanService cancelSeatBanService;
+    @MockBean
+    private GetSeatsByPhoneNumberService getSeatsByPhoneNumberService;
 
     @MockBean
     private SaveJudgementScoreService saveJudgementScoreService;
@@ -154,6 +158,8 @@ class RoleBasedApiAuthorizationTest {
     private ConnectSseJudgeEventService connectSseJudgeEventService;
     @MockBean
     private ConnectSseJudgeMonitoringService connectSseJudgeMonitoringService;
+    @MockBean
+    private GetJudgeMonitoringService getJudgeMonitoringService;
     @MockBean
     private GetJudgeCommentService getJudgeCommentService;
     @MockBean
@@ -247,8 +253,12 @@ class RoleBasedApiAuthorizationTest {
                     Set.of(Role.ADMIN, Role.USER, Role.PERFORMER)),
             new Endpoint("좌석 예약 취소", HttpMethod.DELETE, "/seat", new String[0], null, 204,
                     Set.of(Role.ADMIN, Role.USER)),
+            new Endpoint("전화번호로 예매 좌석 조회", HttpMethod.GET, "/seat/search",
+                    new String[]{"phoneNumber", "01012345678"}, null, 200, Set.of(Role.ADMIN)),
             new Endpoint("심사위원 전체 심사 조회", HttpMethod.GET, "/judge", new String[0], null, 200,
                     Set.of(Role.JUDGE)),
+            new Endpoint("관리자 심사 필기 조회", HttpMethod.GET, "/judge/monitor/1/comment/2",
+                    new String[0], null, 200, Set.of(Role.ADMIN)),
             new Endpoint("이상 탐지 요약 조회", HttpMethod.GET, "/monitoring/anomalies/summary", new String[0], null, 200,
                     Set.of(Role.ADMIN)),
             new Endpoint("심사 집계표 다운로드", HttpMethod.GET, "/excel/summary", new String[0], null, 200,

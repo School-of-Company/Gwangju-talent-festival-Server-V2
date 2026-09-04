@@ -21,9 +21,11 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
 class GetJudgeMonitoringServiceTest {
@@ -58,6 +60,7 @@ class GetJudgeMonitoringServiceTest {
 
         JudgeMonitoringResponse result = service.execute();
 
+        assertThat(result.version()).isPositive();
         assertThat(result.judges()).extracting(JudgeMonitoringResponse.JudgeHeader::label)
                 .containsExactly("심사위원 A", "심사위원 B");
         assertThat(result.scoreRows().getFirst().scores()).extracting(JudgeMonitoringResponse.ScoreCell::score)
@@ -67,6 +70,45 @@ class GetJudgeMonitoringServiceTest {
         assertThat(result.scoreRows().get(1).rank()).isEqualTo(2);
         assertThat(result.commentRows().getFirst().comments()).extracting(JudgeMonitoringResponse.CommentCell::strokes)
                 .containsExactly(strokes, null);
+    }
+
+    @Test
+    void 스냅샷_version은_조회마다_증가한다() {
+        GetJudgeMonitoringService service = new GetJudgeMonitoringServiceImpl(
+                userRepository, teamRepository, judgementRepository, judgeCommentRepository);
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of());
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of());
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of());
+        given(judgeCommentRepository.findAllWithUserAndTeam()).willReturn(List.of());
+
+        long first = service.execute().version();
+        long second = service.execute().version();
+
+        assertThat(second).isGreaterThan(first);
+    }
+
+    @Test
+    void 점수_delta는_필기_데이터를_조회하지_않는다() {
+        GetJudgeMonitoringService service = new GetJudgeMonitoringServiceImpl(
+                userRepository, teamRepository, judgementRepository, judgeCommentRepository);
+        given(userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE)).willReturn(List.of());
+        given(teamRepository.findAllByOrderByPerformOrderAsc()).willReturn(List.of());
+        given(judgementRepository.findAllWithUserAndTeam()).willReturn(List.of());
+
+        service.executeScores();
+
+        verifyNoInteractions(judgeCommentRepository);
+    }
+
+    @Test
+    void 관리자는_팀과_심사위원로_필기를_개별_조회한다() {
+        GetJudgeMonitoringService service = new GetJudgeMonitoringServiceImpl(
+                userRepository, teamRepository, judgementRepository, judgeCommentRepository);
+        ArrayNode strokes = new ObjectMapper().createArrayNode().add(1);
+        given(judgeCommentRepository.findByTeamIdAndUserId(10L, 2L))
+                .willReturn(Optional.of(comment(team(10L, 1, "팀A"), user(2L, Role.JUDGE), strokes)));
+
+        assertThat(service.getComment(10L, 2L).strokes()).isEqualTo(strokes);
     }
 
     @Test

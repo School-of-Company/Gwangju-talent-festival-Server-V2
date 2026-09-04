@@ -6,6 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeCommentEntity;
 import team.startup.gwangjutalentfestival.domain.judge.entity.JudgementEntity;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.JudgeMonitoringResponse;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.JudgeMonitoringDeltaResponse;
+import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeCommentResponse;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgementRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.GetJudgeMonitoringService;
@@ -22,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,19 +36,16 @@ public class GetJudgeMonitoringServiceImpl implements GetJudgeMonitoringService 
     private final TeamRepository teamRepository;
     private final JudgementRepository judgementRepository;
     private final JudgeCommentRepository judgeCommentRepository;
+    private final AtomicLong version = new AtomicLong();
 
     @Override
     @Transactional(readOnly = true)
     public JudgeMonitoringResponse execute() {
+        long snapshotVersion = nextVersion();
         List<UserEntity> judges = userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE);
         List<TeamEntity> teams = teamRepository.findAllByOrderByPerformOrderAsc();
+        JudgeMonitoringDeltaResponse.ScoreSnapshot scores = scoreSnapshot(judges, teams);
         Set<Long> judgeIds = judges.stream().map(UserEntity::getId).collect(Collectors.toSet());
-        Map<JudgeTeamKey, JudgementEntity> judgements = judgementRepository.findAllWithUserAndTeam().stream()
-                .filter(judgement -> judgeIds.contains(judgement.getUser().getId()))
-                .collect(Collectors.toMap(
-                        judgement -> new JudgeTeamKey(judgement.getUser().getId(), judgement.getTeam().getId()),
-                        judgement -> judgement
-                ));
         Map<JudgeTeamKey, JudgeCommentEntity> comments = judgeCommentRepository.findAllWithUserAndTeam().stream()
                 .filter(comment -> judgeIds.contains(comment.getUser().getId()))
                 .collect(Collectors.toMap(
@@ -52,16 +53,49 @@ public class GetJudgeMonitoringServiceImpl implements GetJudgeMonitoringService 
                         comment -> comment
                 ));
 
+        return new JudgeMonitoringResponse(
+                snapshotVersion,
+                scores.judges(),
+                scores.scoreRows(),
+                commentRows(teams, judges, comments)
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public JudgeMonitoringDeltaResponse.ScoreSnapshot executeScores() {
+        List<UserEntity> judges = userRepository.findAllByRoleOrderByIdAsc(Role.JUDGE);
+        List<TeamEntity> teams = teamRepository.findAllByOrderByPerformOrderAsc();
+        return scoreSnapshot(judges, teams);
+    }
+
+    private JudgeMonitoringDeltaResponse.ScoreSnapshot scoreSnapshot(
+            List<UserEntity> judges, List<TeamEntity> teams) {
+        Set<Long> judgeIds = judges.stream().map(UserEntity::getId).collect(Collectors.toSet());
+        Map<JudgeTeamKey, JudgementEntity> judgements = judgementRepository.findAllWithUserAndTeam().stream()
+                .filter(judgement -> judgeIds.contains(judgement.getUser().getId()))
+                .collect(Collectors.toMap(
+                        judgement -> new JudgeTeamKey(judgement.getUser().getId(), judgement.getTeam().getId()),
+                        judgement -> judgement
+                ));
         Map<Long, Integer> calculatedScores = calculateScores(teams, judges, judgements);
         Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
                 teams, judgements.values(), calculatedScores);
-        List<JudgeMonitoringResponse.JudgeHeader> headers = headers(judges);
+        return new JudgeMonitoringDeltaResponse.ScoreSnapshot(
+                headers(judges), scoreRows(teams, judges, judgements, calculatedScores, ranks));
+    }
 
-        return new JudgeMonitoringResponse(
-                headers,
-                scoreRows(teams, judges, judgements, calculatedScores, ranks),
-                commentRows(teams, judges, comments)
-        );
+    @Override
+    public long nextVersion() {
+        return version.incrementAndGet();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public GetJudgeCommentResponse getComment(Long teamId, Long judgeId) {
+        return new GetJudgeCommentResponse(teamId, judgeCommentRepository.findByTeamIdAndUserId(teamId, judgeId)
+                .map(JudgeCommentEntity::getStrokes)
+                .orElseGet(JsonNodeFactory.instance::arrayNode));
     }
 
     private List<JudgeMonitoringResponse.JudgeHeader> headers(List<UserEntity> judges) {

@@ -102,7 +102,7 @@ class DownloadJudgeSheetsServiceImplTest {
             var sheet = workbook.getSheet("개별 심사표");
             assertThat(sheet.getRow(0).getCell(0).getStringCellValue()).isEqualTo("원본 제목");
             assertThat(sheet.getRow(1).getCell(0).getStringCellValue()).isEqualTo("소속/직위/이름");
-            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("심사순서");
+            assertThat(sheet.getRow(2).getCell(0).getStringCellValue()).isEqualTo("심사번호");
             assertThat(sheet.getRow(2).getCell(1).getStringCellValue()).isEqualTo("팀명");
             assertThat(sheet.getRow(2).getCell(2).getStringCellValue()).isEqualTo("완성도·표현력");
             assertThat(sheet.getRow(2).getCell(3).getStringCellValue()).isEqualTo("창의력·구성");
