@@ -2,7 +2,7 @@ package team.startup.gwangjutalentfestival.domain.performer.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.presentation.data.response.TokenResponse;
 import team.startup.gwangjutalentfestival.domain.auth.repository.RefreshTokenRepository;
@@ -36,10 +36,25 @@ public class VerifyPerformerServiceImpl implements VerifyPerformerService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtProperties jwtProperties;
+    private final TransactionTemplate transactionTemplate;
 
     @Override
-    @Transactional
     public TokenResponse execute(VerifyPerformerRequest request) {
+        UserEntity user = transactionTemplate.execute(status -> verifyAndPromote(request));
+        if (user == null) {
+            throw new IllegalStateException("출연자 인증 트랜잭션 결과가 없습니다.");
+        }
+
+        TokenResponse token = jwtProvider.receiveToken(user.getId(), user.getRole());
+        refreshTokenRepository.save(RefreshToken.builder()
+                .userId(user.getId().toString())
+                .token(token.refreshToken())
+                .expiresIn(jwtProperties.getRefreshTokenExpiration())
+                .build());
+        return token;
+    }
+
+    private UserEntity verifyAndPromote(VerifyPerformerRequest request) {
         PerformerVerificationEntity verification = performerVerificationRepository
                 .findByCodeHashForUpdate(hash(request.code().trim()))
                 .orElseThrow(InvalidPerformerVerificationException::new);
@@ -60,14 +75,7 @@ public class VerifyPerformerServiceImpl implements VerifyPerformerService {
 
         verification.claim(user.getId(), now);
         user.promoteToPerformer();
-
-        TokenResponse token = jwtProvider.receiveToken(user.getId(), user.getRole());
-        refreshTokenRepository.save(RefreshToken.builder()
-                .userId(user.getId().toString())
-                .token(token.refreshToken())
-                .expiresIn(jwtProperties.getRefreshTokenExpiration())
-                .build());
-        return token;
+        return user;
     }
 
     private String hash(String code) {

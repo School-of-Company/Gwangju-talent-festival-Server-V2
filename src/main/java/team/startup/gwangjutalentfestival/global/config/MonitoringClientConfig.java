@@ -8,6 +8,10 @@ import team.startup.gwangjutalentfestival.domain.monitoring.properties.MlPropert
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.MonitoringProperties;
 
 import java.time.Duration;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class MonitoringClientConfig {
@@ -31,6 +35,19 @@ public class MonitoringClientConfig {
         return RestClient.builder()
                 .requestFactory(factory)
                 .build();
+    }
+
+    @Bean(name = "discordAlertExecutor", destroyMethod = "shutdown")
+    public ExecutorService discordAlertExecutor() {
+        return new ThreadPoolExecutor(
+                1,
+                1,
+                0,
+                TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(1),
+                Thread.ofPlatform().daemon().name("discord-alert-", 0).factory(),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
     }
 
     @Bean

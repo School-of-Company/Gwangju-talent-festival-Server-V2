@@ -4,7 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,6 @@ import java.time.format.DateTimeFormatter;
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@RequiredArgsConstructor
 public class RequestAlertFilter extends OncePerRequestFilter {
 
     private static final ZoneId ZONE_SEOUL = ZoneId.of("Asia/Seoul");
@@ -32,6 +31,17 @@ public class RequestAlertFilter extends OncePerRequestFilter {
 
     private final RequestAlertProperties requestAlertProperties;
     private final DiscordWebhookClient discordWebhookClient;
+    private final String appEnvironment;
+
+    public RequestAlertFilter(
+            RequestAlertProperties requestAlertProperties,
+            DiscordWebhookClient discordWebhookClient,
+            @Value("${APP_ENV:LOCAL}") String appEnvironment
+    ) {
+        this.requestAlertProperties = requestAlertProperties;
+        this.discordWebhookClient = discordWebhookClient;
+        this.appEnvironment = appEnvironment;
+    }
 
     @Override
     protected void doFilterInternal(
@@ -49,7 +59,7 @@ public class RequestAlertFilter extends OncePerRequestFilter {
         } finally {
             long durationMillis = System.currentTimeMillis() - start;
             int status = response.getStatus();
-            boolean isError = status >= 400;
+            boolean isError = status >= 500;
             boolean isSlow = durationMillis >= requestAlertProperties.slowThresholdMillis();
 
             if (isError || isSlow) {
@@ -62,8 +72,8 @@ public class RequestAlertFilter extends OncePerRequestFilter {
         String emoji = isError ? "🔥" : "🐢";
         String tag = isError ? "ERROR" : "SLOW";
         String time = LocalDateTime.now(ZONE_SEOUL).format(TIME_FORMATTER);
-        return "%s [%s] %s | %s %s → %d (%dms)".formatted(
-                emoji, tag, time, request.getMethod(), request.getRequestURI(), status, durationMillis
+        return "%s [%s][%s] %s | %s %s → %d (%dms)".formatted(
+                emoji, appEnvironment, tag, time, request.getMethod(), request.getRequestURI(), status, durationMillis
         );
     }
 }

@@ -3,7 +3,6 @@ package team.startup.gwangjutalentfestival.domain.auth.service.impl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import team.startup.gwangjutalentfestival.domain.auth.entity.RefreshToken;
 import team.startup.gwangjutalentfestival.domain.auth.exception.InvalidPasswordException;
 import team.startup.gwangjutalentfestival.domain.auth.presentation.data.request.LoginRequest;
@@ -39,7 +38,6 @@ public class LoginServiceImpl implements LoginService {
      * @throws InvalidPasswordException 비밀번호가 일치하지 않는 경우
      */
     @Override
-    @Transactional
     public TokenResponse execute(LoginRequest request) {
         UserEntity user = userRepository.findByPhoneNumber(request.phoneNumber())
                 .orElseThrow(UserNotFoundException::new);

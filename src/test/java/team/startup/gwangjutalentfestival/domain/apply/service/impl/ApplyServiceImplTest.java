@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.apply.entity.ApplyEntity;
@@ -27,6 +28,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.inOrder;
 
 @ExtendWith(MockitoExtension.class)
 class ApplyServiceImplTest {
@@ -61,8 +63,11 @@ class ApplyServiceImplTest {
         ApplyResponse response = applyService.execute(req);
 
         assertThat(response.applyId()).isEqualTo(1L);
-        verify(awsS3Adapter).completeMultipartUpload(eq("videos/test-key.mp4"), eq("upload-id"), anyList());
-        verify(applyRepository).save(argThat(a ->
+        InOrder externalIoBeforeDb = inOrder(awsS3Adapter, applyRepository);
+        externalIoBeforeDb.verify(awsS3Adapter)
+                .completeMultipartUpload(eq("videos/test-key.mp4"), eq("upload-id"), anyList());
+        externalIoBeforeDb.verify(awsS3Adapter).readObjectHead(eq("videos/test-key.mp4"), anyInt());
+        externalIoBeforeDb.verify(applyRepository).save(argThat(a ->
                 a.getVideoKey().equals("videos/test-key.mp4") && a.getOriginalFilename().equals("공연영상.mp4")));
     }
 
