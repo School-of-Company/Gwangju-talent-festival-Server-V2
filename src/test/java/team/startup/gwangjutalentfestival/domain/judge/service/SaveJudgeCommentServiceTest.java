@@ -11,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.mockito.junit.jupiter.MockitoExtension;
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
+import team.startup.gwangjutalentfestival.domain.judge.properties.JudgeStrokesProperties;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.impl.SaveJudgeCommentServiceImpl;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
@@ -36,6 +37,7 @@ class SaveJudgeCommentServiceTest {
     private static final Long TEAM_ID = 1L;
     private static final Long USER_ID = 1L;
     private static final Long NOT_FOUND_TEAM_ID = 99L;
+    private static final int MAX_STROKES_BYTES = 20_971_520;
 
     @Mock
     private UserUtil userUtil;
@@ -60,7 +62,8 @@ class SaveJudgeCommentServiceTest {
     @BeforeEach
     void setUp() {
         saveJudgeCommentService = new SaveJudgeCommentServiceImpl(
-                userUtil, teamRepository, judgeCommentRepository, objectMapper, applicationEventPublisher);
+                userUtil, teamRepository, judgeCommentRepository, objectMapper, applicationEventPublisher,
+                new JudgeStrokesProperties(MAX_STROKES_BYTES));
 
         user = UserEntity.builder()
                 .id(USER_ID)
@@ -107,7 +110,7 @@ class SaveJudgeCommentServiceTest {
     void strokes가_크기_제한을_초과하면_JudgeCommentTooLargeException이_발생한다() {
         ArrayNode largeStrokes = objectMapper.createArrayNode();
         String padding = "a".repeat(1000);
-        for (int i = 0; i < 4_200; i++) {
+        for (int i = 0; i < 21_000; i++) {
             largeStrokes.addObject().put("data", padding);
         }
         SaveJudgeCommentRequest largeRequest = new SaveJudgeCommentRequest(largeStrokes);

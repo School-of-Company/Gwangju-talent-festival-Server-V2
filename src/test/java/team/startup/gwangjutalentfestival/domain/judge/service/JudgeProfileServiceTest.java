@@ -12,6 +12,7 @@ import team.startup.gwangjutalentfestival.domain.judge.entity.JudgeProfileEntity
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeProfileRequest;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.response.GetJudgeProfileResponse;
+import team.startup.gwangjutalentfestival.domain.judge.properties.JudgeStrokesProperties;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeProfileRepository;
 import team.startup.gwangjutalentfestival.domain.user.entity.UserEntity;
 import team.startup.gwangjutalentfestival.domain.user.enums.Role;
@@ -28,6 +29,8 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class JudgeProfileServiceTest {
 
+    private static final int MAX_STROKES_BYTES = 20_971_520;
+
     @Mock
     private UserUtil userUtil;
 
@@ -40,7 +43,8 @@ class JudgeProfileServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new JudgeProfileService(userUtil, judgeProfileRepository, objectMapper);
+        service = new JudgeProfileService(userUtil, judgeProfileRepository, objectMapper,
+                new JudgeStrokesProperties(MAX_STROKES_BYTES));
         judge = UserEntity.builder().id(1L).role(Role.JUDGE).build();
         given(userUtil.getCurrentUserRef()).willReturn(judge);
     }
@@ -102,7 +106,7 @@ class JudgeProfileServiceTest {
     @Test
     void 필기_하나가_크기_제한을_초과하면_저장하지_않는다() {
         ArrayNode large = objectMapper.createArrayNode();
-        large.addObject().put("data", "a".repeat(4_000_001));
+        large.addObject().put("data", "a".repeat(MAX_STROKES_BYTES + 1));
 
         assertThatThrownBy(() -> service.save(new SaveJudgeProfileRequest(
                 large, objectMapper.createArrayNode(), objectMapper.createArrayNode())))
