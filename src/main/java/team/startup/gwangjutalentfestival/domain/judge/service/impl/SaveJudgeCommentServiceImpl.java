@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
-    private static final int MAX_STROKES_BYTES = 500_000;
+    private static final int MAX_STROKES_BYTES = 4_000_000;
 
     private final UserUtil userUtil;
     private final TeamRepository teamRepository;

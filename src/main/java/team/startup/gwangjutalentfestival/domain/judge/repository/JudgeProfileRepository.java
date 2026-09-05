@@ -19,9 +19,9 @@ public interface JudgeProfileRepository extends JpaRepository<JudgeProfileEntity
             INSERT INTO judge_profile (user_id, affiliation_strokes, position_strokes, name_strokes)
             VALUES (:userId, :affiliationStrokes, :positionStrokes, :nameStrokes)
             ON DUPLICATE KEY UPDATE
-                affiliation_strokes = :affiliationStrokes,
-                position_strokes = :positionStrokes,
-                name_strokes = :nameStrokes
+                affiliation_strokes = VALUES(affiliation_strokes),
+                position_strokes = VALUES(position_strokes),
+                name_strokes = VALUES(name_strokes)
             """, nativeQuery = true)
     void upsert(
             @Param("userId") Long userId,

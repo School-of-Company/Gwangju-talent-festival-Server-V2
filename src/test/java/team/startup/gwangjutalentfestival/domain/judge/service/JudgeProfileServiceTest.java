@@ -102,7 +102,7 @@ class JudgeProfileServiceTest {
     @Test
     void 필기_하나가_크기_제한을_초과하면_저장하지_않는다() {
         ArrayNode large = objectMapper.createArrayNode();
-        large.addObject().put("data", "a".repeat(500_000));
+        large.addObject().put("data", "a".repeat(4_000_001));
 
         assertThatThrownBy(() -> service.save(new SaveJudgeProfileRequest(
                 large, objectMapper.createArrayNode(), objectMapper.createArrayNode())))

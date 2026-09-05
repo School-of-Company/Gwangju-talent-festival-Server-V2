@@ -1,3 +1,7 @@
+server:
+  tomcat:
+    max-swallow-size: ${TOMCAT_MAX_SWALLOW_SIZE:32MB}
+
 spring:
   application:
     name: gwangjutalentfestival

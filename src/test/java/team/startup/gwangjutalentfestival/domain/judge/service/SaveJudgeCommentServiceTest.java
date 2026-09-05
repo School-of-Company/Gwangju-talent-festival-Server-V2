@@ -107,7 +107,7 @@ class SaveJudgeCommentServiceTest {
     void strokes가_크기_제한을_초과하면_JudgeCommentTooLargeException이_발생한다() {
         ArrayNode largeStrokes = objectMapper.createArrayNode();
         String padding = "a".repeat(1000);
-        for (int i = 0; i < 600; i++) {
+        for (int i = 0; i < 4_200; i++) {
             largeStrokes.addObject().put("data", padding);
         }
         SaveJudgeCommentRequest largeRequest = new SaveJudgeCommentRequest(largeStrokes);
