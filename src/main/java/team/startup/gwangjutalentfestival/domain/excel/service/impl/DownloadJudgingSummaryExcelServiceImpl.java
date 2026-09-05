@@ -15,6 +15,7 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import team.startup.gwangjutalentfestival.domain.user.repository.UserRepository;
 import team.startup.gwangjutalentfestival.global.thirdparty.google.adapter.GoogleExcelAdapter;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,14 +49,15 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
         }
 
         Map<Long, Map<Long, Integer>> scoreMap = buildScoreMap(judgements, judgeIds);
-        Map<Long, Integer> teamTotalMap = teams.stream().collect(Collectors.toMap(
+        Map<Long, BigDecimal> teamTotalMap = teams.stream().collect(Collectors.toMap(
                 TeamEntity::getId,
-                team -> JudgeScoreCalculator.calculate(scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).values())
+                team -> JudgeScoreCalculator.calculateDecimal(
+                        scoreMap.getOrDefault(team.getId(), Collections.emptyMap()).values())
         ));
         List<JudgementEntity> judgeJudgements = judgements.stream()
                 .filter(judgement -> judgeIds.contains(judgement.getUser().getId()))
                 .toList();
-        Map<Long, Integer> rankMap = JudgeRankingCalculator.calculate(teams, judgeJudgements, teamTotalMap);
+        Map<Long, Integer> rankMap = JudgeRankingCalculator.calculate(teams, judgeJudgements);
 
         List<List<Object>> rows = new ArrayList<>();
         rows.add(buildHeaderRow(judgeIds.size()));
@@ -95,20 +97,25 @@ public class DownloadJudgingSummaryExcelServiceImpl implements DownloadJudgingSu
             TeamEntity team,
             List<Long> judgeIds,
             Map<Long, Map<Long, Integer>> scoreMap,
-            Map<Long, Integer> teamTotalMap,
+            Map<Long, BigDecimal> teamTotalMap,
             Map<Long, Integer> rankMap) {
         List<Object> row = new ArrayList<>();
         row.add(nz(team.getPerformOrder()));
         row.add(team.getTeamName());
         Map<Long, Integer> teamScores = scoreMap.getOrDefault(team.getId(), Collections.emptyMap());
         judgeIds.forEach(judgeId -> row.add(teamScores.getOrDefault(judgeId, 0)));
-        row.add(nz(teamTotalMap.get(team.getId())));
+        row.add(nzDecimal(teamTotalMap.get(team.getId())));
         row.add(nz(rankMap.get(team.getId())));
         return row;
     }
 
     private int nz(Integer v) {
         return Optional.ofNullable(v).orElse(0);
+    }
+
+    /** 산출점수는 반올림 없이 소수 2자리까지 시트에 그대로 출력한다. */
+    private double nzDecimal(BigDecimal v) {
+        return Optional.ofNullable(v).orElse(BigDecimal.ZERO).doubleValue();
     }
 
 }

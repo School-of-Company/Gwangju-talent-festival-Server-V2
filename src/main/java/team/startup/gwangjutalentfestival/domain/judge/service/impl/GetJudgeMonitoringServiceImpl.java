@@ -79,8 +79,7 @@ public class GetJudgeMonitoringServiceImpl implements GetJudgeMonitoringService 
                         judgement -> judgement
                 ));
         Map<Long, Integer> calculatedScores = calculateScores(teams, judges, judgements);
-        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
-                teams, judgements.values(), calculatedScores);
+        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(teams, judgements.values());
         return new JudgeMonitoringDeltaResponse.ScoreSnapshot(
                 headers(judges), scoreRows(teams, judges, judgements, calculatedScores, ranks));
     }

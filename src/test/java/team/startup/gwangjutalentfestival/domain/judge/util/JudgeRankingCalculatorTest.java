@@ -28,7 +28,7 @@ class JudgeRankingCalculatorTest {
         }
 
         Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
-                List.of(teamA, teamB), judgements, Map.of(teamA.getId(), 70, teamB.getId(), 70));
+                List.of(teamA, teamB), judgements);
 
         assertThat(ranks).containsEntry(teamA.getId(), 1).containsEntry(teamB.getId(), 2);
     }
@@ -46,14 +46,31 @@ class JudgeRankingCalculatorTest {
         );
 
         Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
-                List.of(teamA, teamB, teamC),
-                judgements,
-                Map.of(teamA.getId(), 70, teamB.getId(), 70, teamC.getId(), 70));
+                List.of(teamA, teamB, teamC), judgements);
 
         assertThat(ranks)
                 .containsEntry(teamA.getId(), 1)
                 .containsEntry(teamC.getId(), 2)
                 .containsEntry(teamB.getId(), 3);
+    }
+
+    @Test
+    void 정수로_반올림하면_동점이지만_소수점까지_보면_높은_팀이_1위가_된다() {
+        TeamEntity teamA = team(1L);
+        TeamEntity teamB = team(2L);
+        int[] teamATotals = {80, 86, 77, 80, 80};
+        int[] teamBTotals = {81, 90, 65, 75, 85};
+        List<JudgementEntity> judgements = new ArrayList<>();
+        for (int index = 0; index < 5; index++) {
+            UserEntity judge = judge(index + 1L);
+            judgements.add(judgement(teamA, judge, 40, teamATotals[index] - 60, 20));
+            judgements.add(judgement(teamB, judge, 40, teamBTotals[index] - 60, 20));
+        }
+
+        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
+                List.of(teamA, teamB), judgements);
+
+        assertThat(ranks).containsEntry(teamB.getId(), 1).containsEntry(teamA.getId(), 2);
     }
 
     private TeamEntity team(long id) {

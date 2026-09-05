@@ -57,7 +57,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = captor.getValue();
         assertThat(rows.get(0)).containsExactly("심사번호", "팀명", "심사위원 (A)", "심사위원 (B)", "산출점수", "순위");
-        assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 0, 60, 1);
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 0, 60.0, 1);
     }
 
     @Test
@@ -77,7 +77,7 @@ class DownloadJudgingSummaryExcelServiceImplTest {
 
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
-        assertThat(((List<List<Object>>) captor.getValue()).get(1)).containsExactly(1, "팀A", 60, 60, 1);
+        assertThat(((List<List<Object>>) captor.getValue()).get(1)).containsExactly(1, "팀A", 60, 60.0, 1);
     }
 
     @Test
@@ -106,8 +106,8 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = captor.getValue();
-        assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 60, 60, 60, 60, 1);
-        assertThat(rows.get(2)).containsExactly(2, "팀B", 60, 60, 60, 60, 60, 2);
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 60, 60, 60, 60, 60.0, 1);
+        assertThat(rows.get(2)).containsExactly(2, "팀B", 60, 60, 60, 60, 60.0, 2);
     }
 
     @Test
@@ -128,8 +128,8 @@ class DownloadJudgingSummaryExcelServiceImplTest {
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
         verify(googleExcelAdapter).exportSummary(captor.capture());
         List<List<Object>> rows = captor.getValue();
-        assertThat(rows.get(1)).containsExactly(1, "팀A", 70, 70, 2);
-        assertThat(rows.get(2)).containsExactly(2, "팀B", 70, 70, 1);
+        assertThat(rows.get(1)).containsExactly(1, "팀A", 70, 70.0, 2);
+        assertThat(rows.get(2)).containsExactly(2, "팀B", 70, 70.0, 1);
     }
 
     private TeamEntity team(long id, int order, String name) {

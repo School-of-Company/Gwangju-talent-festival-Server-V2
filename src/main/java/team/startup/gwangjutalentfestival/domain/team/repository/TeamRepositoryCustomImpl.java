@@ -14,7 +14,6 @@ import team.startup.gwangjutalentfestival.domain.user.enums.Role;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * {@link TeamRepositoryCustom}의 QueryDSL 구현체.
@@ -40,10 +39,7 @@ public class TeamRepositoryCustomImpl implements TeamRepositoryCustom {
                 .join(judgement.user).fetchJoin()
                 .where(judgement.user.role.eq(Role.JUDGE))
                 .fetch();
-        Map<Long, Integer> calculatedScores = teams.stream()
-                .collect(Collectors.toMap(TeamEntity::getId, TeamEntity::getTotalScore));
-        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(
-                teams, judgements, calculatedScores);
+        Map<Long, Integer> ranks = JudgeRankingCalculator.calculate(teams, judgements);
 
         return teams.stream()
                 .sorted(Comparator.comparing(team -> ranks.get(team.getId())))
