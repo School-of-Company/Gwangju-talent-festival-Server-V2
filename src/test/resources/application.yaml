@@ -102,6 +102,10 @@ monitoring:
   dataset:
     export-path: ./exports
 
+judge:
+  strokes:
+    max-bytes: 20971520
+
 management:
   security:
     enabled: false

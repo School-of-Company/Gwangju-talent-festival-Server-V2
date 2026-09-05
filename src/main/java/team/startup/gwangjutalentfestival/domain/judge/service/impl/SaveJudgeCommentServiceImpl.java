@@ -9,6 +9,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import team.startup.gwangjutalentfestival.domain.judge.event.JudgeMonitoringChangedEvent;
 import team.startup.gwangjutalentfestival.domain.judge.exception.JudgeCommentTooLargeException;
 import team.startup.gwangjutalentfestival.domain.judge.presentation.data.request.SaveJudgeCommentRequest;
+import team.startup.gwangjutalentfestival.domain.judge.properties.JudgeStrokesProperties;
 import team.startup.gwangjutalentfestival.domain.judge.repository.JudgeCommentRepository;
 import team.startup.gwangjutalentfestival.domain.judge.service.SaveJudgeCommentService;
 import team.startup.gwangjutalentfestival.domain.team.entity.TeamEntity;
@@ -29,13 +30,13 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
-    private static final int MAX_STROKES_BYTES = 4_000_000;
 
     private final UserUtil userUtil;
     private final TeamRepository teamRepository;
     private final JudgeCommentRepository judgeCommentRepository;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final JudgeStrokesProperties judgeStrokesProperties;
 
     @Override
     @Transactional
@@ -61,7 +62,7 @@ public class SaveJudgeCommentServiceImpl implements SaveJudgeCommentService {
     }
 
     private void validateSize(String strokes) {
-        if (strokes.getBytes(StandardCharsets.UTF_8).length > MAX_STROKES_BYTES) {
+        if (strokes.getBytes(StandardCharsets.UTF_8).length > judgeStrokesProperties.maxBytes()) {
             throw new JudgeCommentTooLargeException();
         }
     }

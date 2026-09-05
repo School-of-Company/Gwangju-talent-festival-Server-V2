@@ -10,6 +10,7 @@ import team.startup.gwangjutalentfestival.domain.monitoring.properties.DatasetPr
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.MlProperties;
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.MonitoringProperties;
 import team.startup.gwangjutalentfestival.domain.monitoring.properties.RequestAlertProperties;
+import team.startup.gwangjutalentfestival.domain.judge.properties.JudgeStrokesProperties;
 import team.startup.gwangjutalentfestival.domain.seat.properties.SeatReservationPeriodProperties;
 import team.startup.gwangjutalentfestival.domain.slogan.properties.SloganSubmissionProperties;
 import team.startup.gwangjutalentfestival.global.jwt.JwtProperties;
@@ -25,7 +26,7 @@ import team.startup.gwangjutalentfestival.global.sms.properties.SolapiProperties
 @EnableFeignClients
 @EnableAsync
 @EnableScheduling
-@EnableConfigurationProperties({JwtProperties.class, CorsProperties.class, SolapiProperties.class, SmsVerifyProperties.class, SloganSubmissionProperties.class, SeatReservationPeriodProperties.class, MonitoringProperties.class, DatasetProperties.class, MlProperties.class, AwsS3Properties.class, RequestAlertProperties.class})
+@EnableConfigurationProperties({JwtProperties.class, CorsProperties.class, SolapiProperties.class, SmsVerifyProperties.class, SloganSubmissionProperties.class, SeatReservationPeriodProperties.class, MonitoringProperties.class, DatasetProperties.class, MlProperties.class, AwsS3Properties.class, RequestAlertProperties.class, JudgeStrokesProperties.class})
 @SpringBootApplication
 public class GwangjutalentfestivalApplication {
 
