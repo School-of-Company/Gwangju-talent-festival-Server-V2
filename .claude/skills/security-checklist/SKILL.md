@@ -1,87 +1,62 @@
 ---
 name: security-checklist
-description: Verify security vulnerabilities — hardcoded secrets, SQL injection, JWT validation, blacklist enforcement, sensitive logging, and authorization checks. Run before merging any auth or API-related changes.
-allowed-tools: Bash(git *:*), Bash(grep *:*), Read, Glob, Grep
+description: Verify security vulnerabilities — hardcoded secrets, SQL injection, JWT validation, API key masking, sensitive logging, and authorization checks. Run before merging any auth or API-related changes.
 ---
 
-## Step 1 — Gather Changed Files
+# Security Checklist
 
-```bash
-git diff develop...HEAD --name-only 2>/dev/null || git diff HEAD~5...HEAD --name-only
-```
-
-Read each changed `.java` file with the Read tool for detailed analysis.
-
----
-
-## Step 2 — Run Checklist
+## Verification Items
 
 ### 1. Hardcoded Secrets
-- [ ] No API key, password, or secret value hardcoded in `.java` files?
-- [ ] No secrets in `application.yml` — using `${ENV_VAR}` placeholders?
-- [ ] No base64-encoded secret strings embedded in code?
+- [ ] No API Key, Secret, Password in code?
+- [ ] Using environment variables or config files?
 
-Search commands:
+Verification commands:
 ```bash
-grep -rn "password\s*=\s*\"" src/main/java --include="*.java"
-grep -rn "secret\s*=\s*\"" src/main/java --include="*.java"
-grep -rn "apiKey\s*=\s*\"" src/main/java --include="*.java"
-grep -rE "['\"]([A-Za-z0-9+/]{40,}={0,2})['\"]" src/main/java --include="*.java"
+# Basic search in Kotlin files
+grep -r "password.*=.*\"" --include="*.kt"
+grep -r "secret.*=.*\"" --include="*.kt"
+grep -r "apiKey.*=.*\"" --include="*.kt"
+
+# Check YAML/Properties files
+grep -r "password\|secret\|apiKey" --include="*.yml" --include="*.yaml" --include="*.properties"
+
+# Check for base64 encoded strings (potential secrets)
+grep -rE "['\"]([A-Za-z0-9+/]{40,}={0,2})['\"]" --include="*.kt"
 ```
+
+**Limitations:**
+- May miss secrets encoded in base64 or other formats
+- May not detect secrets loaded from external sources at runtime
+- May not find secrets in configuration files outside the codebase
+- Manual review is still recommended for sensitive areas
 
 ### 2. SQL Injection
-- [ ] All queries use JPA, QueryDSL, or `@Query` with named parameters — no string concatenation?
-- [ ] No native queries built with user input directly?
+- [ ] Using PreparedStatement or JPA/QueryDSL?
+- [ ] Not concatenating SQL strings directly?
 
-### 3. JWT Validation (see `JwtProvider`, `JwtFilter`)
-- [ ] Signature is validated via `jwtProvider.validateToken()`?
-- [ ] Expiration is checked before processing claims?
-- [ ] Token type (`isAccessToken`) is verified before granting access?
-- [ ] JTI is extracted and checked against `TokenBlacklistRepository` on every request?
-- [ ] Refresh token is deleted from Redis on logout?
+### 3. JWT Verification
+- [ ] Verifying JWT signature?
+- [ ] Checking expiration time?
+- [ ] Validating claims?
 
-### 4. Blacklist Enforcement (see `JwtFilter`, `LogoutServiceImpl`)
-- [ ] Blacklist check happens in `JwtFilter` before `SecurityContextHolder` is populated?
-- [ ] JTI is stored with TTL equal to remaining token expiry (no permanent entries)?
-- [ ] Redis failure is handled gracefully (fail-open with error log)?
+### 4. API Key Security
+- [ ] Masking API Key in responses?
+- [ ] Encrypting API Key when storing?
 
-### 5. Sensitive Data in Logs
-- [ ] No password, token, or JTI logged at any level?
-- [ ] No personal information (phone number, name) in debug/error logs?
-- [ ] Log level is appropriate — no excessive `log.debug` left in production paths?
+### 5. Logging
+- [ ] Not logging sensitive info (password, token, etc.)?
+- [ ] Appropriate log level?
 
 ### 6. Authorization
-- [ ] All protected endpoints require authentication via `SecurityConfig`?
-- [ ] Resource ownership is verified — users can only access their own data?
-- [ ] Admin-only endpoints are restricted by `Role` check or `@PreAuthorize`?
-- [ ] SSE endpoints (`/seat/changes`, `/judge/sse`) are properly secured?
+- [ ] Using `@PreAuthorize` or Security Filter for auth-required endpoints?
+- [ ] Verifying access to own resources only?
 
-### 7. Input Validation
-- [ ] All request DTOs use `@Valid` in controller method parameters?
-- [ ] Constraints (`@NotBlank`, `@NotNull`, etc.) are applied on record fields?
-- [ ] No user-controlled values passed directly to file paths or external commands?
+## References
 
-### 8. External API Keys (CoolSMS, Google Sheets)
-- [ ] API keys loaded from properties/environment — not hardcoded?
-- [ ] API keys not returned in any response DTO?
-- [ ] API key values not printed in logs?
+Locate reference files at runtime:
 
----
-
-## Step 3 — Report
-
-Output each item as:
-- ✓ Pass
-- ⚠ Warning (recommendation)
-- ✗ Error (must fix)
-
-Group by category, then summarize:
-
-```
-Total {n} items checked
-✓ {p} passed / ⚠ {w} warnings / ✗ {e} errors
-
-Issues found:
-- ✗ [file] : [problem description]
-- ⚠ [file] : [recommendation]
+```bash
+find . -name "ApiKeyService.kt" ! -path "*/build/*"
+find . -type d -name "security" -path "*/main/*" ! -path "*/build/*"
 ```

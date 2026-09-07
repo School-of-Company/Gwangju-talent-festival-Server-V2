@@ -1,23 +1,14 @@
 #!/bin/bash
-# .claude/hooks/preToolUse.sh
-# Block dangerous commands before execution
+INPUT=$(cat)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODULES_DIR="$SCRIPT_DIR/modules"
 
-if [[ "$TOOL_NAME" == "Bash" ]]; then
-    COMMAND="$TOOL_PARAMS_COMMAND"
-    BLOCKED_PATTERNS=(
-        "rm[[:space:]]+-rf[[:space:]]+/"
-        "sudo[[:space:]]+rm[[:space:]]+-rf"
-        ">[[:space:]]*/dev/"
-        "dd[[:space:]]+if="
-        "mkfs[[:space:]]+"
-        "curl[[:space:]]+.*\|[[:space:]]*sh"
-        "wget[[:space:]]+.*\|[[:space:]]*sh"
-    )
-    for pattern in "${BLOCKED_PATTERNS[@]}"; do
-        if [[ "$COMMAND" =~ $pattern ]]; then
-            echo "[Hook] ✗ Blocked dangerous command: $COMMAND"
-            echo "This command is not allowed for safety reasons."
-            exit 2
-        fi
-    done
-fi
+[[ -d "$MODULES_DIR" ]] || exit 0
+
+for hook in "$MODULES_DIR"/*/preToolUse.sh; do
+    [[ -f "$hook" ]] || continue
+    printf "%s\n" "$INPUT" | bash "$hook"
+    [[ $? -eq 2 ]] && exit 2
+done
+
+exit 0

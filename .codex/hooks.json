@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'root=\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\"; hook=\"$root/.codex/hooks/pre-tool-use.sh\"; if [[ ! -f \"$hook\" ]]; then hook=\"$root/.codex/hooks/dispatcher/pre-tool-use.sh\"; fi; if [[ -f \"$hook\" ]]; then exec bash \"$hook\"; fi; exit 0'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'root=\"$(git rev-parse --show-toplevel 2>/dev/null || pwd)\"; hook=\"$root/.codex/hooks/post-tool-use.sh\"; if [[ ! -f \"$hook\" ]]; then hook=\"$root/.codex/hooks/dispatcher/post-tool-use.sh\"; fi; if [[ -f \"$hook\" ]]; then exec bash \"$hook\"; fi; exit 0'"
+          }
+        ]
+      }
+    ]
+  }
+}
